@@ -1,0 +1,3 @@
+ella>=3.0
+PIL
+django-tastypie
