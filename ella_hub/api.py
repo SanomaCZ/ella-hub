@@ -29,20 +29,25 @@ class EllaHubApi(Api):
         for module in getattr(settings, 'RESOURCE_MODULES', ()):
             try:
                 mod = import_module(module)
-                resource_modules.append(mod)
             except ImportError, e:
                 raise ImproperlyConfigured(
                     'Error importing resource module %s,'
                     'check RESOURCE_MODULES '
                     'in your settings: "%s"' % (module, e))
+            else:
+                for attr in mod.__dict__:
+                    resource = getattr(mod, attr)
+                    if isclass(resource) and issubclass(resource, Resource) \
+                            and resource not in (Resource, ModelResource, ApiModelResource):
+                        resource_modules.append(resource)
 
         return resource_modules
 
-    def register_resources(self, resource_modules):
-        # register resources
-        for module in resource_modules:
-            for attr in module.__dict__:
-                resource = getattr(module, attr)
-                if isclass(resource) and issubclass(resource, Resource) \
-                        and resource not in (Resource, ModelResource, ApiModelResource):
-                    self.register(resource())
+    def register_resources(self, resources):
+        "Register one or more resources"
+
+        if isinstance(resources, (list, tuple)):
+            for one in resources:
+                self.register(one())
+        else:
+            self.register(one())
