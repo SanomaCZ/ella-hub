@@ -25,3 +25,11 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+#Doc
+doc/.build
+doc/.static
+doc/.templates
+doc/_build
+doc/Makefile.local
+
