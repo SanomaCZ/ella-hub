@@ -46,8 +46,5 @@ class EllaHubApi(Api):
     def register_resources(self, resources):
         "Register one or more resources"
 
-        if isinstance(resources, (list, tuple)):
-            for one in resources:
-                self.register(one())
-        else:
+        for one in resources:
             self.register(one())
