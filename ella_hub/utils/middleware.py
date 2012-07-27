@@ -20,11 +20,13 @@ class CrossDomainAccessMiddleware(object):
     )
 
     def process_response(self, request, response):
-        for header, settins_var, default_val in CrossDomainAccessMiddleware.__OPTIONS:
-            header = "Access-Control-Allow-" + header
-            if isinstance(default_val, (tuple, list)):
-                default_val = ",".join(default_val)
+        for header_type, settins_var, default_val in CrossDomainAccessMiddleware.__OPTIONS:
+            header_type = "Access-Control-Allow-" + header_type
+            header_value = getattr(settings, settins_var, default_val)
 
-            response[header] = getattr(settings, settins_var, default_val)
+            if isinstance(header_value, (tuple, list)):
+                header_value = ",".join(header_value)
+
+            response[header_type] = header_value
 
         return response
