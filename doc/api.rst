@@ -24,6 +24,11 @@ GET
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
 
 *example: get first 20 articles*
+
+ ::
+
+	http://crawler.bfhost.cz:12345/admin-api/article/
+
  ::
 
 	[
