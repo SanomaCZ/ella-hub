@@ -10,6 +10,7 @@ from ella_hub.api import EllaHubApi
 
 
 class TestApi(unittest.TestCase):
+    @tools.raises(ImproperlyConfigured)
     def test_load_fake_resource_module(self):
         original_resources = settings.RESOURCE_MODULES
         settings.RESOURCE_MODULES = ("some_fake_module_name",)
@@ -17,7 +18,5 @@ class TestApi(unittest.TestCase):
         api = EllaHubApi(api_name='some-api-name')
         try:
             api.collect_resources()
-        except ImproperlyConfigured:
-            pass
         finally:
             settings.RESOURCE_MODULES = original_resources
