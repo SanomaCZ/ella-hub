@@ -103,7 +103,7 @@ MIDDLEWARE_CLASSES = (
     'ella_hub.utils.middleware.CrossDomainAccessMiddleware',
 )
 
-ROOT_URLCONF = 'example_project.urls'
+ROOT_URLCONF = 'tests.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'example_project.wsgi.application'
