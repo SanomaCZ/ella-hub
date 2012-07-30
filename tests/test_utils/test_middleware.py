@@ -27,7 +27,7 @@ class TestCrossDomainAccessMiddleware(unittest.TestCase):
         tools.assert_equals(response["Access-Control-Allow-Origin"], "*")
 
         tools.assert_true("Access-Control-Allow-Methods" in response)
-        tools.assert_equals(response["Access-Control-Allow-Methods"], "POST,GET,OPTIONS,PUT,DELETE")
+        tools.assert_equals(response["Access-Control-Allow-Methods"], "POST,GET,OPTIONS,PUT,PATCH,DELETE")
 
         tools.assert_true("Access-Control-Allow-Headers" in response)
         tools.assert_equals(response["Access-Control-Allow-Headers"], "Content-Type,*")
