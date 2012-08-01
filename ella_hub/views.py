@@ -39,6 +39,11 @@ def cross_domain_post_view(function):
 
     return decorator
 
+def regenerate_key(api_key):
+    api_key.key = api_key.generate_key()
+    api_key.save()
+    return api_key.key
+
 @cross_domain_post_view
 def login_view(request):
     username = request.POST.get("username", "")
@@ -49,7 +54,7 @@ def login_view(request):
         login(request, user)
         api_key = ApiKey.objects.get(user=user)
         return HttpResponse(simplejson.dumps({
-            "api_key": api_key.key,
+            "api_key": regenerate_key(api_key),
         }))
     else:
         return HttpResponseUnauthorized()
@@ -89,8 +94,7 @@ def logout_view(request, api_name):
     except ApiKey.DoesNotExist:
         return HttpResponseUnauthorized()
     else: # change API key
-        api_key.key = api_key.generate_key()
-        api_key.save()
+        regenerate_key(api_key)
 
     logout(request)
     return HttpResponseRedirect('/%s/' % api_name)
