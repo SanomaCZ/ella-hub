@@ -60,6 +60,7 @@ class EllaHubApi(Api):
         `prepend_urls` method in v1.0.
         """
         return [
-            url(r"^(?P<api_name>)%s/login/$" % self.api_name, ella_hub.views.login_view),
-            url(r"^(?P<api_name>)%s/logout/$" % self.api_name, ella_hub.views.logout_view),
+            url(r"^%s/login/$" % self.api_name, ella_hub.views.login_view),
+            url(r"^(?P<api_name>%s)/logout/$" % self.api_name, ella_hub.views.logout_view),
+            url(r"^%s/api-key-validity/$" % self.api_name, ella_hub.views.validate_api_key_view)
         ]

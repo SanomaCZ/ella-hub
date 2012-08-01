@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from tastypie.authentication import Authentication
+from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization as ApiAuthorization
 
 
 class ApiAuthentication(Authentication):
-    def is_authenticated(self, request, **kwargs):
-        return request.user.is_authenticated()
-
-    def get_identifier(self, request):
-        return request.user.username
+    pass # TODO: ceck API key expiration date
