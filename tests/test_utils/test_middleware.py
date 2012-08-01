@@ -30,7 +30,7 @@ class TestCrossDomainAccessMiddleware(unittest.TestCase):
         tools.assert_equals(response["Access-Control-Allow-Methods"], "POST,GET,OPTIONS,PUT,PATCH,DELETE")
 
         tools.assert_true("Access-Control-Allow-Headers" in response)
-        tools.assert_equals(response["Access-Control-Allow-Headers"], "Content-Type,*")
+        tools.assert_equals(response["Access-Control-Allow-Headers"], "Content-Type,X-Requested-With,Authorization")
 
         tools.assert_true("Access-Control-Allow-Credentials" in response)
         tools.assert_equals(response["Access-Control-Allow-Credentials"], "true")
@@ -50,7 +50,7 @@ class TestCrossDomainAccessMiddleware(unittest.TestCase):
         tools.assert_equals(response["Access-Control-Allow-Methods"], "GET,POST")
 
         tools.assert_true("Access-Control-Allow-Headers" in response)
-        tools.assert_equals(response["Access-Control-Allow-Headers"], "Content-Type,*")
+        tools.assert_equals(response["Access-Control-Allow-Headers"], "Content-Type,X-Requested-With,Authorization")
 
         tools.assert_true("Access-Control-Allow-Credentials" in response)
         tools.assert_equals(response["Access-Control-Allow-Credentials"], "false")
