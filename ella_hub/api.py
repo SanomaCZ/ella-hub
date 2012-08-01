@@ -1,8 +1,11 @@
+import ella_hub.views
+
 from inspect import isclass
 
 from django.conf import settings
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
+from django.conf.urls.defaults import url
 
 from tastypie.resources import Resource, ModelResource
 from tastypie.api import Api
@@ -48,3 +51,15 @@ class EllaHubApi(Api):
 
         for one in resources:
             self.register(one())
+
+    def override_urls(self):
+        """
+        Prepend given URL patterns to all API.
+
+        This method is deprecated in repo and should be replaced by
+        `prepend_urls` method in v1.0.
+        """
+        return [
+            url(r"^(?P<api_name>)%s/login/$" % self.api_name, ella_hub.views.login_view),
+            url(r"^(?P<api_name>)%s/logout/$" % self.api_name, ella_hub.views.logout_view),
+        ]

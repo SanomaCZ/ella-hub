@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from tastypie.authorization import Authorization
 from tastypie.resources import ALL_WITH_RELATIONS
 from tastypie import fields
 
@@ -11,9 +10,13 @@ from ella.core.models import Publishable, Listing, Category, Author
 from ella.photos.models import Photo
 from ella.articles.models import Article
 
+from ella_hub.auth import ApiAuthentication as Authentication
+from ella_hub.auth import ApiAuthorization as Authorization
+
 
 class CategoryResource(ApiModelResource):
     class Meta:
+        authentication = Authentication()
         authorization = Authorization()
         always_return_data = True
         queryset = Category.objects.all()
@@ -32,6 +35,7 @@ class CategoryResource(ApiModelResource):
 
 class UserResource(ApiModelResource):
     class Meta:
+        authentication = Authentication()
         authorization = Authorization()
         always_return_data = True
         queryset = User.objects.all()
@@ -44,6 +48,7 @@ class UserResource(ApiModelResource):
 
 class PhotoResource(ApiModelResource):
     class Meta:
+        authentication = Authentication()
         authorization = Authorization()
         always_return_data = True
         queryset = Photo.objects.all()
@@ -67,6 +72,7 @@ class PhotoResource(ApiModelResource):
 
 class ListingResource(ApiModelResource):
     class Meta:
+        authentication = Authentication()
         authorization = Authorization()
         always_return_data = True
         queryset = Listing.objects.all()
@@ -81,6 +87,7 @@ class ListingResource(ApiModelResource):
 
 class AuthorResource(ApiModelResource):
     class Meta:
+        authentication = Authentication()
         authorization = Authorization()
         always_return_data = True
         queryset = Author.objects.all()
@@ -102,6 +109,7 @@ class PublishableResource(ApiModelResource):
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
 
     class Meta:
+        authentication = Authentication()
         authorization = Authorization()
         always_return_data = True
         queryset = Publishable.objects.all()
@@ -131,6 +139,7 @@ class PublishableResource(ApiModelResource):
 
 class ArticleResource(PublishableResource):
     class Meta:
+        authentication = Authentication()
         authorization = Authorization()
         always_return_data = True
         queryset = Article.objects.all()
