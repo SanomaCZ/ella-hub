@@ -1,6 +1,6 @@
-============================
-DEV SERVER API DOCUMENTATION
-============================
+======================
+Ella-hub Documentation
+======================
 
 .. secnum
 .. contents::
@@ -8,6 +8,14 @@ DEV SERVER API DOCUMENTATION
 
 
 Resource list: http://crawler.bfhost.cz:12345/admin-api/?format=json
+Django-tastypie doc__
+
+__ http://django-tastypie.readthedocs.org/en/latest/interacting.html
+
+Ella doc__ 
+  
+__ http://ella.readthedocs.org/en/latest/index.html
+
 
 
 
@@ -233,6 +241,10 @@ PATCH
 -----
 
 - partially updating an existing resource
+- all required attributes needed, `related issue`__
+
+__ https://github.com/toastdriven/django-tastypie/pull/411
+
 
 ::
 
