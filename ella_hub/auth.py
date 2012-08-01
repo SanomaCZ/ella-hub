@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from tastypie.authentication import DigestAuthentication as Authentication
+from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization as ApiAuthorization
 
 
