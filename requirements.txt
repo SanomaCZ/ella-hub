@@ -1,3 +1,4 @@
 ella>=3.0
 PIL
-django-tastypie
+git+git://github.com/toastdriven/django-tastypie.git
+
