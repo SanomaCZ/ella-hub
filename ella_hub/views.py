@@ -19,6 +19,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from tastypie.models import ApiKey
 
+# generate API key for new user
+from django.contrib.auth.models import User
+from django.db import models
+from tastypie.models import create_api_key
+
+models.signals.post_save.connect(create_api_key, sender=User)
+
 APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):(.+)", re.IGNORECASE)
 
 
@@ -51,8 +58,11 @@ def login_view(request):
     user = authenticate(username=username, password=password)
 
     if user is not None and user.is_active:
+        try:
+            api_key = ApiKey.objects.get(user=user)
+        except ApiKey.DoesNotExist:
+            return HttpResponseUnauthorized()
         login(request, user)
-        api_key = ApiKey.objects.get(user=user)
         return HttpResponse(simplejson.dumps({
             "api_key": regenerate_key(api_key),
         }))
