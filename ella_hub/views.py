@@ -3,13 +3,13 @@
 
 import re
 
-from datetime import datetime
+import datetime
 try:
     # try import offset-aware datetime from Django >= 1.4
     from django.utils.timezone import now as datetime_now
 except ImportError:
     # backward compatibility with Django < 1.4 (offset-naive datetimes)
-    datetime_now = datetime.now
+    datetime_now = datetime.datetime.now
 
 from django.utils import simplejson
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
@@ -72,35 +72,39 @@ def login_view(request):
 def parse_authorization_header(request):
     authorization_header = request.META.get('HTTP_AUTHORIZATION')
     if authorization_header is None:
-        return None, None
+        raise ValueError("Authorization header missing")
 
     match = APIKEY_HEADER_PATTERN.match(authorization_header)
     if not match:
-        return None, None
+        raise ValueError("Authorization header in wrong format")
 
     # return username, api_key pair
     return match.groups()
 
 @cross_domain_post_view
 def validate_api_key_view(request):
-    user_name, key = parse_authorization_header(request)
     try:
+        user_name, key = parse_authorization_header(request)
         api_key = ApiKey.objects.get(user__username=user_name, key=key)
+    except ValueError:
+        return HttpResponseBadRequest()
     except ApiKey.DoesNotExist:
         return HttpResponse(simplejson.dumps({
             "api_key_validity": False,
         }))
     else:
         expiration_time = api_key.created + datetime.timedelta(weeks=2)
-        HttpResponse(simplejson.dumps({
+        return HttpResponse(simplejson.dumps({
             "api_key_validity": datetime_now() < expiration_time,
         }))
 
 @cross_domain_post_view
 def logout_view(request, api_name):
-    user_name, key = parse_authorization_header(request)
     try:
+        user_name, key = parse_authorization_header(request)
         api_key = ApiKey.objects.get(user__username=user_name, key=key)
+    except ValueError:
+        return HttpResponseBadRequest()
     except ApiKey.DoesNotExist:
         return HttpResponseUnauthorized()
     else: # change API key

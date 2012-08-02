@@ -59,5 +59,5 @@ class EllaHubApi(Api):
         return [
             url(r"^%s/login/$" % self.api_name, ella_hub.views.login_view),
             url(r"^(?P<api_name>%s)/logout/$" % self.api_name, ella_hub.views.logout_view),
-            url(r"^%s/api-key-validity/$" % self.api_name, ella_hub.views.validate_api_key_view)
+            url(r"^%s/validate-api-key/$" % self.api_name, ella_hub.views.validate_api_key_view)
         ]

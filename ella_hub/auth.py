@@ -19,15 +19,8 @@ class ApiAuthentication(Authentication):
         if super(ApiAuthentication, self).is_authenticated(request, **kwargs) is not True:
             return False
 
-        try:
-            username, key = self.extract_credentials(request)
-        except ValueError:
-            return self._unauthorized()
-
-        try:
-            api_key = ApiKey.objects.get(user__username=username, key=key)
-        except ApiKey.DoesNotExist:
-            return self._unauthorized()
+        username, key = self.extract_credentials(request)
+        api_key = ApiKey.objects.get(user__username=username, key=key)
 
         expiration_time = api_key.created + datetime.timedelta(weeks=2)
         return datetime_now() < expiration_time
