@@ -29,7 +29,7 @@ Login
 
  	http://crawler.bfhost.cz:12345/admin-api/login/
 
-#. Returned JSON object contains `api_key` attribute with API key.
+2. Returned JSON object contains `api_key` attribute with API key.
 
  ::
 
@@ -37,7 +37,7 @@ Login
  		"api_key": "204db7bcfafb2deb7506b89eb3b9b715b09905c8"
 	}
 
-#. Add *Authorization* HTTP header to every next request in format:
+3. Add *Authorization* HTTP header to every next request in format:
 
  ::
 
@@ -51,6 +51,8 @@ You can use GET parameters, too.
  	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/?username=<username>&api_key=<api_key>
  	http://crawler.bfhost.cz:12345/admin-api/article/?username=user&api_key=204db7bcfafb2deb7506b89eb3b9b715b09905c8
 
+
+
 Validate API key
 ----------------
 1. Make POST request with *Authorization* HTTP header
@@ -59,13 +61,14 @@ Validate API key
 
  	http://crawler.bfhost.cz:12345/admin-api/validate-api-key/
 
-#. Returned JSON object contains boolean `api_key_validity` attribute.
+2. Returned JSON object contains boolean `api_key_validity` attribute.
 
  ::
 
  	{
  		"api_key_validity": true
 	}
+
 
 
 Logout
