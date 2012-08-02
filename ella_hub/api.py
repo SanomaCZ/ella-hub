@@ -52,12 +52,9 @@ class EllaHubApi(Api):
         for one in resources:
             self.register(one())
 
-    def override_urls(self):
+    def prepend_urls(self):
         """
         Prepend given URL patterns to all API.
-
-        This method is deprecated in repo and should be replaced by
-        `prepend_urls` method in v1.0.
         """
         return [
             url(r"^%s/login/$" % self.api_name, ella_hub.views.login_view),
