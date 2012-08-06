@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
 import unittest
 import django.utils.simplejson as json
 
 from nose import tools
 from django.test.client import Client
 from django.contrib.auth.models import User
+from tastypie.models import ApiKey
 
 
 class TestGetResources(unittest.TestCase):
@@ -114,6 +116,22 @@ class TestGetResources(unittest.TestCase):
             tools.assert_true("api_key_validity" in resources)
             tools.assert_equals(resources["api_key_validity"],
                 expected, "Header pair %s:%s>" % (username, api_key))
+
+    def test_api_key_expiration(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        response = self.client.get("/admin-api/article/", **headers)
+        tools.assert_equals(response.status_code, 200)
+
+        api_key = ApiKey.objects.get(user=self.user)
+        api_key.created = api_key.created - datetime.timedelta(weeks=2)
+        api_key.save()
+
+        response = self.client.get("/admin-api/article/", **headers)
+        tools.assert_equals(response.status_code, 401)
+
+        self.__logout(headers)
 
     def test_unauthorized_with_wrong_credentials(self):
         """
