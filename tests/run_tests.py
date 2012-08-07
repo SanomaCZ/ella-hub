@@ -24,7 +24,7 @@ def run_all(argv=None):
     if len(argv) == 1:  # only the command itself is in argv
         argv += [
             '--with-coverage', '--cover-package=ella_hub', '--cover-erase',
-            '--with-xunit',
+            '--with-xunit', '--stop',
         ]
 
     nose.run_exit(
