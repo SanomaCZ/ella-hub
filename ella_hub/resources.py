@@ -73,3 +73,5 @@ class ApiModelResource(ModelResource):
         """
         if isinstance(data, dict) and "objects" in data:
             return data["objects"]
+        else:
+            return data
