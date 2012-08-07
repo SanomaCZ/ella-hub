@@ -14,7 +14,6 @@ except ImportError:
 from django.utils import simplejson
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.defaults import permission_denied
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from tastypie.models import ApiKey
@@ -23,6 +22,7 @@ from tastypie.models import ApiKey
 from django.contrib.auth.models import User
 from django.db import models
 from tastypie.models import create_api_key
+from ella_hub.decorators import cross_domain_post_view
 
 models.signals.post_save.connect(create_api_key, sender=User)
 
@@ -34,22 +34,11 @@ class HttpResponseUnauthorized(HttpResponse):
         super(HttpResponseUnauthorized, self).__init__(status=401)
 
 
-def cross_domain_post_view(function):
-    @csrf_exempt
-    def decorator(request, *args, **kwargs):
-        if request.method == "OPTIONS":
-            return HttpResponse()
-        elif request.method != "POST":
-            return HttpResponseBadRequest("Only POST requests are allowed.")
-
-        return function(request, *args, **kwargs)
-
-    return decorator
-
 def regenerate_key(api_key):
     api_key.key = api_key.generate_key()
     api_key.save()
     return api_key.key
+
 
 @cross_domain_post_view
 def login_view(request):
@@ -69,6 +58,7 @@ def login_view(request):
     else:
         return HttpResponseUnauthorized()
 
+
 def parse_authorization_header(request):
     authorization_header = request.META.get('HTTP_AUTHORIZATION')
     if authorization_header is None:
@@ -80,6 +70,7 @@ def parse_authorization_header(request):
 
     # return username, api_key pair
     return match.groups()
+
 
 @cross_domain_post_view
 def validate_api_key_view(request):
@@ -97,6 +88,7 @@ def validate_api_key_view(request):
         return HttpResponse(simplejson.dumps({
             "api_key_validity": datetime_now() < expiration_time,
         }))
+
 
 @cross_domain_post_view
 def logout_view(request, api_name):
