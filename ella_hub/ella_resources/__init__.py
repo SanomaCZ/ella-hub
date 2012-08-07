@@ -84,6 +84,27 @@ class AuthorResource(ApiModelResource):
         }
 
 
+class DraftResource(ApiModelResource):
+    author = fields.ForeignKey(AuthorResource, 'author', full=True)
+
+    def build_filters(self, filters=None):
+        orm_filters = super(DraftResource, self).build_filters(filters)
+
+        if 'content_type' in filters:
+            orm_filters['content_type__name__iexact'] = filters['content_type']
+
+        return orm_filters
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Draft.objects.all()
+        filtering = {
+            'content_type': ['exact'],
+            'name': ['exact'],
+            'author': ALL_WITH_RELATIONS,
+            'timestamp': ALL_WITH_RELATIONS,
+        }
+
+
 class PublishableResource(ApiModelResource):
     photo = fields.ForeignKey(PhotoResource, 'photo', null=True)
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
