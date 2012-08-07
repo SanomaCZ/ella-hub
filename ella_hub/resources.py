@@ -1,5 +1,10 @@
 from tastypie.resources import ModelResource
 
+from ella_hub.auth import ApiAuthentication as Authentication
+from ella_hub.auth import ApiAuthorization as Authorization
+# from tastypie.authentication import Authentication
+# from tastypie.authorization import Authorization
+
 
 class ApiModelResource(ModelResource):
     @classmethod
@@ -75,3 +80,8 @@ class ApiModelResource(ModelResource):
             return data["objects"]
         else:
             return data
+
+    class Meta:
+        authentication = Authentication()
+        authorization = Authorization()
+        always_return_data = True

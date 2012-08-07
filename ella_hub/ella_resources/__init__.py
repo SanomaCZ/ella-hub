@@ -10,15 +10,11 @@ from ella.core.models import Publishable, Listing, Category, Author
 from ella.photos.models import Photo
 from ella.articles.models import Article
 
-from ella_hub.auth import ApiAuthentication as Authentication
-from ella_hub.auth import ApiAuthorization as Authorization
+from ella_hub.models import Draft
 
 
 class CategoryResource(ApiModelResource):
-    class Meta:
-        authentication = Authentication()
-        authorization = Authorization()
-        always_return_data = True
+    class Meta(ApiModelResource.Meta):
         queryset = Category.objects.all()
         filtering = {
             'app_data': ALL_WITH_RELATIONS,
@@ -34,12 +30,8 @@ class CategoryResource(ApiModelResource):
 
 
 class UserResource(ApiModelResource):
-    class Meta:
-        authentication = Authentication()
-        authorization = Authorization()
-        always_return_data = True
+    class Meta(ApiModelResource.Meta):
         queryset = User.objects.all()
-        resource_name = 'user'
         filtering = {
             'id': ALL_WITH_RELATIONS,
             'username': ALL_WITH_RELATIONS,
@@ -47,12 +39,8 @@ class UserResource(ApiModelResource):
 
 
 class PhotoResource(ApiModelResource):
-    class Meta:
-        authentication = Authentication()
-        authorization = Authorization()
-        always_return_data = True
+    class Meta(ApiModelResource.Meta):
         queryset = Photo.objects.all()
-        resource_name = 'photo'
         filtering = {
             'app_data': ALL_WITH_RELATIONS,
             'created': ALL_WITH_RELATIONS,
@@ -71,10 +59,7 @@ class PhotoResource(ApiModelResource):
 
 
 class ListingResource(ApiModelResource):
-    class Meta:
-        authentication = Authentication()
-        authorization = Authorization()
-        always_return_data = True
+    class Meta(ApiModelResource.Meta):
         queryset = Listing.objects.all()
         filtering = {
             'commercial': ALL_WITH_RELATIONS,
@@ -86,10 +71,7 @@ class ListingResource(ApiModelResource):
 
 
 class AuthorResource(ApiModelResource):
-    class Meta:
-        authentication = Authentication()
-        authorization = Authorization()
-        always_return_data = True
+    class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
         filtering = {
             'description': ALL_WITH_RELATIONS,
@@ -108,12 +90,8 @@ class PublishableResource(ApiModelResource):
     listings = fields.ToManyField(ListingResource, 'listing_set', full=True)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
 
-    class Meta:
-        authentication = Authentication()
-        authorization = Authorization()
-        always_return_data = True
+    class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()
-        resource_name = 'publishable'
         filtering = {
             'announced': ALL_WITH_RELATIONS,
             'app_data': ALL_WITH_RELATIONS,
@@ -138,12 +116,8 @@ class PublishableResource(ApiModelResource):
 
 
 class ArticleResource(PublishableResource):
-    class Meta:
-        authentication = Authentication()
-        authorization = Authorization()
-        always_return_data = True
+    class Meta(ApiModelResource.Meta):
         queryset = Article.objects.all()
-        resource_name = 'article'
         filtering = {
             'announced': ALL_WITH_RELATIONS,
             'app_data': ALL_WITH_RELATIONS,
