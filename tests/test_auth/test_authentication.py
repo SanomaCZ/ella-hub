@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from tastypie.models import ApiKey
 
 
-class TestGetResources(unittest.TestCase):
+class TestAuthentication(unittest.TestCase):
     def setUp(self):
         self.user = self.__create_test_user("user", "pass")
         self.client = Client()
