@@ -4,6 +4,7 @@ from tastypie.resources import ALL_WITH_RELATIONS
 from tastypie import fields
 
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 
 from ella_hub.resources import ApiModelResource
 from ella.core.models import Publishable, Listing, Category, Author
@@ -13,7 +14,20 @@ from ella.articles.models import Article
 from ella_hub.models import Draft
 
 
+class SiteResource(ApiModelResource):
+    class Meta(ApiModelResource.Meta):
+        queryset = Site.objects.all()
+        filtering = {
+            'domain': ALL_WITH_RELATIONS,
+            'id' : ALL_WITH_RELATIONS,
+            'name' : ALL_WITH_RELATIONS,
+            'resource_uri' : ALL_WITH_RELATIONS
+        }
+
+
 class CategoryResource(ApiModelResource):
+    site = fields.ForeignKey(SiteResource, 'site', full=True)
+
     class Meta(ApiModelResource.Meta):
         queryset = Category.objects.all()
         filtering = {
@@ -22,6 +36,7 @@ class CategoryResource(ApiModelResource):
             'description': ALL_WITH_RELATIONS,
             'id': ALL_WITH_RELATIONS,
             'resource_uri': ALL_WITH_RELATIONS,
+            'site_id': ALL_WITH_RELATIONS,
             'slug': ALL_WITH_RELATIONS,
             'template': ALL_WITH_RELATIONS,
             'title': ALL_WITH_RELATIONS,
@@ -58,18 +73,6 @@ class PhotoResource(ApiModelResource):
         }
 
 
-class ListingResource(ApiModelResource):
-    class Meta(ApiModelResource.Meta):
-        queryset = Listing.objects.all()
-        filtering = {
-            'commercial': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'publish_from': ALL_WITH_RELATIONS,
-            'publish_to': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-        }
-
-
 class AuthorResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
@@ -84,31 +87,10 @@ class AuthorResource(ApiModelResource):
         }
 
 
-class DraftResource(ApiModelResource):
-    author = fields.ForeignKey(AuthorResource, 'author', full=True)
-
-    def build_filters(self, filters=None):
-        orm_filters = super(DraftResource, self).build_filters(filters)
-
-        if 'content_type' in filters:
-            orm_filters['content_type__name__iexact'] = filters['content_type']
-
-        return orm_filters
-
-    class Meta(ApiModelResource.Meta):
-        queryset = Draft.objects.all()
-        filtering = {
-            'content_type': ['exact'],
-            'name': ['exact'],
-            'author': ALL_WITH_RELATIONS,
-            'timestamp': ALL_WITH_RELATIONS,
-        }
-
-
 class PublishableResource(ApiModelResource):
     photo = fields.ForeignKey(PhotoResource, 'photo', null=True)
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
-    listings = fields.ToManyField(ListingResource, 'listing_set', full=True)
+    #listings = fields.ToManyField(ListingResource, 'listing_set', full=True)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
 
     class Meta(ApiModelResource.Meta):
@@ -134,6 +116,45 @@ class PublishableResource(ApiModelResource):
     def dehydrate(self, bundle):
         bundle.data['url'] = bundle.obj.get_domain_url()
         return bundle
+
+
+
+class ListingResource(ApiModelResource):
+    publishable = fields.ForeignKey(PublishableResource, 'publishable', full=True)
+    category = fields.ForeignKey(CategoryResource, 'category', full=True)
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Listing.objects.all()
+        filtering = {
+            'category': ALL_WITH_RELATIONS,
+            'commercial': ALL_WITH_RELATIONS,
+            'id': ALL_WITH_RELATIONS,
+            'publish_from': ALL_WITH_RELATIONS,
+            'publish_to': ALL_WITH_RELATIONS,
+            'publishable': ALL_WITH_RELATIONS,
+            'resource_uri': ALL_WITH_RELATIONS,
+        }
+
+
+class DraftResource(ApiModelResource):
+    author = fields.ForeignKey(AuthorResource, 'author', full=True)
+
+    def build_filters(self, filters=None):
+        orm_filters = super(DraftResource, self).build_filters(filters)
+
+        if 'content_type' in filters:
+            orm_filters['content_type__name__iexact'] = filters['content_type']
+
+        return orm_filters
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Draft.objects.all()
+        filtering = {
+            'content_type': ['exact'],
+            'name': ['exact'],
+            'author': ALL_WITH_RELATIONS,
+            'timestamp': ALL_WITH_RELATIONS,
+        }
 
 
 class ArticleResource(PublishableResource):
