@@ -134,6 +134,7 @@ INSTALLED_APPS = (
     'ella.photos',
     'ella.articles',
 
+    'guardian',
     'tastypie',
     'ella_hub',  # install it via python setup.py develop
 )
@@ -142,6 +143,15 @@ INSTALLED_APPS = (
 RESOURCE_MODULES = (
     'ella_hub.ella_resources',
 )
+
+# django-guardian auth. backends
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'guardian.backends.ObjectPermissionBackend',
+)
+
+# django-guardian anonym. user
+ANONYMOUS_USER_ID = -1
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
