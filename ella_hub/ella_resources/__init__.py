@@ -5,6 +5,7 @@ from tastypie import fields
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.utils import simplejson
 
 from ella_hub.resources import ApiModelResource
@@ -15,7 +16,20 @@ from ella.articles.models import Article
 from ella_hub.models import Draft
 
 
+class SiteResource(ApiModelResource):
+    class Meta(ApiModelResource.Meta):
+        queryset = Site.objects.all()
+        filtering = {
+            'domain': ALL_WITH_RELATIONS,
+            'id' : ALL_WITH_RELATIONS,
+            'name' : ALL_WITH_RELATIONS,
+            'resource_uri' : ALL_WITH_RELATIONS
+        }
+
+
 class CategoryResource(ApiModelResource):
+    site = fields.ForeignKey(SiteResource, 'site', full=True)
+
     class Meta(ApiModelResource.Meta):
         queryset = Category.objects.all()
         filtering = {
@@ -24,6 +38,7 @@ class CategoryResource(ApiModelResource):
             'description': ALL_WITH_RELATIONS,
             'id': ALL_WITH_RELATIONS,
             'resource_uri': ALL_WITH_RELATIONS,
+            'site_id': ALL_WITH_RELATIONS,
             'slug': ALL_WITH_RELATIONS,
             'template': ALL_WITH_RELATIONS,
             'title': ALL_WITH_RELATIONS,
@@ -60,18 +75,6 @@ class PhotoResource(ApiModelResource):
         }
 
 
-class ListingResource(ApiModelResource):
-    class Meta(ApiModelResource.Meta):
-        queryset = Listing.objects.all()
-        filtering = {
-            'commercial': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'publish_from': ALL_WITH_RELATIONS,
-            'publish_to': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-        }
-
-
 class AuthorResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
@@ -83,6 +86,55 @@ class AuthorResource(ApiModelResource):
             'resource_uri': ALL_WITH_RELATIONS,
             'slug': ALL_WITH_RELATIONS,
             'text': ALL_WITH_RELATIONS,
+        }
+
+
+class PublishableResource(ApiModelResource):
+    photo = fields.ForeignKey(PhotoResource, 'photo', null=True)
+    authors = fields.ToManyField(AuthorResource, 'authors', full=True)
+    #listings = fields.ToManyField(ListingResource, 'listing_set', full=True)
+    category = fields.ForeignKey(CategoryResource, 'category', full=True)
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Publishable.objects.all()
+        filtering = {
+            'announced': ALL_WITH_RELATIONS,
+            'app_data': ALL_WITH_RELATIONS,
+            'authors': ALL_WITH_RELATIONS,
+            'category': ALL_WITH_RELATIONS,
+            'description': ALL_WITH_RELATIONS,
+            'id': ALL_WITH_RELATIONS,
+            'listings': ALL_WITH_RELATIONS,
+            'photo': ALL_WITH_RELATIONS,
+            'publish_from': ALL_WITH_RELATIONS,
+            'publish_to': ALL_WITH_RELATIONS,
+            'published': ALL_WITH_RELATIONS,
+            'resource_uri': ALL_WITH_RELATIONS,
+            'slug': ALL_WITH_RELATIONS,
+            'static': ALL_WITH_RELATIONS,
+            'title': ALL_WITH_RELATIONS,
+        }
+
+    def dehydrate(self, bundle):
+        bundle.data['url'] = bundle.obj.get_domain_url()
+        return bundle
+
+
+
+class ListingResource(ApiModelResource):
+    publishable = fields.ForeignKey(PublishableResource, 'publishable', full=True)
+    category = fields.ForeignKey(CategoryResource, 'category', full=True)
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Listing.objects.all()
+        filtering = {
+            'category': ALL_WITH_RELATIONS,
+            'commercial': ALL_WITH_RELATIONS,
+            'id': ALL_WITH_RELATIONS,
+            'publish_from': ALL_WITH_RELATIONS,
+            'publish_to': ALL_WITH_RELATIONS,
+            'publishable': ALL_WITH_RELATIONS,
+            'resource_uri': ALL_WITH_RELATIONS,
         }
 
 
@@ -137,37 +189,6 @@ class DraftResource(ApiModelResource):
             'author': ALL_WITH_RELATIONS,
             'timestamp': ALL_WITH_RELATIONS,
         }
-
-
-class PublishableResource(ApiModelResource):
-    photo = fields.ForeignKey(PhotoResource, 'photo', null=True)
-    authors = fields.ToManyField(AuthorResource, 'authors', full=True)
-    listings = fields.ToManyField(ListingResource, 'listing_set', full=True)
-    category = fields.ForeignKey(CategoryResource, 'category', full=True)
-
-    class Meta(ApiModelResource.Meta):
-        queryset = Publishable.objects.all()
-        filtering = {
-            'announced': ALL_WITH_RELATIONS,
-            'app_data': ALL_WITH_RELATIONS,
-            'authors': ALL_WITH_RELATIONS,
-            'category': ALL_WITH_RELATIONS,
-            'description': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'listings': ALL_WITH_RELATIONS,
-            'photo': ALL_WITH_RELATIONS,
-            'publish_from': ALL_WITH_RELATIONS,
-            'publish_to': ALL_WITH_RELATIONS,
-            'published': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-            'slug': ALL_WITH_RELATIONS,
-            'static': ALL_WITH_RELATIONS,
-            'title': ALL_WITH_RELATIONS,
-        }
-
-    def dehydrate(self, bundle):
-        bundle.data['url'] = bundle.obj.get_domain_url()
-        return bundle
 
 
 class ArticleResource(PublishableResource):
