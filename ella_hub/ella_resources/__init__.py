@@ -49,9 +49,9 @@ class CategoryResource(ApiModelResource):
 class UserResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = User.objects.all()
+        fields = ('id', 'first_name', 'last_name', 'username')
         filtering = {
-            'id': ALL_WITH_RELATIONS,
-            'username': ALL_WITH_RELATIONS,
+            'username': ('exact',),
         }
 
 
@@ -149,6 +149,14 @@ class DraftResource(ApiModelResource):
 
         return orm_filters
 
+    def apply_filters(self, request, applicable_filters):
+        """
+        Always return only subset of objects that logged `user` owns.
+        """
+        object_list = super(DraftResource, self).apply_filters(request,
+            applicable_filters)
+        return object_list.filter(user=request.user)
+
     def hydrate(self, bundle):
         """
         Translates content_type name into real Django ContentType object.
@@ -184,9 +192,8 @@ class DraftResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Draft.objects.all()
         filtering = {
-            'content_type': ['exact'],
-            'name': ['exact'],
-            'user': ALL_WITH_RELATIONS,
+            'content_type': ('exact',),
+            'name': ('exact',),
             'timestamp': ALL_WITH_RELATIONS,
         }
 
