@@ -86,10 +86,9 @@ class TestDraft(unittest.TestCase):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        author = Author.objects.create(user=self.user)
         data = json.dumps({
             "content_type": "article",
-            "author": "/admin-api/author/%d/" % author.pk,
+            "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
@@ -98,7 +97,7 @@ class TestDraft(unittest.TestCase):
         resource = self.__get_response_json(response)
 
         tools.assert_true(isinstance(resource, dict))
-        tools.assert_true("author" in resource)
+        tools.assert_true("user" in resource)
         tools.assert_true("data" in resource)
         tools.assert_true("name" in resource)
 
@@ -108,7 +107,6 @@ class TestDraft(unittest.TestCase):
         tools.assert_equals(resource["data"]["field"], "value")
         tools.assert_equals(resource["data"]["another_field"], True)
 
-        author.delete()
         self.__logout(headers)
 
     def test_detail_data_deserialized_and_serialized_as_json(self):
@@ -119,10 +117,9 @@ class TestDraft(unittest.TestCase):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        author = Author.objects.create(user=self.user)
         data = json.dumps({
             "content_type": "article",
-            "author": "/admin-api/author/%d/" % author.pk,
+            "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
@@ -131,7 +128,7 @@ class TestDraft(unittest.TestCase):
         resource = self.__get_response_json(response)
 
         tools.assert_true(isinstance(resource, dict))
-        tools.assert_true("author" in resource)
+        tools.assert_true("user" in resource)
         tools.assert_true("data" in resource)
         tools.assert_true("name" in resource)
 
@@ -153,18 +150,16 @@ class TestDraft(unittest.TestCase):
         tools.assert_equals(resource["data"]["another_field"], True)
 
         Draft.objects.all().delete()
-        author.delete()
         self.__logout(headers)
 
     def test_list_data_deserialized_and_serialized_as_json(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        author = Author.objects.create(user=self.user)
         for id in range(6):
             data = json.dumps({
                 "content_type": "article",
-                "author": "/admin-api/author/%d/" % author.pk,
+                "user": "/admin-api/user/%d/" % self.user.pk,
                 "data": {"id": id, "field": "value", "another_field": True},
             })
             response = self.client.post("/admin-api/draft/", data=data,
@@ -184,7 +179,6 @@ class TestDraft(unittest.TestCase):
             tools.assert_equals(draft["data"]["another_field"], True)
 
         Draft.objects.all().delete()
-        author.delete()
         self.__logout(headers)
 
     def test_draft_data_stored_correctly(self):
@@ -196,10 +190,9 @@ class TestDraft(unittest.TestCase):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        author = Author.objects.create(user=self.user)
         data = json.dumps({
             "content_type": "article",
-            "author": "/admin-api/author/%d/" % author.pk,
+            "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
@@ -207,9 +200,9 @@ class TestDraft(unittest.TestCase):
         tools.assert_equals(response.status_code, 201)
 
         article_ct = ContentType.objects.get(name__iexact="article")
-        draft = Draft.objects.get(content_type=article_ct, author=author)
+        draft = Draft.objects.get(content_type=article_ct, user=self.user)
         tools.assert_equals(draft.content_type, article_ct)
-        tools.assert_equals(draft.author, author)
+        tools.assert_equals(draft.user, self.user)
         tools.assert_equals(draft.name, "")
         tools.assert_equals(type(draft.data), dict)
         tools.assert_equals(draft.data["id"], 222)
@@ -217,7 +210,6 @@ class TestDraft(unittest.TestCase):
         tools.assert_equals(draft.data["another_field"], True)
 
         Draft.objects.all().delete()
-        author.delete()
         self.__logout(headers)
 
     def __login(self, username, password):
@@ -245,13 +237,11 @@ class TestDraft(unittest.TestCase):
 
     def __insert_article_drafts(self, count):
         article_content_type = ContentType.objects.get(name__iexact="article")
-        self.author = Author.objects.create(user=self.user)
 
         for i in range(count):
             Draft.objects.create(content_type=article_content_type,
-                name="draft_%d" % i , author=self.author,
+                name="draft_%d" % i , user=self.user,
                 data={"id": i, "field": "value", "another_field": True})
 
     def __delete_article_drafts(self):
-        self.author.delete()
         Draft.objects.all().delete()

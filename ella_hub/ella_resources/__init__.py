@@ -139,7 +139,7 @@ class ListingResource(ApiModelResource):
 
 
 class DraftResource(ApiModelResource):
-    author = fields.ForeignKey(AuthorResource, 'author', full=True)
+    user = fields.ForeignKey(UserResource, 'user', full=True)
 
     def build_filters(self, filters=None):
         orm_filters = super(DraftResource, self).build_filters(filters)
@@ -186,7 +186,7 @@ class DraftResource(ApiModelResource):
         filtering = {
             'content_type': ['exact'],
             'name': ['exact'],
-            'author': ALL_WITH_RELATIONS,
+            'user': ALL_WITH_RELATIONS,
             'timestamp': ALL_WITH_RELATIONS,
         }
 

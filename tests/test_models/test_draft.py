@@ -19,15 +19,18 @@ class TestDraftModel(unittest.TestCase):
         author_type = ContentType.objects.get(name__iexact="author")
 
         self.user = user = User.objects.create_user(username="user", password="pass")
-        self.author = Author.objects.create(user=self.user, name="Mr. user")
 
         self.article_draft = Draft.objects.create(content_type=article_type,
-            author=self.author, name="Article draft",
+            user=self.user, name="Article draft",
             data={"about": "this is nothing", "useless": [True, False]})
 
         self.author_draft = Draft.objects.create(content_type=author_type,
-            author=self.author, name="Author draft",
+            user=self.user, name="Author draft",
             data={"name": "Olivia Wilde", "nick": "thirteen"})
+
+    def tearDown(self):
+        self.user.delete()
+        Draft.objects.all().delete()
 
     def test_get_article_draft(self):
         draft = Draft.objects.get(content_type__name__iexact="article")
@@ -44,7 +47,7 @@ class TestDraftModel(unittest.TestCase):
     def test_draft_to_string(self):
         content_type = ContentType.objects.get(name__iexact="article")
         draft = Draft.objects.create(content_type=content_type,
-            author=self.author, data="payload")
+            user=self.user, data="payload")
 
         tools.assert_equals(unicode(draft), u"%s %s (%s)" % (
             _("Autosaved"), _(content_type.name), date(draft.timestamp, 'y-m-d H:i')))
@@ -56,8 +59,3 @@ class TestDraftModel(unittest.TestCase):
             u"%s (%s)" % (u"Some title ľščťžýáíé", date(draft.timestamp, 'y-m-d H:i')))
 
         draft.delete()
-
-    def tearDown(self):
-        self.user.delete()
-        self.author.delete()
-        Draft.objects.all().delete()
