@@ -4,6 +4,8 @@ from tastypie.resources import ALL_WITH_RELATIONS
 from tastypie import fields
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.utils import simplejson
 
 from ella_hub.resources import ApiModelResource
 from ella.core.models import Publishable, Listing, Category, Author
@@ -94,6 +96,38 @@ class DraftResource(ApiModelResource):
             orm_filters['content_type__name__iexact'] = filters['content_type']
 
         return orm_filters
+
+    def hydrate(self, bundle):
+        """
+        Translates content_type name into real Django ContentType object.
+
+        Name of content type is case insensitive and correspond to the name
+        of resource.
+        """
+        content_type = ContentType.objects.get(name__iexact=bundle.data['content_type'])
+        bundle.obj.content_type = content_type
+        return bundle
+
+    def alter_list_data_to_serialize(self, request, bundle):
+        """
+        Deserializes `data` JSONField into JSON data.
+        """
+        bundle = super(DraftResource, self).alter_list_data_to_serialize(request, bundle)
+        for object in bundle:
+            self.__alter_data_to_serialize(object)
+
+        return bundle
+
+    def alter_detail_data_to_serialize(self, request, bundle):
+        """
+        Deserializes `data` JSONField into JSON data.
+        """
+        bundle = super(DraftResource, self).alter_detail_data_to_serialize(request, bundle)
+        return self.__alter_data_to_serialize(bundle)
+
+    def __alter_data_to_serialize(self, bundle):
+        bundle.data["data"] = bundle.obj.data
+        return bundle
 
     class Meta(ApiModelResource.Meta):
         queryset = Draft.objects.all()

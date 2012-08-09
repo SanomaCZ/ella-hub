@@ -81,15 +81,142 @@ class TestDraft(unittest.TestCase):
         self.__logout(headers)
         self.__delete_article_drafts()
 
-    def __test_draft_inserted_via_post_method(self):
+    def test_inserted_via_post_method(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        response = self.client.post("/admin-api/draft/", **headers)
+        author = Author.objects.create(user=self.user)
+        data = json.dumps({
+            "content_type": "article",
+            "author": "/admin-api/author/%d/" % author.pk,
+            "data": {"id": 222, "field": "value", "another_field": True},
+        })
+        response = self.client.post("/admin-api/draft/", data=data,
+            content_type="application/json", **headers)
+        tools.assert_equals(response.status_code, 201)
+        resource = self.__get_response_json(response)
+
+        tools.assert_true(isinstance(resource, dict))
+        tools.assert_true("author" in resource)
+        tools.assert_true("data" in resource)
+        tools.assert_true("name" in resource)
+
+        tools.assert_equals(resource["name"], "")
+        tools.assert_equals(type(resource["data"]), dict)
+        tools.assert_equals(resource["data"]["id"], 222)
+        tools.assert_equals(resource["data"]["field"], "value")
+        tools.assert_equals(resource["data"]["another_field"], True)
+
+        author.delete()
+        self.__logout(headers)
+
+    def test_detail_data_deserialized_and_serialized_as_json(self):
+        """
+        Data should be properly serialized and stored as JSON in JSONField
+        and then properly deserialized into JSON object in response.
+        """
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        author = Author.objects.create(user=self.user)
+        data = json.dumps({
+            "content_type": "article",
+            "author": "/admin-api/author/%d/" % author.pk,
+            "data": {"id": 222, "field": "value", "another_field": True},
+        })
+        response = self.client.post("/admin-api/draft/", data=data,
+            content_type="application/json", **headers)
+        tools.assert_equals(response.status_code, 201)
+        resource = self.__get_response_json(response)
+
+        tools.assert_true(isinstance(resource, dict))
+        tools.assert_true("author" in resource)
+        tools.assert_true("data" in resource)
+        tools.assert_true("name" in resource)
+
+        tools.assert_equals(resource["name"], "")
+        tools.assert_equals(type(resource["data"]), dict)
+        tools.assert_equals(resource["data"]["id"], 222)
+        tools.assert_equals(resource["data"]["field"], "value")
+        tools.assert_equals(resource["data"]["another_field"], True)
+
+        # get detail of draft resource
+        response = self.client.get("/admin-api/draft/%d/" % resource["id"], **headers)
+        tools.assert_equals(response.status_code, 200)
+        resource = self.__get_response_json(response)
+
+        tools.assert_equals(resource["name"], "")
+        tools.assert_equals(type(resource["data"]), dict)
+        tools.assert_equals(resource["data"]["id"], 222)
+        tools.assert_equals(resource["data"]["field"], "value")
+        tools.assert_equals(resource["data"]["another_field"], True)
+
+        Draft.objects.all().delete()
+        author.delete()
+        self.__logout(headers)
+
+    def test_list_data_deserialized_and_serialized_as_json(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        author = Author.objects.create(user=self.user)
+        for id in range(6):
+            data = json.dumps({
+                "content_type": "article",
+                "author": "/admin-api/author/%d/" % author.pk,
+                "data": {"id": id, "field": "value", "another_field": True},
+            })
+            response = self.client.post("/admin-api/draft/", data=data,
+                content_type="application/json", **headers)
+            tools.assert_equals(response.status_code, 201)
+
+        response = self.client.get("/admin-api/draft/", **headers)
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
-        tools.assert_equals(len(resources), draft_count)
 
+        resources = sorted(resources, key=lambda i: i["data"]["id"])
+        for id, draft in enumerate(resources):
+            tools.assert_equals(draft["name"], "")
+            tools.assert_equals(type(draft["data"]), dict)
+            tools.assert_equals(draft["data"]["id"], id)
+            tools.assert_equals(draft["data"]["field"], "value")
+            tools.assert_equals(draft["data"]["another_field"], True)
+
+        Draft.objects.all().delete()
+        author.delete()
+        self.__logout(headers)
+
+    def test_draft_data_stored_correctly(self):
+        """
+        Tests if data in JSONFiled are stored as JSON,
+        not as serialized JSON string.
+        """
+
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        author = Author.objects.create(user=self.user)
+        data = json.dumps({
+            "content_type": "article",
+            "author": "/admin-api/author/%d/" % author.pk,
+            "data": {"id": 222, "field": "value", "another_field": True},
+        })
+        response = self.client.post("/admin-api/draft/", data=data,
+            content_type="application/json", **headers)
+        tools.assert_equals(response.status_code, 201)
+
+        article_ct = ContentType.objects.get(name__iexact="article")
+        draft = Draft.objects.get(content_type=article_ct, author=author)
+        tools.assert_equals(draft.content_type, article_ct)
+        tools.assert_equals(draft.author, author)
+        tools.assert_equals(draft.name, "")
+        tools.assert_equals(type(draft.data), dict)
+        tools.assert_equals(draft.data["id"], 222)
+        tools.assert_equals(draft.data["field"], "value")
+        tools.assert_equals(draft.data["another_field"], True)
+
+        Draft.objects.all().delete()
+        author.delete()
         self.__logout(headers)
 
     def __login(self, username, password):
@@ -109,6 +236,7 @@ class TestDraft(unittest.TestCase):
     def __build_headers(self, username, api_key):
         return {
             "HTTP_AUTHORIZATION" : "ApiKey %s:%s" % (username, api_key),
+            "HTTP_CONTENT_TYPE" : "application/json",
         }
 
     def __get_response_json(self, response):
@@ -121,7 +249,7 @@ class TestDraft(unittest.TestCase):
         for i in range(count):
             Draft.objects.create(content_type=article_content_type,
                 name="draft_%d" % i , author=self.author,
-                data='{id: %d, "field": "value", "another_field": true}' % i)
+                data={"id": i, "field": "value", "another_field": True})
 
     def __delete_article_drafts(self):
         self.author.delete()
