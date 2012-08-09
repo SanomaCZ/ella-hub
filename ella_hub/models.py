@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
@@ -30,3 +31,6 @@ class Draft(models.Model):
         verbose_name = _('Draft item')
         verbose_name_plural = _('Draft items')
         ordering = ('-timestamp',)
+
+
+admin.site.register(Draft)
