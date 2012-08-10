@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-
 import re
 import datetime
 try:
@@ -44,23 +40,23 @@ class ApiAuthorization(Authorization):
     __permPrefixes = {"GET":"view_", "POST":"add_", "PUT":"change_", "PATCH":"change_", "DELETE":"delete_"}
     # Suffix of advanced (object-specific) permissions.
     __permObjectSuffix = "_object"
-    # Regular Expression parsing class name from path, 
+    # Regular Expression parsing class name from path,
     # e.g. from /admin-api/author/1/ is author lower-cased Author class.
     __reGetObjectClass = re.compile(r"/[^/]*/(?P<class_name>[^/]*)/.*")
 
     def is_authorized(self, request, object=None):
         if request and hasattr(request, 'user') and not request.user.is_authenticated():
             return False
-        
+
         # TODO multiple query, check tastypie doc!
         requestMethod = request.META['REQUEST_METHOD']
         objectsClassName = self.__reGetObjectClass.match(request.path).group("class_name")
 
         # No need to apply object specific permissions to POST requests
-        # Remark: apply_limits method is NOT called in POST requests 
+        # Remark: apply_limits method is NOT called in POST requests
         if requestMethod == "POST":
             # e.g. add_article is suffix of articles.add_article
-            foundPerm = filter(lambda perm: perm.endswith(self.__permPrefixes[requestMethod] + objectsClassName), 
+            foundPerm = filter(lambda perm: perm.endswith(self.__permPrefixes[requestMethod] + objectsClassName),
                                                           request.user.get_all_permissions())
             if not foundPerm:
                 return False
@@ -70,7 +66,7 @@ class ApiAuthorization(Authorization):
     def apply_limits(self, request, object_list):
         """
         Applying permission limits, this method is NOT called after POST request.
-        
+
         type(request) == django.core.handlers.wsgi.WSGIRequest
         type(object_list) == django.db.models.query.QuerySet
         """
@@ -83,16 +79,16 @@ class ApiAuthorization(Authorization):
         # Request method - one of GET, PUT, PATCH, DELETE (except POST)
         requestMethod = request.META['REQUEST_METHOD']
         objectsClassName = self.__reGetObjectClass.match(request.path).group("class_name")
-        
+
         allowedObjects = []
-        
-        # TODO: add class&object-specific permissions for GET request method ? 
+
+        # TODO: add class&object-specific permissions for GET request method ?
         if requestMethod != "GET":
             for obj in object_list.all():
-                objPermission = self.__permPrefixes[requestMethod] + objectsClassName + self.__permObjectSuffix            
+                objPermission = self.__permPrefixes[requestMethod] + objectsClassName + self.__permObjectSuffix
 
                 if (self.__permPrefixes[requestMethod] + objectsClassName in request.user.get_all_permissions() or
-                    user.has_perm(objPermission, obj)):    
+                    user.has_perm(objPermission, obj)):
                     allowedObjects.append(obj.id)
         else:
             return object_list

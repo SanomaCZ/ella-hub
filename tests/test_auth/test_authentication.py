@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import datetime
 import unittest
 import django.utils.simplejson as json

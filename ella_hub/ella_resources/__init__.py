@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from tastypie.resources import ALL_WITH_RELATIONS
 from tastypie import fields
 
