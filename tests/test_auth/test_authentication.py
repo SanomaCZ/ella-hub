@@ -34,12 +34,15 @@ class TestAuthentication(unittest.TestCase):
         )
 
         for url in URLS:
-            request = self.client.options(url)
-            tools.assert_equals(request.status_code, 200)
+            response = self.client.options(url)
+            tools.assert_equals(response.status_code, 200)
 
     def test_only_post_requests_allowed(self):
         """
         Only POST requests are allowed for API views.
+
+        Browser sends OPTIONS request before crossdomain request so
+        this method is also allowed but returns only headers.
         """
         URLS = (
             "/admin-api/login/",
@@ -48,8 +51,10 @@ class TestAuthentication(unittest.TestCase):
         )
 
         for url in URLS:
-            request = self.client.get(url)
-            tools.assert_equals(request.status_code, 400)
+            response = self.client.get(url)
+            tools.assert_equals(response.status_code, 405)
+            tools.assert_true(response.has_header("Allow"))
+            tools.assert_equals(response["Allow"], "OPTIONS, POST")
 
     def test_unauthorized_when_not_login(self):
         """

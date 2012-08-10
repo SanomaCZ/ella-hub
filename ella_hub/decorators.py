@@ -1,16 +1,14 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotAllowed
 
 
-def cross_domain_post_view(function):
-    @csrf_exempt
-    def decorator(request, *args, **kwargs):
+def cross_domain_api_post_view(function):
+    def decorator(self, request, *args, **kwargs):
         if request.method == "OPTIONS":
             return HttpResponse()
         elif request.method != "POST":
-            return HttpResponseBadRequest("Only POST requests are allowed.")
+            return HttpResponseNotAllowed(["OPTIONS", "POST"])
 
-        return function(request, *args, **kwargs)
+        return function(self, request, *args, **kwargs)
 
     decorator.__name__ = function.__name__
     decorator.__doc__ = function.__doc__
