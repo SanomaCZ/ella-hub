@@ -187,10 +187,12 @@ class DraftResource(ApiModelResource):
 
     def __alter_data_to_serialize(self, bundle):
         bundle.data["data"] = bundle.obj.data
+        bundle.data["content_type"] = bundle.obj.content_type.name.lower()
         return bundle
 
     class Meta(ApiModelResource.Meta):
         queryset = Draft.objects.all()
+        ordering = ('-timestamp',)
         filtering = {
             'content_type': ('exact',),
             'name': ('exact',),
