@@ -11,6 +11,7 @@ except ImportError:
 from inspect import isclass
 
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.utils.importlib import import_module
 from django.utils import simplejson
@@ -86,6 +87,10 @@ class EllaHubApi(Api):
             url(r"^(?P<api_name>%s)/logout/$" % self.api_name, self.wrap_view('logout_view')),
             url(r"^%s/validate-api-key/$" % self.api_name, self.wrap_view('validate_api_key_view'))
         ]
+
+    def wrap_view(self, view):
+        wrapped_view = super(EllaHubApi, self).wrap_view(view)
+        return csrf_exempt(wrapped_view)
 
     @cross_domain_api_post_view
     def login_view(self, request):
