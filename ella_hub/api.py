@@ -26,8 +26,6 @@ from ella_hub.resources import ApiModelResource
 # generate API key for new user
 models.signals.post_save.connect(create_api_key, sender=User)
 
-APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):(.+)", re.IGNORECASE)
-
 
 class HttpResponseUnauthorized(HttpResponse):
     def __init__(self):
@@ -97,7 +95,8 @@ class EllaHubApi(Api):
             try:
                 api_key = ApiKey.objects.get(user=user)
             except ApiKey.DoesNotExist:
-                return HttpResponseUnauthorized()
+                api_key = ApiKey.objects.create(user=user)
+
             login(request, user)
             return HttpResponse(simplejson.dumps({
                 "api_key": self.__regenerate_key(api_key),
@@ -107,49 +106,38 @@ class EllaHubApi(Api):
 
     @cross_domain_api_post_view
     def logout_view(self, request, api_name):
+        if request.user.is_anonymous():
+            return HttpResponseUnauthorized()
+
         try:
-            user_name, key = self.__parse_authorization_header(request)
-            api_key = ApiKey.objects.get(user__username=user_name, key=key)
-        except ValueError:
-            return HttpResponseBadRequest()
+            api_key = ApiKey.objects.get(user=request.user)
         except ApiKey.DoesNotExist:
             return HttpResponseUnauthorized()
-        else: # change API key
-            self.__regenerate_key(api_key)
 
+        self.__regenerate_key(api_key)
         logout(request)
+
         return HttpResponseRedirect('/%s/' % api_name)
 
     @cross_domain_api_post_view
     def validate_api_key_view(self, request):
+        if request.user.is_anonymous():
+            return self.__build_response(False)
+
         try:
-            user_name, key = self.__parse_authorization_header(request)
-            api_key = ApiKey.objects.get(user__username=user_name, key=key)
-        except ValueError:
-            return HttpResponseBadRequest()
+            api_key = ApiKey.objects.get(user=request.user)
         except ApiKey.DoesNotExist:
-            return HttpResponse(simplejson.dumps({
-                "api_key_validity": False,
-            }))
+            return self.__build_response(False)
         else:
             expiration_time = api_key.created + datetime.timedelta(weeks=2)
-            return HttpResponse(simplejson.dumps({
-                "api_key_validity": timezone.now() < expiration_time,
-            }))
+            return self.__build_response(timezone.now() < expiration_time)
+
+    def __build_response(self, api_key_validity):
+        return HttpResponse(simplejson.dumps({
+            "api_key_validity": api_key_validity,
+        }))
 
     def __regenerate_key(self, api_key):
         api_key.key = api_key.generate_key()
         api_key.save()
         return api_key.key
-
-    def __parse_authorization_header(self, request):
-        authorization_header = request.META.get('HTTP_AUTHORIZATION')
-        if authorization_header is None:
-            raise ValueError("Authorization header missing")
-
-        match = APIKEY_HEADER_PATTERN.match(authorization_header)
-        if not match:
-            raise ValueError("Authorization header in wrong format")
-
-        # return username, api_key pair
-        return match.groups()

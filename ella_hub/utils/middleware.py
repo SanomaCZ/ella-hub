@@ -2,11 +2,10 @@ import re
 import datetime
 
 from django.conf import settings
+from django.contrib.auth.models import User, AnonymousUser
 from tastypie.models import ApiKey
 
 from ella_hub.utils import timezone
-
-APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):(.+)", re.IGNORECASE)
 
 
 class CrossDomainAccessMiddleware(object):
@@ -40,28 +39,52 @@ class CrossDomainAccessMiddleware(object):
         return response
 
 
-class APIKeyRefresherMiddleware(object):
+class AuthenticationMiddleware(object):
+    __APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):(.+)", re.IGNORECASE)
+    API_KEY_EXPIRATION_IN_DAYS = 14
+
     def process_request(self, request):
-        api_key = self.__get_api_key(request)
-        if not api_key:
-            return
-
-        expiration_time = api_key.created + datetime.timedelta(weeks=2)
-        if timezone.now() < expiration_time:
-            api_key.created = timezone.now()
-            api_key.save()
-
-    def __get_api_key(self, request):
-        authorization_header = request.META.get('HTTP_AUTHORIZATION')
-        if authorization_header is None:
-            return None
-
-        match = APIKEY_HEADER_PATTERN.match(authorization_header)
-        if not match:
-            return None
-
-        username, api_key = match.groups()
         try:
-            return ApiKey.objects.get(user__username=username, key=api_key)
-        except ApiKey.DoesNotExist:
+            username, key_token = self._extract_credentials(request)
+            api_key = ApiKey.objects.get(user__username=username, key=key_token)
+            if not self._is_api_key_valid(api_key):
+                raise ValueError("API key expired.")
+        except (ValueError, ApiKey.DoesNotExist):
+            self.__set_anonymous_user(request)
             return None
+
+        self._refresh_api_key_expiration_time(api_key)
+        request.user = User.objects.get(username=username)
+        return None
+
+    def _extract_credentials(self, request):
+        if self._authentication_header_is_set(request):
+            match = AuthenticationMiddleware.__APIKEY_HEADER_PATTERN.match(
+                request.META["HTTP_AUTHORIZATION"])
+
+            if not match:
+                raise ValueError("Incorrect authorization header.")
+
+            username, api_key = match.groups()
+        else:
+            username = request.GET.get("username") or request.POST.get("username")
+            api_key = request.GET.get("api_key") or request.POST.get("api_key")
+
+        return username, api_key
+
+    def _authentication_header_is_set(self, request):
+        if not request.META.get("HTTP_AUTHORIZATION"):
+            return False
+        return request.META["HTTP_AUTHORIZATION"].lower().startswith("apikey ")
+
+    def __set_anonymous_user(self, request):
+        request.user = AnonymousUser()
+
+    def _is_api_key_valid(self, api_key):
+        expiration_time = api_key.created + datetime.timedelta(
+            days=AuthenticationMiddleware.API_KEY_EXPIRATION_IN_DAYS)
+        return timezone.now() < expiration_time
+
+    def _refresh_api_key_expiration_time(self, api_key):
+        api_key.created = timezone.now()
+        api_key.save()

@@ -71,7 +71,7 @@ class TestAuthentication(unittest.TestCase):
         tools.assert_equals(response.status_code, 401)
 
         response = self.client.post("/admin-api/logout/", **headers)
-        tools.assert_equals(response.status_code, 400)
+        tools.assert_equals(response.status_code, 401)
 
     def test_unauthorized_for_wrong_api_key(self):
         api_key = self.__login("user", "pass")
@@ -90,34 +90,43 @@ class TestAuthentication(unittest.TestCase):
 
     def test_missing_authorization_header(self):
         """
-        Return "400 Bad Request" if header with API key is missing.
+        Return "401 Unauthorized" if header with API key is missing.
         """
-        for url in ("/admin-api/logout/", "/admin-api/validate-api-key/"):
-            response = self.client.post(url)
-            tools.assert_equals(response.status_code, 400)
+        response = self.client.post("/admin-api/logout/")
+        tools.assert_equals(response.status_code, 401)
+
+    def test_missing_api_key_for_user(self):
+        user = self.__create_test_user("api_key", "secret")
+        ApiKey.objects.get(user=user).delete()
+
+        api_key = self.__login("api_key", "secret")
+        headers = self.__build_headers("api_key", api_key)
+        self.__logout(headers)
 
     def test_api_key_validity(self):
         """
         Return information about API key expiration validity.
         """
-        api_key = self.__login("user", "pass")
-
         TEST_CASES = (
-            # username, API key, expected validity
-            ("user", api_key, True),
-            ("use", api_key, False), # wrong username
-            ("user", api_key[:-1], False), # wrong API key
-            ("pepek", "spinach", False), # wrong username and API key
+            # username, API key modifier, expected validity
+            ("user", lambda k: k, True),
+            ("use", lambda k: k, False), # wrong username
+            ("user", lambda k: k[:-1], False), # wrong API key
+            ("use", lambda k: k[:-1], False), # wrong username and API key
         )
 
-        for username, api_key, expected in TEST_CASES:
+        for username, api_key_modifier, expected in TEST_CASES:
+            api_key = api_key_modifier(self.__login("user", "pass"))
             headers = self.__build_headers(username, api_key)
+
             response = self.client.post('/admin-api/validate-api-key/', **headers)
             resources = self.__get_response_json(response)
 
             tools.assert_true("api_key_validity" in resources)
             tools.assert_equals(resources["api_key_validity"],
                 expected, "Header pair %s:%s>" % (username, api_key))
+
+            self.__logout(headers, 302 if expected else 401)
 
     def test_api_key_expiration(self):
         api_key = self.__login("user", "pass")
@@ -133,7 +142,7 @@ class TestAuthentication(unittest.TestCase):
         response = self.client.get("/admin-api/article/", **headers)
         tools.assert_equals(response.status_code, 401)
 
-        self.__logout(headers)
+        self.__logout(headers, 401)
 
     def test_unauthorized_with_wrong_credentials(self):
         """
@@ -177,9 +186,9 @@ class TestAuthentication(unittest.TestCase):
 
         return resources["api_key"]
 
-    def __logout(self, headers):
+    def __logout(self, headers, status_code=302):
         response = self.client.post('/admin-api/logout/', **headers)
-        tools.assert_equals(response.status_code, 302)
+        tools.assert_equals(response.status_code, status_code)
 
     def __build_headers(self, username, api_key):
         return {
