@@ -1,21 +1,15 @@
 import re
 import datetime
-try:
-    # try import offset-aware datetime from Django >= 1.4
-    from django.utils.timezone import now as datetime_now
-except ImportError:
-    # backward compatibility with Django < 1.4 (offset-naive datetimes)
-    datetime_now = datetime.datetime.now
 
 from django.template import RequestContext
 from django.contrib.auth.models import User
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.models import ApiKey
-
+from guardian.shortcuts import assign
 from ella.core.models import Category
 
-from guardian.shortcuts import assign
+from ella_hub.utils import timezone
 
 
 class ApiAuthentication(Authentication):
@@ -26,9 +20,7 @@ class ApiAuthentication(Authentication):
         api_key = ApiKey.objects.get(user__username=username, key=key)
 
         expiration_time = api_key.created + datetime.timedelta(weeks=2)
-        return datetime_now() < expiration_time
-
-
+        return timezone.now() < expiration_time
 
 
 class ApiAuthorization(Authorization):

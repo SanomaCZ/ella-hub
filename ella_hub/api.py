@@ -1,12 +1,6 @@
 import re
 import ella_hub.views
 import datetime
-try:
-    # try import offset-aware datetime from Django >= 1.4
-    from django.utils.timezone import now as datetime_now
-except ImportError:
-    # backward compatibility with Django < 1.4 (offset-naive datetimes)
-    datetime_now = datetime.datetime.now
 
 from inspect import isclass
 
@@ -25,6 +19,7 @@ from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
 from tastypie.models import create_api_key
 
+from ella_hub.utils import timezone
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
 
@@ -139,7 +134,7 @@ class EllaHubApi(Api):
         else:
             expiration_time = api_key.created + datetime.timedelta(weeks=2)
             return HttpResponse(simplejson.dumps({
-                "api_key_validity": datetime_now() < expiration_time,
+                "api_key_validity": timezone.now() < expiration_time,
             }))
 
     def __regenerate_key(self, api_key):

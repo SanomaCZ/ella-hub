@@ -1,14 +1,10 @@
 import re
 import datetime
-try:
-    # try import offset-aware datetime from Django >= 1.4
-    from django.utils.timezone import now as datetime_now
-except ImportError:
-    # backward compatibility with Django < 1.4 (offset-naive datetimes)
-    datetime_now = datetime.datetime.now
 
 from django.conf import settings
 from tastypie.models import ApiKey
+
+from ella_hub.utils import timezone
 
 APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):(.+)", re.IGNORECASE)
 
@@ -51,8 +47,8 @@ class APIKeyRefresherMiddleware(object):
             return
 
         expiration_time = api_key.created + datetime.timedelta(weeks=2)
-        if datetime_now() < expiration_time:
-            api_key.created = datetime_now()
+        if timezone.now() < expiration_time:
+            api_key.created = timezone.now()
             api_key.save()
 
     def __get_api_key(self, request):
