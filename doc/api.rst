@@ -232,12 +232,33 @@ POST
 
 - "Content-Type: application/json"
 
-- to create new resources/objects, you will POST to the list endpoint of a resource, trying to POST to a detail endpoint has a different meaning in the REST mindset (meaning to add a resource as a child of a resource of the same type
+- to create new resources/objects, you will POST to the list endpoint of a resource, trying to POST to a detail endpoint has a different meaning in the REST mindset (meaning to add a resource as a child of a resource of the same type)
 
-To create new resource:
-::
+- related objects are identified by their resource URI
 
- http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
+To create new resource (article) send POST request:
+
+ ::
+
+	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
+	http://crawler.bfhost.cz:12345/admin-api/article/
+
+ ::
+
+	{
+	    "title": "Article title",
+	    "authors": ["/admin-api/user/6/", "/admin-api/user/1/"],
+	    "content": "Unicode text",
+	    "description": "Perex",
+	    "publish_from_date": "2012-08-09",
+	    "publish_from_time": "15:47",
+	    "published": true,
+	    "category": "/admin-api/category/2/",
+	    "last_updated": "2012-08-07T09:47:44",
+	    "publish_from": "2012-08-09T15:47",
+	    "slug": "slug-like-a-hmm",
+	    "static": true
+	}
 
 
 PUT
