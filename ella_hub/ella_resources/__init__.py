@@ -143,7 +143,7 @@ class DraftResource(ApiModelResource):
         orm_filters = super(DraftResource, self).build_filters(filters)
 
         if 'content_type' in filters:
-            orm_filters['content_type__name__iexact'] = filters['content_type']
+            orm_filters['content_type__model__iexact'] = filters['content_type']
 
         return orm_filters
 
@@ -162,7 +162,7 @@ class DraftResource(ApiModelResource):
         Name of content type is case insensitive and correspond to the name
         of resource.
         """
-        content_type = ContentType.objects.get(name__iexact=bundle.data['content_type'])
+        content_type = ContentType.objects.get(model__iexact=bundle.data['content_type'])
         bundle.obj.content_type = content_type
         return bundle
 
@@ -185,7 +185,7 @@ class DraftResource(ApiModelResource):
 
     def __alter_data_to_serialize(self, bundle):
         bundle.data["data"] = bundle.obj.data
-        bundle.data["content_type"] = bundle.obj.content_type.name.lower()
+        bundle.data["content_type"] = bundle.obj.content_type.model.lower()
         return bundle
 
     class Meta(ApiModelResource.Meta):
