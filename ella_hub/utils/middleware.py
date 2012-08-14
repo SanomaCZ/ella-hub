@@ -44,6 +44,10 @@ class AuthenticationMiddleware(object):
     API_KEY_EXPIRATION_IN_DAYS = 14
 
     def process_request(self, request):
+        # ignore authentication to Django admin
+        if request.path.startswith("/admin/"):
+            return
+
         try:
             username, key_token = self._extract_credentials(request)
             api_key = ApiKey.objects.get(user__username=username, key=key_token)
