@@ -1,13 +1,13 @@
 import re
 import datetime
 
+from tastypie.exceptions import ImmediateHttpResponse
+from tastypie.http import HttpUnauthorized, HttpForbidden
 from django.template import RequestContext
 from django.contrib.auth.models import User
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.models import ApiKey
-from guardian.shortcuts import assign
-from ella.core.models import Category
 
 from ella_hub.utils import timezone
 
@@ -46,6 +46,7 @@ class ApiAuthorization(Authorization):
 
         # No need to apply object specific permissions to POST requests
         # Remark: apply_limits method is NOT called in POST requests
+        # Q: return 403 instead of 401 ? 
         if requestMethod == "POST":
             # e.g. add_article is suffix of articles.add_article
             foundPerm = filter(lambda perm: perm.endswith(self.__permPrefixes[requestMethod] + objectsClassName),
@@ -74,16 +75,22 @@ class ApiAuthorization(Authorization):
 
         allowedObjects = []
 
-        # TODO: add class&object-specific permissions for GET request method ?
+        # TODO: add class&object-specific permissions for GET request method.
         if requestMethod != "GET":
             for obj in object_list.all():
                 objPermission = self.__permPrefixes[requestMethod] + objectsClassName + self.__permObjectSuffix
 
-                if (self.__permPrefixes[requestMethod] + objectsClassName in request.user.get_all_permissions() or
-                    user.has_perm(objPermission, obj)):
+                foundPerm = filter(lambda perm: perm.endswith(self.__permPrefixes[requestMethod] + objectsClassName),
+                                                          request.user.get_all_permissions())
+                
+                if (foundPerm or user.has_perm(objPermission, obj)):
                     allowedObjects.append(obj.id)
+
         else:
             return object_list
+
+        if not allowedObjects and object_list:
+            raise ImmediateHttpResponse(response=HttpForbidden())
 
         # Filtering allowed objects.
         object_list = object_list.filter(id__in=allowedObjects)
