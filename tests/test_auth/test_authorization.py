@@ -50,6 +50,10 @@ class TestAuthorization(unittest.TestCase):
         # Creating temporary image.
         self.photoFileName = ".test_image.jpg"
         image = Image.new('RGB', (200, 100), "black")
+        
+        if not os.path.exists(settings.MEDIA_ROOT):
+            os.makedirs(settings.MEDIA_ROOT)
+
         image.save(settings.MEDIA_ROOT + "/" + self.photoFileName, format="jpeg")
 
         self.newAuthor = json.dumps({
