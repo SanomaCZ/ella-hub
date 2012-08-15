@@ -32,6 +32,10 @@ class TestGetResources(unittest.TestCase):
         tools.assert_true("list_endpoint" in resources["user"])
         tools.assert_true("schema" in resources["user"])
 
+        tools.assert_true("site" in resources)
+        tools.assert_true("list_endpoint" in resources["site"])
+        tools.assert_true("schema" in resources["site"])
+
         tools.assert_true("article" in resources)
         tools.assert_true("list_endpoint" in resources["article"])
         tools.assert_true("schema" in resources["article"])
