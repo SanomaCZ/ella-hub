@@ -4,7 +4,10 @@ import django.utils.simplejson as json
 from nose import tools
 from django.test.client import Client
 from django.contrib.auth.models import User
-from ella.utils.test_helpers import create_basic_categories, create_and_place_a_publishable
+from ella.utils.test_helpers import create_basic_categories
+from ella.utils import timezone
+
+from ella_hub.models import CommonArticle, Recipe, Encyclopedia, PagedArticle
 
 
 class TestGetResources(unittest.TestCase):
@@ -12,10 +15,21 @@ class TestGetResources(unittest.TestCase):
         self.user = self.__create_test_user("user", "pass")
         self.client = Client()
         create_basic_categories(self)
-        create_and_place_a_publishable(self)
+        CommonArticle.objects.create(title="Jop",
+            category=self.category, publish_from=timezone.now(), slug="jop")
+        Recipe.objects.create(title="Spinach", category=self.category_nested,
+            publish_from=timezone.now(), slug="spinach", cook_time=30)
+        Encyclopedia.objects.create(title="Jop3", category=self.category,
+            publish_from=timezone.now(), slug="jop3")
+        PagedArticle.objects.create(title="Jop4", category=self.category,
+            publish_from=timezone.now(), slug="jop4")
 
     def tearDown(self):
         self.user.delete()
+        CommonArticle.objects.all().delete()
+        Recipe.objects.all().delete()
+        Encyclopedia.objects.all().delete()
+        PagedArticle.objects.all().delete()
 
     def __create_test_user(self, username, password, is_admin=False):
         user = User.objects.create_user(username=username, password=password)

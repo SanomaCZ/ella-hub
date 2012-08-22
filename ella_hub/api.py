@@ -36,6 +36,8 @@ class EllaHubApi(Api):
     """
     """
 
+    registered_resources = {}
+
     def collect_resources(self):
         resource_modules = []
 
@@ -68,8 +70,10 @@ class EllaHubApi(Api):
     def register_resources(self, resources):
         "Register one or more resources"
 
-        for one in resources:
-            self.register(one())
+        for resource_class in resources:
+            resource = resource_class()
+            EllaHubApi.registered_resources[resource._meta.resource_name] = resource
+            self.register(resource)
 
     def prepend_urls(self):
         """
@@ -141,3 +145,12 @@ class EllaHubApi(Api):
         api_key.key = api_key.generate_key()
         api_key.save()
         return api_key.key
+
+
+def get_resource_by_name(resource_name):
+    return EllaHubApi.registered_resources[resource_name]
+
+
+def get_model_name(resource_name):
+    resource = EllaHubApi.registered_resources[resource_name]
+    return resource._meta.object_class.__name__.lower()

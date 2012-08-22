@@ -132,7 +132,6 @@ INSTALLED_APPS = (
 
     'ella.core',
     'ella.photos',
-    'ella.articles',
 
     'tastypie',
     'ella_hub',  # install it via python setup.py develop

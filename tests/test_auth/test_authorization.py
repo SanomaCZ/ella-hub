@@ -23,9 +23,9 @@ class PatchClient(Client):
     """
     def patch(self, path, data={}, content_type=MULTIPART_CONTENT, **extra):
         "Construct a PATCH request."
- 
+
         patch_data = self._encode_data(data, content_type)
- 
+
         parsed = urlparse(path)
         r = {
             'CONTENT_LENGTH': len(patch_data),
@@ -50,29 +50,29 @@ class TestAuthorization(unittest.TestCase):
         # Creating temporary image.
         self.photoFileName = ".test_image.jpg"
         image = Image.new('RGB', (200, 100), "black")
-        
+
         if not os.path.exists(settings.MEDIA_ROOT):
             os.makedirs(settings.MEDIA_ROOT)
 
         image.save(settings.MEDIA_ROOT + "/" + self.photoFileName, format="jpeg")
 
         self.newAuthor = json.dumps({
-            'description':"this is descr.", 
-            'email':"mail@mail.com", 
-            'id':100, 
-            'name':"dumb_name", 
-            'resource_uri':"/admin-api/author/100/", 
-            'slug':"dumb-name", 
+            'description':"this is descr.",
+            'email':"mail@mail.com",
+            'id':100,
+            'name':"dumb_name",
+            'resource_uri':"/admin-api/author/100/",
+            'slug':"dumb-name",
             'text':"this is text"})
 
         self.newUser = json.dumps({
-            'email':"user@mail.com", 
+            'email':"user@mail.com",
             'first_name': "test",
             "id":100,
-            "is_staff": True, 
-            "is_superuser":True, 
-            "last_name": "user", 
-            "password": "heslo", 
+            "is_staff": True,
+            "is_superuser":True,
+            "last_name": "user",
+            "password": "heslo",
             "resource_uri": "/admin-api/user/100/",
             "username":"test_user"})
 
@@ -90,7 +90,7 @@ class TestAuthorization(unittest.TestCase):
 
         self.newArticle = json.dumps({
             "authors": [
-                {     
+                {
                     "description": "this is descr.",
                     "email": "mail@mail.com",
                     "id": 100,
@@ -149,7 +149,7 @@ class TestAuthorization(unittest.TestCase):
         GROUP1_PERMISSIONS = ("change_author", "add_author", "delete_author")
 
         for perm in GROUP1_PERMISSIONS:
-            group1.permissions.add(Permission.objects.get(codename=perm))    
+            group1.permissions.add(Permission.objects.get(codename=perm))
     	group1.save()
     	return (group1,)
 
@@ -181,36 +181,36 @@ class TestAuthorization(unittest.TestCase):
         headers = self.__build_headers("user", api_key)
 
         self.articleModel_ct = ContentType.objects.get(app_label='core', model='author')
-        
+
         PERMS = ("add", "change", "delete")
 
         for perm in PERMS:
-            perm_article = Permission.objects.get(codename="%s_article" % perm)
+            perm_article = Permission.objects.get(codename="%s_commonarticle" % perm)
             self.group1.permissions.add(perm_article)
- 
+
         self.user.groups.add(self.group1)
 
         # POST
-        response = self.client.post("/admin-api/author/", data=self.newAuthor, 
+        response = self.client.post("/admin-api/author/", data=self.newAuthor,
                                     content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 201)
         # GET
         response = self.client.get("/admin-api/author/100/", **headers)
         tools.assert_equals(response.status_code, 200)
         # PUT
-        response = self.client.put("/admin-api/author/100/", data=self.newAuthor, 
+        response = self.client.put("/admin-api/author/100/", data=self.newAuthor,
                                    content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 202)
         # PATCH
-        response = self.client.patch("/admin-api/author/100/", data=self.newAuthor, 
+        response = self.client.patch("/admin-api/author/100/", data=self.newAuthor,
                                    content_type='application/json', **headers)
-        tools.assert_true(response.status_code, 202)   
+        tools.assert_true(response.status_code, 202)
 
         # Can't handle other resources, f.e. site.
-        response = self.client.post("/admin-api/site/", data=self.newSite, 
+        response = self.client.post("/admin-api/site/", data=self.newSite,
                                     content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 401)
-        
+
         self.__logout(headers)
 
 
@@ -232,34 +232,34 @@ class TestAuthorization(unittest.TestCase):
         )
 
         for (resourceType, newResourceObj) in TEST_CASES:
-            response = self.client.post("/admin-api/%s/" % resourceType, data=newResourceObj, 
+            response = self.client.post("/admin-api/%s/" % resourceType, data=newResourceObj,
                                         content_type='application/json', **headers)
             tools.assert_equals(response.status_code, 201)
 
         self.__logout(headers)
 
         api_key = self.__login("banned_user", "pass2")
-        headers = self.__build_headers("banned_user", api_key)    
+        headers = self.__build_headers("banned_user", api_key)
 
         for (resourceType, newResourceObj) in TEST_CASES:
             # GET
             response = self.client.get("/admin-api/%s/100/" % resourceType, **headers)
             tools.assert_equals(response.status_code, 200)
             # POST
-            response = self.client.post("/admin-api/%s/" % resourceType, data=newResourceObj, 
+            response = self.client.post("/admin-api/%s/" % resourceType, data=newResourceObj,
                                         content_type='application/json', **headers)
             tools.assert_equals(response.status_code, 401)
             # PUT
-            response = self.client.put("/admin-api/%s/100/" % resourceType, data=newResourceObj, 
+            response = self.client.put("/admin-api/%s/100/" % resourceType, data=newResourceObj,
                                        content_type='application/json', **headers)
             tools.assert_equals(response.status_code, 403)
             # PATCH
-            response = self.client.patch("/admin-api/%s/100/" % resourceType, data=newResourceObj, 
+            response = self.client.patch("/admin-api/%s/100/" % resourceType, data=newResourceObj,
                                        content_type='application/json', **headers)
-            tools.assert_true(response.status_code, 403)   
+            tools.assert_true(response.status_code, 403)
             # DELETE
             response = self.client.delete("/admin-api/%s/100/" % resourceType, **headers)
-            tools.assert_equals(response.status_code, 403)           
+            tools.assert_equals(response.status_code, 403)
 
         self.__logout(headers)
 
@@ -286,21 +286,21 @@ class TestAuthorization(unittest.TestCase):
             response = self.client.get("/admin-api/%s/" % resourceType, **headers)
             tools.assert_equals(response.status_code, 200)
             # POST
-            response = self.client.post("/admin-api/%s/" % resourceType, data=newResourceObj, 
+            response = self.client.post("/admin-api/%s/" % resourceType, data=newResourceObj,
                                         content_type='application/json', **headers)
             tools.assert_equals(response.status_code, 201)
             # PUT
-            response = self.client.put("/admin-api/%s/100/" % resourceType, data=newResourceObj, 
+            response = self.client.put("/admin-api/%s/100/" % resourceType, data=newResourceObj,
                                        content_type='application/json', **headers)
-            #tools.assert_true(response.status_code in (201,202))            
-            tools.assert_equals(response.status_code, 202)            
+            #tools.assert_true(response.status_code in (201,202))
+            tools.assert_equals(response.status_code, 202)
             # PATCH
-            response = self.client.patch("/admin-api/%s/100/" % resourceType, data=newResourceObj, 
+            response = self.client.patch("/admin-api/%s/100/" % resourceType, data=newResourceObj,
                                        content_type='application/json', **headers)
-            tools.assert_true(response.status_code, 202)   
-        
+            tools.assert_true(response.status_code, 202)
+
         TEST_CASES = list(TEST_CASES)
-        TEST_CASES.reverse()    
+        TEST_CASES.reverse()
 
         for (resourceType, newResourceObj) in TEST_CASES:
             # DELETE

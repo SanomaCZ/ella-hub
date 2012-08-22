@@ -65,7 +65,7 @@ class TestDraft(unittest.TestCase):
         self.__insert_article_drafts(draft_count)
 
         response = self.client.get(
-            "/admin-api/draft/?content_type=article&limit=%d" % draft_count, **headers)
+            "/admin-api/draft/?content_type=commonarticle&limit=%d" % draft_count, **headers)
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
         tools.assert_equals(len(resources), draft_count)
@@ -84,7 +84,7 @@ class TestDraft(unittest.TestCase):
         headers = self.__build_headers("user", api_key)
 
         data = json.dumps({
-            "content_type": "article",
+            "content_type": "commonarticle",
             "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
@@ -115,7 +115,7 @@ class TestDraft(unittest.TestCase):
         headers = self.__build_headers("user", api_key)
 
         data = json.dumps({
-            "content_type": "article",
+            "content_type": "commonarticle",
             "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
@@ -155,7 +155,7 @@ class TestDraft(unittest.TestCase):
 
         for id in range(6):
             data = json.dumps({
-                "content_type": "article",
+                "content_type": "commonarticle",
                 "user": "/admin-api/user/%d/" % self.user.pk,
                 "data": {"id": id, "field": "value", "another_field": True},
             })
@@ -188,7 +188,7 @@ class TestDraft(unittest.TestCase):
         headers = self.__build_headers("user", api_key)
 
         data = json.dumps({
-            "content_type": "article",
+            "content_type": "commonarticle",
             "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })

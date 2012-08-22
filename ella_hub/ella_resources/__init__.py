@@ -9,9 +9,8 @@ from django.utils import simplejson
 from ella_hub.resources import ApiModelResource
 from ella.core.models import Publishable, Listing, Category, Author
 from ella.photos.models import Photo
-from ella.articles.models import Article
 
-from ella_hub.models import Draft
+from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe, PagedArticle
 
 
 class SiteResource(ApiModelResource):
@@ -199,26 +198,20 @@ class DraftResource(ApiModelResource):
 
 
 class ArticleResource(PublishableResource):
-    class Meta(ApiModelResource.Meta):
-        queryset = Article.objects.all()
-        filtering = {
-            'announced': ALL_WITH_RELATIONS,
-            'app_data': ALL_WITH_RELATIONS,
-            'authors': ALL_WITH_RELATIONS,
-            'category': ALL_WITH_RELATIONS,
-            'content': ALL_WITH_RELATIONS,
-            'created': ALL_WITH_RELATIONS,
-            'description': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'listings': ALL_WITH_RELATIONS,
-            'photo': ALL_WITH_RELATIONS,
-            'publish_from': ALL_WITH_RELATIONS,
-            'publish_to': ALL_WITH_RELATIONS,
-            'published': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-            'slug': ALL_WITH_RELATIONS,
-            'static': ALL_WITH_RELATIONS,
-            'title': ALL_WITH_RELATIONS,
-            'updated': ALL_WITH_RELATIONS,
-            'upper_title': ALL_WITH_RELATIONS,
-        }
+    class Meta(PublishableResource.Meta):
+        queryset = CommonArticle.objects.all()
+
+
+class EncyclopediaResource(PublishableResource):
+    class Meta(PublishableResource.Meta):
+        queryset = Encyclopedia.objects.all()
+
+
+class RecipeResource(PublishableResource):
+    class Meta(PublishableResource.Meta):
+        queryset = Recipe.objects.all()
+
+
+class PagedArticleResource(PublishableResource):
+    class Meta(PublishableResource.Meta):
+        queryset = PagedArticle.objects.all()
