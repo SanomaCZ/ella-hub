@@ -7,24 +7,19 @@ from inspect import isclass
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+import ella_hub.signals
+
 from django.utils.importlib import import_module
 from django.utils import simplejson
 from django.core.exceptions import ImproperlyConfigured
 from django.conf.urls.defaults import url
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
-from django.db import models
 from tastypie.api import Api
 from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
-from tastypie.models import create_api_key
-
 from ella_hub.utils import timezone
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
-
-# generate API key for new user
-models.signals.post_save.connect(create_api_key, sender=User)
 
 
 class HttpResponseUnauthorized(HttpResponse):

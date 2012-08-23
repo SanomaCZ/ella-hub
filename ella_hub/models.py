@@ -33,6 +33,27 @@ class Draft(models.Model):
         ordering = ("-timestamp",)
 
 
+class PublishableLock(models.Model):
+    """Lock for publishable objects."""
+
+    publishable = models.ForeignKey(Publishable, unique=True,
+        verbose_name=_("Locked publishable"))
+    user = models.ForeignKey(User)
+    locked = models.BooleanField(_("Locked?"))
+    timestamp = models.DateTimeField(editable=False, auto_now=True)
+
+    def __unicode__(self):
+        return _("%s publishable #%d for user '%s'") % (
+            _("Locked") if self.locked else _("Unlocked"),
+            self.publishable.id,
+            self.user.username,
+        )
+
+    class Meta:
+        verbose_name = _("Publishable lock")
+        verbose_name_plural = _("Publishable locks")
+
+
 COMMNETS_CHOICES = (
     ("all", _("All")),
     ("registered", _("Registered")),
