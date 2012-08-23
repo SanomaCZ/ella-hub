@@ -7,6 +7,7 @@ from ella.utils.test_helpers import create_basic_categories
 
 from ella_hub.utils.timezone import now
 from ella_hub.models import PublishableLock, Encyclopedia
+from ella_hub.exceptions import PublishableLocked
 
 
 class TestPublishableLock(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestPublishableLock(unittest.TestCase):
         tools.assert_equals(unicode(self.lock),
             u"Unlocked publishable #%d for user 'user'" % self.publishable.id)
 
-    @tools.raises(ValueError)
+    @tools.raises(PublishableLocked)
     def test_article_locked(self):
         self.lock.locked = True
         self.lock.save()
