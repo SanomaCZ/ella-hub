@@ -28,13 +28,16 @@ class CrossDomainAccessMiddleware(object):
 
     def process_response(self, request, response):
         for header_type, settins_var, default_val in CrossDomainAccessMiddleware.__OPTIONS:
-            header_type = "Access-Control-Allow-" + header_type
+            header = "Access-Control-Allow-" + header_type
             header_value = getattr(settings, settins_var, default_val)
+
+            if header_type == "Origin" and header_value == "*":
+                header_value = request.META.get("HTTP_ORIGIN", "*")
 
             if isinstance(header_value, (tuple, list)):
                 header_value = ",".join(header_value)
 
-            response[header_type] = header_value
+            response[header] = header_value
 
         return response
 

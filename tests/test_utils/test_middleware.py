@@ -35,6 +35,14 @@ class TestCrossDomainAccessMiddleware(unittest.TestCase):
         tools.assert_true("Access-Control-Allow-Credentials" in response)
         tools.assert_equals(response["Access-Control-Allow-Credentials"], "true")
 
+    def test_origin_set_to_origin_url(self):
+        request = self.request_factory.get("/admin-api/", HTTP_ORIGIN="http://origin.org/")
+        response = DummyResponse()
+        response = self.middleware.process_response(request, response)
+
+        tools.assert_true("Access-Control-Allow-Origin" in response)
+        tools.assert_equals(response["Access-Control-Allow-Origin"], "http://origin.org/")
+
     def test_own_headers_properly_set(self):
         request = self.request_factory.get("/admin-api/")
         response = DummyResponse()
