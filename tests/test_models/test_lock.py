@@ -6,7 +6,6 @@ from ella.utils.test_helpers import create_basic_categories
 
 from ella_hub.utils.timezone import now
 from ella_hub.models import PublishableLock, Encyclopedia
-from ella_hub.exceptions import PublishableLocked
 
 
 class TestPublishableLock(unittest.TestCase):
