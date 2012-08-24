@@ -78,17 +78,16 @@ class ApiAuthorization(Authorization):
 
         # TODO: add class&object-specific permissions for GET request method.
         if request.method != "GET":
+            permission_string = self.__permPrefixes[request.method] + \
+                ella_hub.api.get_model_name(objectsClassName)
+            objPermission = permission_string + self.__permObjectSuffix
+
+            foundPerm = filter(lambda perm: perm.endswith(permission_string),
+                request.user.get_all_permissions())
+
             for obj in object_list.all():
-                permission_string = self.__permPrefixes[request.method] + \
-                    ella_hub.api.get_model_name(objectsClassName)
-                objPermission = permission_string + self.__permObjectSuffix
-
-                foundPerm = filter(lambda perm: perm.endswith(permission_string),
-                    request.user.get_all_permissions())
-
-                if (foundPerm or user.has_perm(objPermission, obj)):
+                if foundPerm or user.has_perm(objPermission, obj):
                     allowedObjects.append(obj.id)
-
         else:
             return object_list
 
