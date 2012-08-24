@@ -72,7 +72,7 @@ class PublishableLock(models.Model):
         verbose_name_plural = _("Publishable locks")
 
 
-COMMNETS_CHOICES = (
+COMMENTS_CHOICES = (
     ("all", _("All")),
     ("registered", _("Registered")),
     ("nobody", _("Nobody")),
@@ -85,7 +85,7 @@ class BaseArticle(Publishable):
     commercial = models.BooleanField(verbose_name=_("Commercial"), default=False)
     photo_displayed = models.BooleanField(verbose_name=_("Display perex photo"), default=True)
     enable_comments = models.CharField(_("Article comments"), max_length=16,
-        choices=COMMNETS_CHOICES, default=COMMNETS_CHOICES[0][0])
+        choices=COMMENTS_CHOICES, default=COMMENTS_CHOICES[0][0])
 
     class Meta:
         abstract = True
