@@ -1,22 +1,21 @@
 import re
-import ella_hub.views
 import datetime
+import ella_hub.signals
 
 from inspect import isclass
-
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
-import ella_hub.signals
-
 from django.utils.importlib import import_module
-from django.utils import simplejson
 from django.core.exceptions import ImproperlyConfigured
 from django.conf.urls.defaults import url
 from django.contrib.auth import authenticate, login, logout
+from ella.core.models import Publishable
 from tastypie.api import Api
 from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
+from tastypie.serializers import Serializer
+from ella_hub.models import PublishableLock
 from ella_hub.utils import timezone
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
@@ -25,6 +24,13 @@ from ella_hub.resources import ApiModelResource
 class HttpResponseUnauthorized(HttpResponse):
     def __init__(self):
         super(HttpResponseUnauthorized, self).__init__(status=401)
+
+
+class HttpJsonResponse(HttpResponse):
+    def __init__(self, object, **kwargs):
+        payload = Serializer().to_json(object)
+        super(HttpJsonResponse, self).__init__(payload,
+            content_type='application/json', **kwargs)
 
 
 class EllaHubApi(Api):
@@ -75,8 +81,12 @@ class EllaHubApi(Api):
         Prepend given URL patterns to all API.
         """
         return [
+            url(r"^%s/lock-publishable/(?P<id>\d+)/$" % self.api_name, self.wrap_view('lock_publishable')),
+            url(r"^%s/unlock-publishable/(?P<id>\d+)/$" % self.api_name, self.wrap_view('unlock_publishable')),
+            url(r"^%s/is-publishable-locked/(?P<id>\d+)/$" % self.api_name, self.wrap_view('is_publishable_locked')),
+
             url(r"^%s/login/$" % self.api_name, self.wrap_view('login_view')),
-            url(r"^(?P<api_name>%s)/logout/$" % self.api_name, self.wrap_view('logout_view')),
+            url(r"^%s/logout/$" % self.api_name, self.wrap_view('logout_view')),
             url(r"^%s/validate-api-key/$" % self.api_name, self.wrap_view('validate_api_key_view'))
         ]
 
@@ -97,14 +107,14 @@ class EllaHubApi(Api):
                 api_key = ApiKey.objects.create(user=user)
 
             login(request, user)
-            return HttpResponse(simplejson.dumps({
+            return HttpJsonResponse({
                 "api_key": self.__regenerate_key(api_key),
-            }))
+            })
         else:
             return HttpResponseUnauthorized()
 
     @cross_domain_api_post_view
-    def logout_view(self, request, api_name):
+    def logout_view(self, request):
         if request.user.is_anonymous():
             return HttpResponseUnauthorized()
 
@@ -116,7 +126,7 @@ class EllaHubApi(Api):
         self.__regenerate_key(api_key)
         logout(request)
 
-        return HttpResponseRedirect('/%s/' % api_name)
+        return HttpResponseRedirect('/%s/' % self.api_name)
 
     @cross_domain_api_post_view
     def validate_api_key_view(self, request):
@@ -132,18 +142,39 @@ class EllaHubApi(Api):
             return self.__build_response(timezone.now() < expiration_time)
 
     def __build_response(self, api_key_validity):
-        return HttpResponse(simplejson.dumps({
+        return HttpJsonResponse({
             "api_key_validity": api_key_validity,
-        }))
+        })
 
     def __regenerate_key(self, api_key):
         api_key.key = api_key.generate_key()
         api_key.save()
         return api_key.key
 
+    @cross_domain_api_post_view
+    def lock_publishable(self, request, id):
+        publishable = Publishable.objects.get(id=id)
+        lock = PublishableLock.objects.lock(publishable, request.user)
+        return HttpJsonResponse({"locked": bool(lock)}, status=202)
 
-def get_resource_by_name(resource_name):
-    return EllaHubApi.registered_resources[resource_name]
+    @cross_domain_api_post_view
+    def unlock_publishable(self, request, id):
+        publishable = Publishable.objects.get(id=id)
+        lock = PublishableLock.objects.unlock(publishable)
+        return HttpResponse(status=202)
+
+    def is_publishable_locked(self, request, id):
+        publishable = Publishable.objects.get(id=id)
+        lock = PublishableLock.objects.is_locked(publishable)
+
+        payload = {"locked": bool(lock)}
+        if lock:
+            payload.update({
+                "locked_by": "/%s/user/%s/" % (self.api_name, id),
+                "locked_at": lock.timestamp,
+            })
+
+        return HttpJsonResponse(payload, status=202)
 
 
 def get_model_name(resource_name):
