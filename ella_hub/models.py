@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
@@ -33,20 +33,38 @@ class Draft(models.Model):
         ordering = ("-timestamp",)
 
 
+class PublishableLockManager(models.Manager):
+    def lock(self, publishable, user):
+        try:
+            return self.create(publishable=publishable, locked_by=user)
+        except IntegrityError:
+            # duplicate entry 'publishable'
+            return None
+
+    def is_locked(self, publishable):
+        try:
+            return self.get(publishable=publishable)
+        except PublishableLock.DoesNotExist:
+            return None
+
+    def unlock(self, publishable):
+        return self.filter(publishable=publishable).delete()
+
+
 class PublishableLock(models.Model):
     """Lock for publishable objects."""
 
+    objects = PublishableLockManager()
+
     publishable = models.ForeignKey(Publishable, unique=True,
         verbose_name=_("Locked publishable"))
-    user = models.ForeignKey(User)
-    locked = models.BooleanField(_("Locked?"))
+    locked_by = models.ForeignKey(User, null=True)
     timestamp = models.DateTimeField(editable=False, auto_now=True)
 
     def __unicode__(self):
-        return _("%s publishable #%d for user '%s'") % (
-            _("Locked") if self.locked else _("Unlocked"),
+        return _("Publishable #%d locked by '%s'") % (
             self.publishable.id,
-            self.user.username,
+            self.locked_by.username,
         )
 
     class Meta:
