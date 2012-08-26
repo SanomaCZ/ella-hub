@@ -10,13 +10,17 @@ from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from django.conf.urls.defaults import url
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User, Permission
+from django.contrib.contenttypes.models import ContentType
 from ella.core.models import Publishable
 from tastypie.api import Api
 from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
 from ella_hub.models import PublishableLock
+from tastypie.utils.mime import determine_format, build_content_type
 from ella_hub.utils import timezone
+from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
 
@@ -25,6 +29,9 @@ class HttpResponseUnauthorized(HttpResponse):
     def __init__(self):
         super(HttpResponseUnauthorized, self).__init__(status=401)
 
+class HttpResponseForbidden(HttpResponse):
+    def __init__(self):
+        super(HttpResponseForbidden, self).__init__(status=403)
 
 class HttpJsonResponse(HttpResponse):
     def __init__(self, object, **kwargs):
@@ -38,6 +45,63 @@ class EllaHubApi(Api):
     """
 
     registered_resources = {}
+
+    def top_level(self, request, api_name=None):
+        """
+        Overriding top_level method to serialize only resources
+        that user has rights to use.
+        """
+        serializer = Serializer()
+        available_resources = {}
+
+        if api_name is None:
+            api_name = self.api_name
+        
+        for resource_name in sorted(self._registry.keys()):
+            if not is_resource_allowed(request.user, get_model_name(resource_name)):
+                continue
+            
+            available_resources[resource_name] = {
+                'list_endpoint': self._build_reverse_url("api_dispatch_list", kwargs={
+                    'api_name': api_name,
+                    'resource_name': resource_name,
+                }),
+                'schema': self._build_reverse_url("api_get_schema", kwargs={
+                    'api_name': api_name,
+                    'resource_name': resource_name,
+                }),
+            }
+
+        if not available_resources:
+            return HttpResponseForbidden()
+
+        desired_format = determine_format(request, serializer)
+        options = {}
+
+        if 'text/javascript' in desired_format:
+            callback = request.GET.get('callback', 'callback')
+
+            if not is_valid_jsonp_callback_value(callback):
+                raise BadRequest('JSONP callback name is invalid.')
+
+            options['callback'] = callback
+
+        serialized = serializer.serialize(available_resources, desired_format, options)
+        return HttpResponse(content=serialized, content_type=build_content_type(desired_format))
+
+    def register_view_model_permission(self):
+        """
+        Register view model permission for all resource classes.
+        - view_<className>
+        """
+        for resource_name in EllaHubApi.registered_resources.keys():
+            model_name = get_model_name(resource_name)
+            ct = ContentType.objects.get(model=model_name)
+
+            perm = Permission.objects.get_or_create(codename='view_%s' % model_name, 
+                name='View %s.' % model_name, content_type=ct)
+            if not isinstance(perm, tuple):
+                perm.save()
 
     def collect_resources(self):
         resource_modules = []
@@ -109,6 +173,7 @@ class EllaHubApi(Api):
             login(request, user)
             return HttpJsonResponse({
                 "api_key": self.__regenerate_key(api_key),
+                #"auth_tree": self.__create_auth_tree(request),
             })
         else:
             return HttpResponseUnauthorized()
@@ -175,6 +240,32 @@ class EllaHubApi(Api):
             })
 
         return HttpJsonResponse(payload, status=202)
+
+    def __create_auth_tree(self, request):
+        """
+        self._registry - dict{res_name: <res_obj>}
+        return:
+            dict{resource_name: {"allowed_http_methods":["get","post",...],
+                                 "fields": {attr1:{"readonly": boolean, "nullable":boolean}}}}
+        """
+        
+        auth_tree = {}
+        allowed_resources = [res for res in self._registry.keys() 
+                                 if has_user_any_model_perm(request.user, res)]
+
+        for res_name in allowed_resources:
+            schema = self._registry[res_name].build_schema()
+            res_tree = {"allowed_http_methods":[], "fields":{}}
+
+            for fn, attrs in schema['fields'].items():
+                field_attrs = {"readonly": False, "nullable": False}
+                field_attrs["readonly"] = attrs["readonly"]
+                field_attrs["nullable"] = attrs["nullable"]
+                res_tree["fields"].update({fn:field_attrs})
+            
+            res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
+            auth_tree.update({res_name:res_tree})
+        return auth_tree
 
 
 def get_model_name(resource_name):
