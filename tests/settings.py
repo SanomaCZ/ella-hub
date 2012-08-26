@@ -13,7 +13,8 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': ':memory:',                      # Or path to database file if using sqlite3.
+        #'NAME': ':memory:',                      # Or path to database file if using sqlite3.
+        'NAME': 'db.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -133,6 +134,7 @@ INSTALLED_APPS = (
     'ella.core',
     'ella.photos',
 
+    'object_permissions',
     'tastypie',
     'ella_hub',  # install it via python setup.py develop
 )
@@ -140,6 +142,12 @@ INSTALLED_APPS = (
 # API resources
 RESOURCE_MODULES = (
     'ella_hub.ella_resources',
+)
+
+# Needed by object_permissions app (django-object-permissions)
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'object_permissions.backend.ObjectPermBackend',
 )
 
 # A sample logging configuration. The only tangible logging

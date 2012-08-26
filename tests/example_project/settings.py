@@ -133,6 +133,7 @@ INSTALLED_APPS = (
     'ella.core',
     'ella.photos',
 
+    'object_permissions',
     'tastypie',
     'ella_hub',  # install it via python setup.py develop
 )
@@ -140,6 +141,12 @@ INSTALLED_APPS = (
 # API resources
 RESOURCE_MODULES = (
     'ella_hub.ella_resources',
+)
+
+# Needed by object_permissions app (django-object-permissions)
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'object_permissions.backend.ObjectPermBackend',
 )
 
 # A sample logging configuration. The only tangible logging
