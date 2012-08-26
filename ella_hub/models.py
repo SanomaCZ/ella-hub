@@ -1,14 +1,20 @@
 from django.db import models, IntegrityError
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
+from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import date
+from object_permissions import register
 
-from ella.core.models import Publishable
+from ella.core.models import Author, Category, Source, Listing, Publishable
 from ella.core.admin import PublishableAdmin
+from ella.articles.models import Article
+from ella.photos.models import Photo
 
 from jsonfield import JSONField
+
+from ella_hub.utils.perms import has_user_model_perm
 
 
 class Draft(models.Model):
@@ -138,9 +144,9 @@ RECIPE_OCCASIONS = (
 
 
 RECOMENDED_TO_CHOICES = (
-    ("for_diabetics", _("Fro diabetics")),
+    ("for_diabetics", _("For diabetics")),
     ("for_childs", _("For childs")),
-    ("for_vegetarins", _("For vegetarians")),
+    ("for_vegetarians", _("For vegetarians")),
     ("for_diet", _("For diet")),
     ("without_gluten", _("Without gluten")),
     ("milk_allergy", _("Milk Allergy")),
@@ -293,3 +299,25 @@ class ArticlePage(models.Model):
     class Meta:
         verbose_name = _("Article page")
         verbose_name_plural = _("Article pages")
+
+
+def register_object_permissions():
+    CLASSES = (
+        ('author', Author, 'core'),
+        ('user', User, 'auth'),
+        ('category', Category, 'core'),
+        ('source', Source, 'core'),
+        ('listing', Listing, 'core'),
+        ('site', Site, 'sites'),
+        ('photo', Photo, 'photos'),
+        ('article', CommonArticle, 'ella_hub'),
+        ('pagedarticle', PagedArticle, 'ella_hub'),
+        ('recipe', Recipe, 'ella_hub'),
+        ('encyclopedia', Encyclopedia, 'ella_hub'),
+    )
+    for class_str, class_, app_label in CLASSES:
+        register(['view_%s' % class_str, 'change_%s' %class_str, 
+            'delete_%s' %class_str], class_ , app_label)
+
+
+register_object_permissions()
