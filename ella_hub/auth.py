@@ -11,7 +11,7 @@ from tastypie.authorization import Authorization
 from tastypie.models import ApiKey
 
 from ella_hub.utils import timezone
-
+from ella_hub.utils.perms import has_obj_perm
 
 class ApiAuthentication(Authentication):
     def is_authenticated(self, request, **kwargs):
@@ -29,33 +29,30 @@ class ApiAuthorization(Authorization):
     Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
     2 methods are overridden: is_authorized() and (optional) apply_limits()
     """
-    # Prefixes of both basic (class-specific) and advanced (object-specidic) permissions based on Request type.
-    __permPrefixes = {"GET":"view_", "POST":"add_", "PUT":"change_", "PATCH":"change_", "DELETE":"delete_"}
-    # Suffix of advanced (object-specific) permissions.
-    __permObjectSuffix = "_object"
+    # Prefixes of both basic (class-specific) and 
+    # advanced (object-specidic) permissions based on Request type.
+    __perm_prefixes = {"GET":"view_", "POST":"add_", "PUT":"change_", 
+                       "PATCH":"change_", "DELETE":"delete_"}
     # Regular Expression parsing class name from path,
     # e.g. from /admin-api/author/1/ is author lower-cased Author class.
-    __reGetObjectClass = re.compile(r"/[^/]*/(?P<class_name>[^/]*)/.*")
+    __re_objects_class = re.compile(r"/[^/]*/(?P<class_name>[^/]*)/.*")
+
 
     def is_authorized(self, request, object=None):
         if request and hasattr(request, 'user') and not request.user.is_authenticated():
             return False
 
-        # TODO multiple query, check tastypie doc!
-        objectsClassName = self.__reGetObjectClass.match(request.path).group("class_name")
+        self.request_method = request.META['REQUEST_METHOD']
+        self.objects_class_name = self.__re_objects_class.match(request.path).group("class_name")
 
-        # No need to apply object specific permissions to POST requests
-        # Remark: apply_limits method is NOT called in POST requests
-        # Q: return 403 instead of 401 ?
-        if request.method == "POST":
+        if self.request_method == "POST":
             # e.g. add_article is suffix of articles.add_article
-            permission_string = self.__permPrefixes[request.method] + \
-                ella_hub.api.get_model_name(objectsClassName)
-            foundPerm = filter(lambda perm: perm.endswith(permission_string),
+            permission_string = self.__perm_prefixes[request.method] + \
+                ella_hub.api.get_model_name(self.objects_class_name)
+            found_perm = filter(lambda perm: perm.endswith(permission_string), 
                 request.user.get_all_permissions())
-            if not foundPerm:
-                return False
-
+            if not found_perm:
+                raise ImmediateHttpResponse(response=HttpForbidden())
         return True
 
     def apply_limits(self, request, object_list):
@@ -65,36 +62,20 @@ class ApiAuthorization(Authorization):
         type(request) == django.core.handlers.wsgi.WSGIRequest
         type(object_list) == django.db.models.query.QuerySet
         """
-        # TODO: permissions on Category/Article objects
         user = request.user
 
         if user.is_superuser:
             return object_list
+    
+        allowed_objects = []
+        permission_string = self.__perm_prefixes[self.request_method] + \
+            ella_hub.api.get_model_name(self.objects_class_name)
+        
+        for obj in object_list:
+            if has_obj_perm(request.user, obj, permission_string):
+                allowed_objects.append(obj)
 
-        # Request method - one of GET, PUT, PATCH, DELETE (except POST)
-        objectsClassName = self.__reGetObjectClass.match(request.path).group("class_name")
-
-        allowedObjects = []
-
-        # TODO: add class&object-specific permissions for GET request method.
-        if request.method != "GET":
-            permission_string = self.__permPrefixes[request.method] + \
-                ella_hub.api.get_model_name(objectsClassName)
-            objPermission = permission_string + self.__permObjectSuffix
-
-            foundPerm = filter(lambda perm: perm.endswith(permission_string),
-                request.user.get_all_permissions())
-
-            for obj in object_list.all():
-                if foundPerm or user.has_perm(objPermission, obj):
-                    allowedObjects.append(obj.id)
-        else:
-            return object_list
-
-        if not allowedObjects and object_list:
+        if not allowed_objects and object_list:
             raise ImmediateHttpResponse(response=HttpForbidden())
 
-        # Filtering allowed objects.
-        object_list = object_list.filter(id__in=allowedObjects)
-
-        return object_list
+        return allowed_objects
