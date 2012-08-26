@@ -10,7 +10,7 @@ from tastypie.models import ApiKey
 
 class TestAuthentication(unittest.TestCase):
     def setUp(self):
-        self.user = self.__create_test_user("user", "pass")
+        self.user = self.__create_test_user("user", "pass", True)
         self.client = Client()
 
     def tearDown(self):

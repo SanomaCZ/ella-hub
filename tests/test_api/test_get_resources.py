@@ -12,7 +12,7 @@ from ella_hub.models import CommonArticle, Recipe, Encyclopedia, PagedArticle
 
 class TestGetResources(unittest.TestCase):
     def setUp(self):
-        self.user = self.__create_test_user("user", "pass")
+        self.user = self.__create_test_user("user", "pass", True)
         self.client = Client()
         create_basic_categories(self)
         CommonArticle.objects.create(title="Jop",
@@ -39,7 +39,10 @@ class TestGetResources(unittest.TestCase):
         return user
 
     def test_ella_resources_present(self):
-        response = self.client.get("/admin-api/")
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        response = self.client.get("/admin-api/", **headers)
         resources = self.__get_response_json(response)
 
         tools.assert_true("user" in resources)
@@ -73,6 +76,8 @@ class TestGetResources(unittest.TestCase):
         tools.assert_true("publishable" in resources)
         tools.assert_true("list_endpoint" in resources["publishable"])
         tools.assert_true("schema" in resources["publishable"])
+
+        self.__logout(headers)
 
     def test_check_modified_resource_structure(self):
         """
