@@ -43,7 +43,7 @@ class CrossDomainAccessMiddleware(object):
 
 
 class AuthenticationMiddleware(object):
-    __APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):(.+)", re.IGNORECASE)
+    __APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):([^\"]+).*", re.IGNORECASE)
     API_KEY_EXPIRATION_IN_DAYS = 14
 
     def process_request(self, request):
