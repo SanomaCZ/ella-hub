@@ -173,7 +173,7 @@ class EllaHubApi(Api):
             login(request, user)
             return HttpJsonResponse({
                 "api_key": self.__regenerate_key(api_key),
-                #"auth_tree": self.__create_auth_tree(request),
+                "auth_tree": self.__create_auth_tree(request),
             })
         else:
             return HttpResponseUnauthorized()
@@ -251,7 +251,7 @@ class EllaHubApi(Api):
         
         auth_tree = {}
         allowed_resources = [res for res in self._registry.keys() 
-                                 if has_user_any_model_perm(request.user, res)]
+                                 if has_user_model_perm(request.user, res)]
 
         for res_name in allowed_resources:
             schema = self._registry[res_name].build_schema()
