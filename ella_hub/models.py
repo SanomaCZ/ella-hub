@@ -62,7 +62,7 @@ class PublishableLock(models.Model):
 
     publishable = models.ForeignKey(Publishable, unique=True,
         verbose_name=_("Locked publishable"))
-    locked_by = models.ForeignKey(User, null=True)
+    locked_by = models.ForeignKey(User)
     timestamp = models.DateTimeField(editable=False, auto_now=True)
 
     def __unicode__(self):
