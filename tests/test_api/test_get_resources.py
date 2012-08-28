@@ -1,4 +1,4 @@
-import unittest
+from django.test import TestCase
 import django.utils.simplejson as json
 
 from nose import tools
@@ -10,7 +10,7 @@ from ella.utils import timezone
 from ella_hub.models import CommonArticle, Recipe, Encyclopedia, PagedArticle
 
 
-class TestGetResources(unittest.TestCase):
+class TestGetResources(TestCase):
     def setUp(self):
         self.user = self.__create_test_user("user", "pass", True)
         self.client = Client()
@@ -132,7 +132,7 @@ class TestGetResources(unittest.TestCase):
 
     def __build_headers(self, username, api_key):
         return {
-            "HTTP_AUTHORIZATION" : "ApiKey %s:%s" % (username, api_key),
+            "HTTP_AUTHORIZATION": "ApiKey %s:%s" % (username, api_key),
         }
 
     def __get_response_json(self, response):
