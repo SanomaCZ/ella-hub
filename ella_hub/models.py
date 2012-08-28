@@ -14,8 +14,6 @@ from ella.photos.models import Photo
 
 from jsonfield import JSONField
 
-from ella_hub.utils.perms import has_user_model_perm
-
 
 class Draft(models.Model):
     """Auto-saved objects and user templates."""
@@ -316,7 +314,7 @@ def register_object_permissions():
         ('encyclopedia', Encyclopedia, 'ella_hub'),
     )
     for class_str, class_, app_label in CLASSES:
-        register(['view_%s' % class_str, 'change_%s' %class_str, 
+        register(['view_%s' % class_str, 'change_%s' %class_str,
             'delete_%s' %class_str], class_ , app_label)
 
 

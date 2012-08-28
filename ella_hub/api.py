@@ -19,7 +19,7 @@ from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
 from ella_hub.models import PublishableLock
 from tastypie.utils.mime import determine_format, build_content_type
-from ella_hub.utils import timezone
+from ella_hub.utils import timezone, get_model_name
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
@@ -56,11 +56,11 @@ class EllaHubApi(Api):
 
         if api_name is None:
             api_name = self.api_name
-        
+
         for resource_name in sorted(self._registry.keys()):
-            if not is_resource_allowed(request.user, get_model_name(resource_name)):
+            if not is_resource_allowed(request.user, resource_name):
                 continue
-            
+
             available_resources[resource_name] = {
                 'list_endpoint': self._build_reverse_url("api_dispatch_list", kwargs={
                     'api_name': api_name,
@@ -98,7 +98,7 @@ class EllaHubApi(Api):
             model_name = get_model_name(resource_name)
             ct = ContentType.objects.get(model=model_name)
 
-            perm = Permission.objects.get_or_create(codename='view_%s' % model_name, 
+            perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
                 name='View %s.' % model_name, content_type=ct)
             if not isinstance(perm, tuple):
                 perm.save()
@@ -248,9 +248,9 @@ class EllaHubApi(Api):
             dict{resource_name: {"allowed_http_methods":["get","post",...],
                                  "fields": {attr1:{"readonly": boolean, "nullable":boolean}}}}
         """
-        
+
         auth_tree = {}
-        allowed_resources = [res for res in self._registry.keys() 
+        allowed_resources = [res for res in self._registry.keys()
                                  if has_user_model_perm(request.user, res)]
 
         for res_name in allowed_resources:
@@ -262,12 +262,7 @@ class EllaHubApi(Api):
                 field_attrs["readonly"] = attrs["readonly"]
                 field_attrs["nullable"] = attrs["nullable"]
                 res_tree["fields"].update({fn:field_attrs})
-            
+
             res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
             auth_tree.update({res_name:res_tree})
         return auth_tree
-
-
-def get_model_name(resource_name):
-    resource = EllaHubApi.registered_resources[resource_name]
-    return resource._meta.object_class.__name__.lower()

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldError
 from object_permissions import get_users_any
@@ -5,8 +8,10 @@ from object_permissions import get_users_any
 from ella.articles.models import Article
 from ella.core.models import Author
 
+from ella_hub.utils import get_model_name
 
-__all__ = ('has_obj_perm', 'has_user_model_perm', 
+
+__all__ = ('has_obj_perm', 'has_user_model_perm',
 	       'has_user_model_object_with_any_perm', 'is_resource_allowed',)
 
 
@@ -21,7 +26,7 @@ def has_obj_perm(user, obj, perm=None):
 	if perm:
 		if ((ct.app_label + '.' + perm) in user.get_all_permissions() or
 			user.has_perm(perm, obj)):
-			return True	
+			return True
 	else:
 		if user.has_any_perms(obj):
 			return True
@@ -35,7 +40,8 @@ def has_user_model_perm(user, model_name, perm=None):
 	If `perm` is not specified, return True if user
 	has any perm to `model_name` mode.
 	"""
-	ct = ContentType.objects.get(model=model_name)
+	model = get_model_name(model_name)
+	ct = ContentType.objects.get(model=model)
 	found_perm = False
 
 	permission = ct.app_label + "."
@@ -51,20 +57,21 @@ def has_user_model_perm(user, model_name, perm=None):
 
 def has_user_model_object_with_any_perm(user, model_name, perm_list=[]):
 	"""
-	Return True if user has any permission from `perm_list` 
+	Return True if user has any permission from `perm_list`
 	to any object of `model_name` model,
 	if `perm_list` is not specified, return True if user
 	has any permission to any object of `model_name` model.
 	"""
-	ct = ContentType.objects.get(model=model_name)
+	model = get_model_name(model_name)
+	ct = ContentType.objects.get(model=model)
 	objects = []
 
-	try:		
+	try:
 		objects = user.get_objects_any_perms(ct.model_class(), perms=perm_list)
 	except FieldError:
 		pass
 		#print "Class %s has no registered permissions." % ct.model_class()
-	
+
 	if objects:
 	    return True
 	return False
@@ -79,4 +86,4 @@ def is_resource_allowed(user, model_name):
 		has_user_model_object_with_any_perm(user, model_name)):
 		return True
 	return False
-	
+

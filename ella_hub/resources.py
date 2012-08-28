@@ -107,7 +107,7 @@ class ApiModelResource(ModelResource):
             ("change_", "patch"),
             ("delete_", "delete"),
         )
-        
+
         user_perms = request.user.get_all_permissions()
 
         (objects_class_name,) = re.match(r"/[^/]*/([^/]*)/.*", request.path).groups()
@@ -120,7 +120,7 @@ class ApiModelResource(ModelResource):
             permission_string = prefix + model_name
             if (ct.app_label + '.' + permission_string) in user_perms:
                 allowed_methods.append(method)
-            
+
         if not allowed_methods:
             return HttpResponseForbidden()
 
@@ -140,7 +140,7 @@ class ApiModelResource(ModelResource):
         bundle = super(ApiModelResource, self).alter_list_data_to_serialize(request, bundle)
         if isinstance(bundle, dict) and "objects" in bundle:
             bundle = bundle["objects"]
-        
+
         for object in bundle:
             self.__filter_according_to_perms(request, object)
         return bundle
@@ -150,7 +150,7 @@ class ApiModelResource(ModelResource):
         return self.__filter_according_to_perms(request, bundle)
 
     def __filter_according_to_perms(self, request, bundle):
-        resource_name = bundle.obj.__class__.__name__.lower()
+        resource_name = self._meta.resource_name
 
         if (not has_user_model_perm(request.user, resource_name, 'change') and not
             has_obj_perm(request.user, bundle.obj, 'change_%s' % resource_name)):
