@@ -2,7 +2,7 @@ import re
 
 from tastypie import fields
 from tastypie.resources import ModelResource
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
 
 import ella_hub.api
@@ -11,11 +11,6 @@ from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
 # from tastypie.authentication import Authentication
 # from tastypie.authorization import Authorization
-
-
-class HttpResponseForbidden(HttpResponse):
-    def __init__(self):
-        super(HttpResponseForbidden, self).__init__(status=403)
 
 
 class ApiModelResource(ModelResource):

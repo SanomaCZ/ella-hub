@@ -5,7 +5,8 @@ import ella_hub.signals
 from inspect import isclass
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import (HttpResponse, HttpResponseBadRequest,
+    HttpResponseRedirect, HttpResponseForbidden)
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from django.conf.urls.defaults import url
@@ -14,25 +15,18 @@ from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from ella.core.models import Publishable
 from tastypie.api import Api
+from tastypie.http import HttpUnauthorized
 from tastypie.exceptions import BadRequest
 from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
-from ella_hub.models import PublishableLock
 from tastypie.utils.mime import determine_format, build_content_type
+from ella_hub.models import PublishableLock
 from ella_hub.utils import timezone, get_model_name
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
 
-
-class HttpResponseUnauthorized(HttpResponse):
-    def __init__(self):
-        super(HttpResponseUnauthorized, self).__init__(status=401)
-
-class HttpResponseForbidden(HttpResponse):
-    def __init__(self):
-        super(HttpResponseForbidden, self).__init__(status=403)
 
 class HttpJsonResponse(HttpResponse):
     def __init__(self, object, **kwargs):
@@ -177,17 +171,17 @@ class EllaHubApi(Api):
                 "auth_tree": self.__create_auth_tree(request),
             })
         else:
-            return HttpResponseUnauthorized()
+            return HttpUnauthorized()
 
     @cross_domain_api_post_view
     def logout_view(self, request):
         if request.user.is_anonymous():
-            return HttpResponseUnauthorized()
+            return HttpUnauthorized()
 
         try:
             api_key = ApiKey.objects.get(user=request.user)
         except ApiKey.DoesNotExist:
-            return HttpResponseUnauthorized()
+            return HttpUnauthorized()
 
         self.__regenerate_key(api_key)
         logout(request)
