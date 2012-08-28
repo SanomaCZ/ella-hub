@@ -1,5 +1,5 @@
 import datetime
-import unittest
+from django.test import TestCase
 import django.utils.simplejson as json
 
 from nose import tools
@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from tastypie.models import ApiKey
 
 
-class TestAuthentication(unittest.TestCase):
+class TestAuthentication(TestCase):
     def setUp(self):
         self.user = self.__create_test_user("user", "pass", True)
         self.client = Client()

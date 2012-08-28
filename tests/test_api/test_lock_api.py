@@ -1,4 +1,4 @@
-import unittest
+from django.test import TestCase
 import django.utils.simplejson as json
 
 from nose import tools
@@ -10,7 +10,7 @@ from ella.utils import timezone
 from ella_hub.models import PublishableLock, Recipe
 
 
-class TestLockApi(unittest.TestCase):
+class TestLockApi(TestCase):
     def setUp(self):
         self.user = self.__create_test_user("user", "pass", is_admin=True)
         self.client = Client()

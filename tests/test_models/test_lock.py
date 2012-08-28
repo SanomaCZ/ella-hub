@@ -1,4 +1,4 @@
-import unittest
+from django.test import TestCase
 
 from nose import tools
 from django.contrib.auth.models import User
@@ -8,7 +8,7 @@ from ella.utils.timezone import now
 from ella_hub.models import PublishableLock, Encyclopedia
 
 
-class TestPublishableLock(unittest.TestCase):
+class TestPublishableLock(TestCase):
     def setUp(self):
         create_basic_categories(self)
         self.publishable = Encyclopedia.objects.create(title=u"Title like a boss",

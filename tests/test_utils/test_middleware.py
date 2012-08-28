@@ -1,4 +1,4 @@
-import unittest
+from django.test import TestCase
 
 from nose import tools
 from django.contrib.auth.models import User, AnonymousUser
@@ -13,7 +13,7 @@ class DummyResponse(dict):
     pass
 
 
-class TestCrossDomainAccessMiddleware(unittest.TestCase):
+class TestCrossDomainAccessMiddleware(TestCase):
     def setUp(self):
         self.request_factory = RequestFactory()
         self.middleware = CrossDomainAccessMiddleware()
@@ -79,7 +79,7 @@ class TestCrossDomainAccessMiddleware(unittest.TestCase):
         del settings.XS_SHARING_ALLOWED_METHODS
 
 
-class TestAuthenticationMiddleware(unittest.TestCase):
+class TestAuthenticationMiddleware(TestCase):
     def setUp(self):
         self.request_factory = RequestFactory()
         self.middleware = AuthenticationMiddleware()

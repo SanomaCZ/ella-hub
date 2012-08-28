@@ -1,5 +1,5 @@
 import os
-import unittest
+from django.test import TestCase
 from urlparse import urlparse, urlsplit
 
 from PIL import Image
@@ -35,7 +35,7 @@ class PatchClient(Client):
         return self.request(**r)
 
 
-class TestAuthorization(unittest.TestCase):
+class TestAuthorization(TestCase):
     def setUp(self):
         self.client = PatchClient()
         (self.admin_user, self.banned_user, self.user) = self.__create_test_users()

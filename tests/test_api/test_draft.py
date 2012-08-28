@@ -1,4 +1,4 @@
-import unittest
+from django.test import TestCase
 import django.utils.simplejson as json
 
 from nose import tools
@@ -6,11 +6,10 @@ from django.test.client import Client
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 
-from ella.core.models import Author
 from ella_hub.models import Draft
 
 
-class TestDraft(unittest.TestCase):
+class TestDraft(TestCase):
     def setUp(self):
         self.user = self.__create_test_user("user", "pass", True)
         self.client = Client()

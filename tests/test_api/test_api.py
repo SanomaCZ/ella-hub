@@ -1,4 +1,4 @@
-import unittest
+from django.test import TestCase
 
 from nose import tools
 from django.conf import settings
@@ -6,7 +6,7 @@ from django.core.exceptions import ImproperlyConfigured
 from ella_hub.api import EllaHubApi
 
 
-class TestApi(unittest.TestCase):
+class TestApi(TestCase):
     @tools.raises(ImproperlyConfigured)
     def test_load_fake_resource_module(self):
         original_resources = settings.RESOURCE_MODULES

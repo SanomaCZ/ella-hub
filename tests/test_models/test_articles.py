@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import unittest
+from django.test import TestCase
 
 from nose import tools
 from django.utils.translation import ugettext_lazy as _
@@ -10,7 +10,7 @@ from ella.utils import timezone
 from ella_hub.models import CommonArticle, Recipe, Encyclopedia, PagedArticle
 
 
-class TestArticleModels(unittest.TestCase):
+class TestArticleModels(TestCase):
     def setUp(self):
         create_basic_categories(self)
         self.article = CommonArticle.objects.create(title="Jop",

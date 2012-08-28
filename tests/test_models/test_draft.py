@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import unittest
+from django.test import TestCase
 
 from nose import tools
 from django.utils.translation import ugettext_lazy as _
@@ -12,7 +12,7 @@ from ella.articles.models import Article
 from ella_hub.models import Draft
 
 
-class TestDraftModel(unittest.TestCase):
+class TestDraftModel(TestCase):
     def setUp(self):
         article_type = ContentType.objects.get(name__iexact="article")
         author_type = ContentType.objects.get(name__iexact="author")
