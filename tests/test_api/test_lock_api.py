@@ -5,8 +5,8 @@ from nose import tools
 from django.test.client import Client
 from django.contrib.auth.models import User
 from ella.utils.test_helpers import create_basic_categories
+from ella.utils import timezone
 
-from ella_hub.utils import timezone
 from ella_hub.models import PublishableLock, Recipe
 
 

@@ -5,8 +5,8 @@ import unittest
 from nose import tools
 from django.utils.translation import ugettext_lazy as _
 from ella.utils.test_helpers import create_basic_categories
+from ella.utils import timezone
 
-from ella_hub.utils import timezone
 from ella_hub.models import CommonArticle, Recipe, Encyclopedia, PagedArticle
 
 

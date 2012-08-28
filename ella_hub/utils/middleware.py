@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, AnonymousUser
 from tastypie.models import ApiKey
 
-from ella_hub.utils import timezone
+from ella.utils import timezone
 
 
 class CrossDomainAccessMiddleware(object):

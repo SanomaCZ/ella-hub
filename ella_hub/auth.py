@@ -6,12 +6,12 @@ from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpUnauthorized, HttpForbidden
 from django.template import RequestContext
 from django.contrib.auth.models import User
+from ella.utils import timezone
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.models import ApiKey
 
 from ella_hub.utils.perms import has_obj_perm
-from ella_hub.utils import timezone
 
 
 class ApiAuthentication(Authentication):

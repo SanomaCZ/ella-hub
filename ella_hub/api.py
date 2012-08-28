@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from ella.core.models import Publishable
+from ella.utils import timezone
 from tastypie.api import Api
 from tastypie.http import HttpUnauthorized
 from tastypie.exceptions import BadRequest
@@ -22,7 +23,6 @@ from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
 from tastypie.utils.mime import determine_format, build_content_type
 from ella_hub.models import PublishableLock
-from ella_hub.utils import timezone
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource

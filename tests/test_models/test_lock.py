@@ -3,8 +3,8 @@ import unittest
 from nose import tools
 from django.contrib.auth.models import User
 from ella.utils.test_helpers import create_basic_categories
+from ella.utils.timezone import now
 
-from ella_hub.utils.timezone import now
 from ella_hub.models import PublishableLock, Encyclopedia
 
 
