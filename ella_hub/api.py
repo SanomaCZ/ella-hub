@@ -14,6 +14,7 @@ from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from ella.core.models import Publishable
 from tastypie.api import Api
+from tastypie.exceptions import BadRequest
 from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
