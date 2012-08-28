@@ -1,11 +1,11 @@
 import re
+import ella_hub.api
 
 from tastypie import fields
 from tastypie.resources import ModelResource
 from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
 
-import ella_hub.api
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
@@ -106,7 +106,7 @@ class ApiModelResource(ModelResource):
         user_perms = request.user.get_all_permissions()
 
         (objects_class_name,) = re.match(r"/[^/]*/([^/]*)/.*", request.path).groups()
-        model_name = ella_hub.api.get_model_name(objects_class_name)
+        model_name = ella_hub.api.EllaHubApi.get_model_name(objects_class_name)
         ct = ContentType.objects.get(model=model_name)
 
         allowed_methods = []
@@ -145,14 +145,15 @@ class ApiModelResource(ModelResource):
         return self.__filter_according_to_perms(request, bundle)
 
     def __filter_according_to_perms(self, request, bundle):
-        resource_name = self._meta.resource_name
+        model_name = ella_hub.api.EllaHubApi.get_model_name(
+            self._meta.resource_name)
 
-        if (not has_user_model_perm(request.user, resource_name, 'change') and not
-            has_obj_perm(request.user, bundle.obj, 'change_%s' % resource_name)):
+        if (not has_user_model_perm(request.user, model_name, 'change') and not
+            has_obj_perm(request.user, bundle.obj, 'change_%s' % model_name)):
             bundle.data['_patch'] = False
 
-        if (not has_user_model_perm(request.user, resource_name, 'delete') and not
-            has_obj_perm(request.user, bundle.obj, 'delete_%s' % resource_name)):
+        if (not has_user_model_perm(request.user, model_name, 'delete') and not
+            has_obj_perm(request.user, bundle.obj, 'delete_%s' % model_name)):
             bundle.data['_delete'] = False
 
         #filter according to user's permissions, f.e.:

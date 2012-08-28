@@ -22,7 +22,7 @@ from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
 from tastypie.utils.mime import determine_format, build_content_type
 from ella_hub.models import PublishableLock
-from ella_hub.utils import timezone, get_model_name
+from ella_hub.utils import timezone
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
@@ -41,6 +41,12 @@ class EllaHubApi(Api):
 
     registered_resources = {}
 
+    @classmethod
+    def get_model_name(cls, resource_name):
+        """Returns name of DB model for given resource name."""
+        resource = cls.registered_resources[resource_name]
+        return resource._meta.object_class.__name__.lower()
+
     def top_level(self, request, api_name=None):
         """
         Overriding top_level method to serialize only resources
@@ -53,7 +59,8 @@ class EllaHubApi(Api):
             api_name = self.api_name
 
         for resource_name in sorted(self._registry.keys()):
-            if not is_resource_allowed(request.user, resource_name):
+            model_name = EllaHubApi.get_model_name(resource_name)
+            if not is_resource_allowed(request.user, model_name):
                 continue
 
             available_resources[resource_name] = {
@@ -90,7 +97,8 @@ class EllaHubApi(Api):
         - view_<className>
         """
         for resource_name in EllaHubApi.registered_resources.keys():
-            model_name = get_model_name(resource_name)
+            resource = ella_hub.api.EllaHubApi.registered_resources[resource_name]
+            model_name = resource._meta.object_class.__name__.lower()
             ct = ContentType.objects.get(model=model_name)
 
             perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
@@ -246,7 +254,7 @@ class EllaHubApi(Api):
 
         auth_tree = {}
         allowed_resources = [res for res in self._registry.keys()
-                                 if has_user_model_perm(request.user, res)]
+            if has_user_model_perm(request.user, EllaHubApi.get_model_name(res))]
 
         for res_name in allowed_resources:
             schema = self._registry[res_name].build_schema()

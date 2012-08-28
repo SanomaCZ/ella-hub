@@ -3,12 +3,11 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldError
+from django.contrib.auth.models import AnonymousUser
 from object_permissions import get_users_any
 
 from ella.articles.models import Article
 from ella.core.models import Author
-
-from ella_hub.utils import get_model_name
 
 
 __all__ = ('has_obj_perm', 'has_user_model_perm',
@@ -40,8 +39,7 @@ def has_user_model_perm(user, model_name, perm=None):
 	If `perm` is not specified, return True if user
 	has any perm to `model_name` mode.
 	"""
-	model = get_model_name(model_name)
-	ct = ContentType.objects.get(model=model)
+	ct = ContentType.objects.get(model=model_name)
 	found_perm = False
 
 	permission = ct.app_label + "."
@@ -62,8 +60,10 @@ def has_user_model_object_with_any_perm(user, model_name, perm_list=[]):
 	if `perm_list` is not specified, return True if user
 	has any permission to any object of `model_name` model.
 	"""
-	model = get_model_name(model_name)
-	ct = ContentType.objects.get(model=model)
+	if isinstance(user, AnonymousUser):
+		return False
+
+	ct = ContentType.objects.get(model=model_name)
 	objects = []
 
 	try:

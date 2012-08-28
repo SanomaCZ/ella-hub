@@ -1,6 +1,6 @@
 import re
 import datetime
-import ella_hub
+import ella_hub.api
 
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpUnauthorized, HttpForbidden
@@ -10,8 +10,9 @@ from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.models import ApiKey
 
-from ella_hub.utils import timezone
 from ella_hub.utils.perms import has_obj_perm
+from ella_hub.utils import timezone
+
 
 class ApiAuthentication(Authentication):
     def is_authenticated(self, request, **kwargs):
@@ -29,9 +30,9 @@ class ApiAuthorization(Authorization):
     Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
     2 methods are overridden: is_authorized() and (optional) apply_limits()
     """
-    # Prefixes of both basic (class-specific) and 
+    # Prefixes of both basic (class-specific) and
     # advanced (object-specidic) permissions based on Request type.
-    __perm_prefixes = {"GET":"view_", "POST":"add_", "PUT":"change_", 
+    __perm_prefixes = {"GET":"view_", "POST":"add_", "PUT":"change_",
                        "PATCH":"change_", "DELETE":"delete_"}
     # Regular Expression parsing class name from path,
     # e.g. from /admin-api/author/1/ is author lower-cased Author class.
@@ -48,8 +49,8 @@ class ApiAuthorization(Authorization):
         if self.request_method == "POST":
             # e.g. add_article is suffix of articles.add_article
             permission_string = self.__perm_prefixes[request.method] + \
-                ella_hub.api.get_model_name(self.objects_class_name)
-            found_perm = filter(lambda perm: perm.endswith(permission_string), 
+                ella_hub.api.EllaHubApi.get_model_name(self.objects_class_name)
+            found_perm = filter(lambda perm: perm.endswith(permission_string),
                 request.user.get_all_permissions())
             if not found_perm:
                 raise ImmediateHttpResponse(response=HttpForbidden())
@@ -66,11 +67,11 @@ class ApiAuthorization(Authorization):
 
         if user.is_superuser:
             return object_list
-    
+
         allowed_objects = []
         permission_string = self.__perm_prefixes[self.request_method] + \
-            ella_hub.api.get_model_name(self.objects_class_name)
-        
+            ella_hub.api.EllaHubApi.get_model_name(self.objects_class_name)
+
         for obj in object_list:
             if has_obj_perm(request.user, obj, permission_string):
                 allowed_objects.append(obj)
