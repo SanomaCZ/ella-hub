@@ -8,7 +8,7 @@ from ella_hub.models import Draft, CommonArticle, Encyclopedia, PagedArticle, Ar
 class ArticleAdmin(PublishableAdmin):
     ordering = ("-publish_from",)
     fieldsets = (
-        (_("Article heading"), {"fields": ("title", "upper_title", "slug")}),
+        (_("Article heading"), {"fields": ("title", "upper_title", "slug", "state")}),
         (_("Article contents"), {"fields": ("description", "content")}),
         (_("Metadata"), {"fields": ("category", "authors", "source",
             ("photo", "photo_displayed"))}),
@@ -23,7 +23,7 @@ class ArticleAdmin(PublishableAdmin):
 class EncyclopediaAdmin(PublishableAdmin):
     ordering = ("-publish_from",)
     fieldsets = (
-        (_("Article heading"), {"fields": ("title", "upper_title", "slug")}),
+        (_("Article heading"), {"fields": ("title", "upper_title", "slug", "state")}),
         (_("Article contents"), {"fields": ("description", "content")}),
         (_("Metadata"), {"fields": ("category", "authors", "source",
             ("photo", "photo_displayed"))}),
@@ -49,7 +49,7 @@ class IngredientInlineAdmin(admin.StackedInline):
 class RecipeAdmin(PublishableAdmin):
     ordering = ("-publish_from",)
     fieldsets = (
-        (_("Article heading"), {"fields": ("title", "upper_title", "slug")}),
+        (_("Article heading"), {"fields": ("title", "upper_title", "slug", "state")}),
         (_("Article contents"), {"fields": (
             "description",
             "redaction_note",
@@ -79,7 +79,7 @@ class PageInlineAdmin(admin.StackedInline):
 class PagedArticleAdmin(PublishableAdmin):
     ordering = ("-publish_from",)
     fieldsets = (
-        (_("Article heading"), {"fields": ("title", "upper_title", "slug")}),
+        (_("Article heading"), {"fields": ("title", "upper_title", "slug", "state")}),
         (_("Article contents"), {"fields": ("description",)}),
         (_("Metadata"), {"fields": ("category", "authors", "source",
             ("photo", "photo_displayed"))}),
