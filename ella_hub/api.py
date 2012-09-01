@@ -247,14 +247,13 @@ class EllaHubApi(Api):
 
     def __get_system_info(self, request):
         """
+        Roles definition, publishable states.
         """
-        # TODO: roles definition
         system_info = {}
         system_info.update({"roles_definition":{}})
-
-        # publishable states
+        
         pub_states = {}
-        for (state_id, state_name) in enumerate(PUBLISHABLE_STATES):
+        for (state_id, state_name) in PUBLISHABLE_STATES:
             pub_states.update({state_id: unicode(state_name)})
         
         system_info.update({"publishable_states": pub_states})

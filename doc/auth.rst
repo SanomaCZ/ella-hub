@@ -43,6 +43,11 @@ Login response content format:
                 "_delete":{...}
               }
           }
+        "articles":
+          {
+            "article_resource_name":
+              {...}
+          }
       },
     "system": 
       {
