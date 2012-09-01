@@ -28,26 +28,21 @@ class ApiAuthentication(Authentication):
 class ApiAuthorization(Authorization):
     """
     Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
-    2 methods are overridden: is_authorized() and (optional) apply_limits()
     """
-    # Prefixes of both basic (class-specific) and
-    # advanced (object-specidic) permissions based on Request type.
-    __perm_prefixes = {"GET":"view_", "POST":"add_", "PUT":"change_",
-                       "PATCH":"change_", "DELETE":"delete_"}
-    # Regular Expression parsing class name from path,
-    # e.g. from /admin-api/author/1/ is author lower-cased Author class.
+    __perm_prefixes = {"GET":"view_", 
+                       "POST":"add_", 
+                       "PUT":"change_",
+                       "PATCH":"change_", 
+                       "DELETE":"delete_"}
+    # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<class_name>[^/]*)/.*")
 
-
     def is_authorized(self, request, object=None):
-        if request and hasattr(request, 'user') and not request.user.is_authenticated():
-            return False
-
         self.request_method = request.META['REQUEST_METHOD']
         self.objects_class_name = self.__re_objects_class.match(request.path).group("class_name")
 
         if self.request_method == "POST":
-            # e.g. add_article is suffix of articles.add_article
+            # `apply_limits` method is not called for POST requests.
             permission_string = self.__perm_prefixes[request.method] + \
                 ella_hub.api.EllaHubApi.get_model_name(self.objects_class_name)
             found_perm = filter(lambda perm: perm.endswith(permission_string),
@@ -58,10 +53,7 @@ class ApiAuthorization(Authorization):
 
     def apply_limits(self, request, object_list):
         """
-        Applying permission limits, this method is NOT called after POST request.
-
-        type(request) == django.core.handlers.wsgi.WSGIRequest
-        type(object_list) == django.db.models.query.QuerySet
+        Applying permission limits, this method is NOT called by POST requests.
         """
         user = request.user
 
