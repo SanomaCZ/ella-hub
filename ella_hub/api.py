@@ -26,6 +26,8 @@ from ella_hub.models import PublishableLock
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
+from ella_hub.ella_resources import PublishableResource
+from ella_hub.workflow import PUBLISHABLE_STATES
 
 
 class HttpJsonResponse(HttpResponse):
@@ -96,13 +98,12 @@ class EllaHubApi(Api):
         Register view model permission for all resource classes.
         - view_<className>
         """
-        for resource_name in EllaHubApi.registered_resources.keys():
-            resource = ella_hub.api.EllaHubApi.registered_resources[resource_name]
-            model_name = resource._meta.object_class.__name__.lower()
+        for resource_name, resource_obj in EllaHubApi.registered_resources.items():
+            model_name = resource_obj._meta.object_class.__name__.lower()
             ct = ContentType.objects.get(model=model_name)
 
             perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
-                name='View %s.' % model_name, content_type=ct)
+                name='Can view %s.' % model_name, content_type=ct)
             if not isinstance(perm, tuple):
                 perm.save()
 
@@ -177,6 +178,7 @@ class EllaHubApi(Api):
             return HttpJsonResponse({
                 "api_key": self.__regenerate_key(api_key),
                 "auth_tree": self.__create_auth_tree(request),
+                "system": self.__get_system_info(request),
             })
         else:
             return HttpUnauthorized()
@@ -244,14 +246,26 @@ class EllaHubApi(Api):
 
         return HttpJsonResponse(payload, status=202)
 
+    def __get_system_info(self, request):
+        """
+        """
+        # TODO: roles definition
+        system_info = {}
+        system_info.update({"roles_definition":{}})
+
+        # publishable states
+        pub_states = {}
+        for (state_id, state_name) in enumerate(PUBLISHABLE_STATES):
+            pub_states.update({state_id: unicode(state_name)})
+        
+        system_info.update({"publishable_states": pub_states})
+        return system_info
+
     def __create_auth_tree(self, request):
         """
-        self._registry - dict{res_name: <res_obj>}
-        return:
-            dict{resource_name: {"allowed_http_methods":["get","post",...],
-                                 "fields": {attr1:{"readonly": boolean, "nullable":boolean}}}}
+        Create authorization tree, so no need to crawl top level and
+        particular resource schemas.
         """
-
         auth_tree = {}
         allowed_resources = [res for res in self._registry.keys()
             if has_user_model_perm(request.user, EllaHubApi.get_model_name(res))]
@@ -264,8 +278,23 @@ class EllaHubApi(Api):
                 field_attrs = {"readonly": False, "nullable": False}
                 field_attrs["readonly"] = attrs["readonly"]
                 field_attrs["nullable"] = attrs["nullable"]
-                res_tree["fields"].update({fn:field_attrs})
+                # TODO: set "show" true/false, no roles defined -> true
+                field_attrs["viewable"] = True
+                res_tree["fields"].update({fn: field_attrs})
 
             res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
             auth_tree.update({res_name:res_tree})
+
+        # covering article types under "articles" node
+        article_resources = [res_name for res_name, res_obj in self._registry.items()
+            if issubclass(res_obj.__class__, PublishableResource) and \
+                type(res_obj) is not PublishableResource]
+
+        articles_dict = {}
+        for article in article_resources:
+            if article in allowed_resources:
+                articles_dict.update({article: auth_tree[article]})
+                del auth_tree[article]
+        auth_tree.update({"articles":articles_dict})
+
         return auth_tree
