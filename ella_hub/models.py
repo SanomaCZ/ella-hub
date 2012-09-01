@@ -82,6 +82,14 @@ COMMENTS_CHOICES = (
     ("nobody", _("Nobody")),
 )
 
+PUBLISHABLE_STATES = (
+        ("added", _("Added")),
+        ("ready", _("Ready")),
+        ("approved", _("Approved")),
+        ("published", _("Published")),
+        ("postponed", _("Postponed")),
+        ("deleted", _("Deleted")),
+    )
 
 class BaseArticle(Publishable):
     upper_title = models.CharField(_("Upper title"), max_length=255, blank=True)
@@ -90,6 +98,8 @@ class BaseArticle(Publishable):
     photo_displayed = models.BooleanField(verbose_name=_("Display perex photo"), default=True)
     enable_comments = models.CharField(_("Article comments"), max_length=16,
         choices=COMMENTS_CHOICES, default=COMMENTS_CHOICES[0][0])
+    state = models.CharField(_("State"), choices=PUBLISHABLE_STATES, max_length=36, 
+        default=PUBLISHABLE_STATES[0][0])
 
     class Meta:
         abstract = True

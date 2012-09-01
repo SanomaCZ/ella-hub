@@ -22,12 +22,11 @@ from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
 from tastypie.utils.mime import determine_format, build_content_type
-from ella_hub.models import PublishableLock
+from ella_hub.models import PublishableLock, PUBLISHABLE_STATES
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
 from ella_hub.ella_resources import PublishableResource
-from ella_hub.workflow import PUBLISHABLE_STATES
 
 
 class HttpJsonResponse(HttpResponse):
