@@ -16,6 +16,9 @@ import django.utils.simplejson as json
 from ella.articles.models import Article
 from ella.core.models import Author
 
+from ella_hub.api import EllaHubApi
+
+
 class PatchClient(Client):
     """
     Construct a test client which can do PATCH requests.
@@ -38,6 +41,8 @@ class PatchClient(Client):
 class TestAuthorization(TestCase):
     def setUp(self):
         self.client = PatchClient()
+        self.__register_view_model_permission()
+        
         (self.admin_user, self.banned_user, self.user) = self.__create_test_users()
         (self.group1,) = self.__create_test_groups()
 
@@ -144,6 +149,7 @@ class TestAuthorization(TestCase):
         group1 = Group.objects.create(name="group1")
         GROUP1_PERMISSIONS = ("view_author", "change_author", 
                               "add_author", "delete_author")
+        
         for perm in GROUP1_PERMISSIONS:
             group1.permissions.add(Permission.objects.get(codename=perm))    
         group1.save()
@@ -516,6 +522,16 @@ class TestAuthorization(TestCase):
             tools.assert_equals(response.status_code, 204)
 
         self.__logout(headers)
+
+    def __register_view_model_permission(self):
+        for resource_name, resource_obj in EllaHubApi.registered_resources.items():
+            model_name = resource_obj._meta.object_class.__name__.lower()
+            ct = ContentType.objects.get(model=model_name)
+
+            perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
+                name='Can view %s.' % model_name, content_type=ct)
+            if not isinstance(perm, tuple):
+                perm.save()
 
     def __login(self, username, password):
         response = self.client.post('/admin-api/login/',
