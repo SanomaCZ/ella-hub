@@ -95,7 +95,7 @@ class TestAuthenticationMiddleware(TestCase):
 
         response = self.middleware.process_request(request)
         tools.assert_equals(response, None)
-        tools.assert_is_instance(request.user, User)
+        tools.assert_true(isinstance(request.user, User))
         tools.assert_true(request.user.is_authenticated())
 
     def test_header_in_wrong_format(self):
@@ -105,4 +105,4 @@ class TestAuthenticationMiddleware(TestCase):
 
         response = self.middleware.process_request(request)
         tools.assert_equals(response, None)
-        tools.assert_is_instance(request.user, AnonymousUser)
+        tools.assert_true(isinstance(request.user, AnonymousUser))
