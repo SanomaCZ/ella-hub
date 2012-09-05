@@ -21,12 +21,15 @@ from tastypie.exceptions import BadRequest
 from tastypie.resources import Resource, ModelResource
 from tastypie.models import ApiKey
 from tastypie.serializers import Serializer
+from tastypie.utils import is_valid_jsonp_callback_value
 from tastypie.utils.mime import determine_format, build_content_type
 from ella_hub.models import PublishableLock, PUBLISHABLE_STATES
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.resources import ApiModelResource
 from ella_hub.ella_resources import PublishableResource
+
+
 
 
 class HttpJsonResponse(HttpResponse):
@@ -247,7 +250,7 @@ class EllaHubApi(Api):
 
     def __get_system_info(self, request):
         """
-        Roles definition, publishable states.
+        Roles definition, publishable states, system resources.
         """
         system_info = {}
         system_info.update({"roles_definition":{}})
@@ -255,8 +258,14 @@ class EllaHubApi(Api):
         pub_states = {}
         for (state_id, state_name) in PUBLISHABLE_STATES:
             pub_states.update({state_id: unicode(state_name)})
-        
         system_info.update({"publishable_states": pub_states})
+
+        system_res_tree = {}
+        allowed_system_resources = self.__get_allowed_system_resources(request.user)
+        for res_name in allowed_system_resources:
+            system_res_tree.update({res_name: self.__create_resource_tree(res_name)})
+        system_info.update({"resources": system_res_tree})
+
         return system_info
 
     def __create_auth_tree(self, request):
@@ -265,23 +274,10 @@ class EllaHubApi(Api):
         particular resource schemas.
         """
         auth_tree = {}
-        allowed_resources = [res for res in self._registry.keys()
-            if has_user_model_perm(request.user, EllaHubApi.get_model_name(res))]
+        allowed_public_resources = self.__get_allowed_public_resources(request.user)
 
-        for res_name in allowed_resources:
-            schema = self._registry[res_name].build_schema()
-            res_tree = {"allowed_http_methods":[], "fields":{}}
-
-            for fn, attrs in schema['fields'].items():
-                field_attrs = {"readonly": False, "nullable": False}
-                field_attrs["readonly"] = attrs["readonly"]
-                field_attrs["nullable"] = attrs["nullable"]
-                # TODO: set "show" true/false, no roles defined -> true
-                field_attrs["viewable"] = True
-                res_tree["fields"].update({fn: field_attrs})
-
-            res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
-            auth_tree.update({res_name:res_tree})
+        for res_name in allowed_public_resources:
+            auth_tree.update({res_name: self.__create_resource_tree(res_name)})
 
         # covering article types under "articles" node
         article_resources = [res_name for res_name, res_obj in self._registry.items()
@@ -290,9 +286,35 @@ class EllaHubApi(Api):
 
         articles_dict = {}
         for article in article_resources:
-            if article in allowed_resources:
+            if article in allowed_public_resources:
                 articles_dict.update({article: auth_tree[article]})
                 del auth_tree[article]
-        auth_tree.update({"articles":articles_dict})
-
+        auth_tree.update({"articles": articles_dict})
         return auth_tree
+
+    def __get_allowed_public_resources(self, user):
+        allowed_public_resources = [res_name for res_name, res_obj in self._registry.items()
+            # has_user_model_perm(user, EllaHubApi.get_model_name(res_name))
+            if hasattr(res_obj._meta, 'public') and res_obj._meta.public]
+        return allowed_public_resources
+
+    def __get_allowed_system_resources(self, user):
+        allowed_system_resources = [res_name for res_name, res_obj in self._registry.items()
+            # has_user_model_perm(user, EllaHubApi.get_model_name(res_name))
+            if hasattr(res_obj._meta, 'public') and not res_obj._meta.public]
+        return allowed_system_resources
+
+    def __create_resource_tree(self, res_name):
+        schema = self._registry[res_name].build_schema()
+        res_tree = {"allowed_http_methods":[], "fields":{}}
+
+        for fn, attrs in schema['fields'].items():
+            field_attrs = {"readonly": False, "nullable": False}
+            field_attrs["readonly"] = attrs["readonly"]
+            field_attrs["nullable"] = attrs["nullable"]
+            # TODO: set "show" true/false, no roles defined -> true
+            field_attrs["disabled"] = False
+            res_tree["fields"].update({fn: field_attrs})
+
+        res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
+        return res_tree
