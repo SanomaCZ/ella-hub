@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldError
 from django.contrib.auth.models import AnonymousUser
@@ -8,10 +5,6 @@ from object_permissions import get_users_any
 
 from ella.articles.models import Article
 from ella.core.models import Author
-
-
-__all__ = ('has_obj_perm', 'has_user_model_perm',
-           'has_user_model_object_with_any_perm', 'is_resource_allowed',)
 
 
 def has_obj_perm(user, obj, perm=None):
