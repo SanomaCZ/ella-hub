@@ -19,9 +19,10 @@ Authorization
 Ella-hub authorization uses subclassed ``tastypie.Authorization``, it overrides ``is_authenticated`` method and defines ``apply_limits`` method. Top level schema, particular resource schemas and resource items are generated with respect to user's permissions.
 
 
-Authorization tree
-------------------
-After login request is sent and requesting user is authenticated, login response is sent with specified content format. Object-level permissions are implemented too. Every resource has ``_patch`` and ``_delete`` boolean attributes.
+Login response content
+----------------------
+After login request is sent and requesting user is authenticated, login response is sent with specified content format. All necessary resources definitions are sent to user with all attributes. If user don't have rights to see resource attribute, ``disabled`` flag is set to ``true``.
+Object-level permissions are implemented too. Every resource has ``_patch`` and ``_delete`` boolean attributes.
 
 Login response content format:
 ::
@@ -37,7 +38,7 @@ Login response content format:
                {
                 "attr1":
                   {
-                    "nullable":boolean, "readonly":boolean, "viewable":boolean
+                    "nullable":boolean, "readonly":boolean, "disabled":boolean
                   },
                 "_patch": {...},
                 "_delete":{...}
@@ -51,6 +52,11 @@ Login response content format:
       },
     "system": 
       {
+        "resources":
+          {
+            "resource_name":
+              {...}
+          }
         "roles_definition":{},
         "publishable_states":
           {
@@ -63,3 +69,75 @@ Login response content format:
           }
       }
   }
+
+Current superuser login response content:
+
+::
+
+  {
+    "api_key": "...",
+    "auth_tree": {
+      "articles": {
+        "article": {
+          "allowed_http_methods": [
+            "get",
+            "post",
+            "put",
+            "delete",
+            "patch"
+          ],
+          "fields": {...}
+        },
+        "encyclopedia": {
+          "allowed_http_methods": [...],
+          "fields": {...}
+        },
+        "pagedarticle": {
+          "allowed_http_methods": [...],
+          "fields": {...}
+        },
+        "recipe": {
+          "allowed_http_methods": [...],
+          "fields": {...}
+        }
+      },
+      "photo": {
+        "allowed_http_methods": [...],
+        "fields": {...}
+      }
+    },
+    "system": {
+      "publishable_states": {
+        "added": "Added",
+        "approved": "Approved",
+        "deleted": "Deleted",
+        "postponed": "Postponed",
+        "published": "Published",
+        "ready": "Ready"
+      },
+      "resources": {
+        "author": {
+          "allowed_http_methods": [...],
+          "fields": {...}
+        },
+        "category": {
+          "allowed_http_methods": [...],
+          "fields": {...}
+        },
+        "draft": {
+          "allowed_http_methods": [],
+          "fields": {...}
+        },
+        "site": {
+          "allowed_http_methods": [...],
+          "fields": {...}
+        },
+        "user": {
+          "allowed_http_methods": [...],
+          "fields": {...}
+        }
+      },
+      "roles_definition": {}
+    }
+  }
+
