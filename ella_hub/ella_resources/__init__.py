@@ -22,6 +22,7 @@ class SiteResource(ApiModelResource):
             'name' : ALL_WITH_RELATIONS,
             'resource_uri' : ALL_WITH_RELATIONS
         }
+        public = False
 
 
 class CategoryResource(ApiModelResource):
@@ -41,6 +42,7 @@ class CategoryResource(ApiModelResource):
             'title': ALL_WITH_RELATIONS,
             'tree_path': ALL_WITH_RELATIONS,
         }
+        public = False
 
 
 class UserResource(ApiModelResource):
@@ -50,6 +52,7 @@ class UserResource(ApiModelResource):
         filtering = {
             'username': ('exact',),
         }
+        public = False
 
 
 class PhotoResource(ApiModelResource):
@@ -70,6 +73,7 @@ class PhotoResource(ApiModelResource):
             'title': ALL_WITH_RELATIONS,
             'width': ALL_WITH_RELATIONS,
         }
+        public = True
 
 
 class AuthorResource(ApiModelResource):
@@ -84,6 +88,7 @@ class AuthorResource(ApiModelResource):
             'slug': ALL_WITH_RELATIONS,
             'text': ALL_WITH_RELATIONS,
         }
+        public = False
 
 
 class PublishableResource(ApiModelResource):
@@ -195,23 +200,28 @@ class DraftResource(ApiModelResource):
             'name': ('exact',),
             'timestamp': ALL_WITH_RELATIONS,
         }
+        public = False
 
 
 class ArticleResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = CommonArticle.objects.all()
+        public = True
 
 
 class EncyclopediaResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = Encyclopedia.objects.all()
+        public = True
 
 
 class RecipeResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = Recipe.objects.all()
+        public = True
 
 
 class PagedArticleResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = PagedArticle.objects.all()
+        public = True
