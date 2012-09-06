@@ -6,8 +6,6 @@ Ella-hub Documentation
 .. contents::
 
 
-
-Resource list: http://crawler.bfhost.cz:12345/admin-api/?format=json
 Django-tastypie doc__
 
 __ http://django-tastypie.readthedocs.org/en/latest/interacting.html
@@ -85,15 +83,30 @@ Generic API for all resources
 =============================
 
 GET
-----------
+---
 
-1. Get first 20 objects of given resource
+1. Get top-level resources schema
+`````````````````````````````````
+ ::
+
+ 	http://crawler.bfhost.cz:12345/admin-api/
+
+2. Get resource-specific schema
+```````````````````````````````
+ ::
+
+ 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
+
+
+3. Get max 20 objects of given resource
+```````````````````````````````````````
+- max 20, because it is implicit limit, to change or disable this limit, see_.
 
  ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
 
-*example: get first 20 articles*
+*example: get max 20 articles*
 
  ::
 
@@ -155,28 +168,24 @@ GET
 		...
 	]
 
-2. Get first 50 objects of given resource (default value is 20)
 
- ::
-
-	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/?limit=50
-
-3. Getting a detailed resource
-
+4. Getting a detailed resource
+``````````````````````````````
  ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/{id}/
 
-4. Selecting a subset of resources:
 
+5. Selecting a subset of resources
+``````````````````````````````````
  ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/set/{id_from};{id_to}/
 
 
 
-5. Filtering
-
+6. Filtering
+````````````
  a. Direct filtering
 
  ::
@@ -207,17 +216,21 @@ GET
 	http://crawler.bfhost.cz:12345/admin-api/article/?authors__name=daniel
 
 
+Required parameters
+```````````````````
+
+ ::
+
+ 	format=json
 
 
+Optional parameters
+```````````````````
+.. _see:
 
-*Required parameters:*
+ ::
 
-* format=json
-
-
-*Optional parameters:*
-
-* limit=<number>
+	limit=<number>
 
  - page limit, return <number> objects on one page, set limit=0 to disable paging [`more info`__]
 
@@ -228,7 +241,7 @@ __ http://django-tastypie.readthedocs.org/en/latest/interacting.html#getting-a-c
 POST
 ----
 
-- create a new resource
+- creation of a new resource
 
 - "Content-Type: application/json"
 
@@ -236,12 +249,14 @@ POST
 
 - related objects are identified by their resource URI
 
-To create new resource (article) send POST request:
+To create new resource (article) send POST request to:
 
  ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
-	http://crawler.bfhost.cz:12345/admin-api/article/
+	
+
+*example: creation of a new article*
 
  ::
 
@@ -267,18 +282,21 @@ PUT
 - requires that the entire resource representation be enclosed, missing fields may cause errors, or be filled in by default values
 
 1. Updating an existing resource
+````````````````````````````````
 
 ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/{id}/
 
+
 2. Updating a whole collection of resources
+```````````````````````````````````````````
 
 ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
 
-*example: update authors*
+*example: updating authors*
 ::
 
 	{
@@ -323,7 +341,7 @@ PUT
 PATCH
 -----
 
-- partially updating an existing resource
+- partially update of an existing resource
 - all required attributes needed, `related issue`__
 
 __ https://github.com/toastdriven/django-tastypie/pull/411
@@ -338,12 +356,12 @@ __ https://github.com/toastdriven/django-tastypie/pull/411
 DELETE
 ------
 
-1. Deleting a single resource
+1. Deletion of a single resource
 ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/{id}/
 
-2. Deleting a whole collection of resources
+2. Deleting of a whole collection of resources
 ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
@@ -388,13 +406,10 @@ Resources
 
 article
 -------
-- `ella doc`__, schema__
+- `ella doc`__
 - inherits from `publishable` resource
 
-
 __ http://ella.readthedocs.org/en/latest/reference/models.html#module-ella.articles.models
-__ http://crawler.bfhost.cz:12345/admin-api/article/schema/?format=json
-
 
 
 - required attributes:
@@ -433,10 +448,9 @@ __ http://crawler.bfhost.cz:12345/admin-api/article/schema/?format=json
 
 author
 ------
-- `ella doc`__, schema__
+- `ella doc`__
 
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-author-model
-__ http://crawler.bfhost.cz:12345/admin-api/author/schema/?format=json
 
 
 - required attributes:
@@ -459,10 +473,9 @@ __ http://crawler.bfhost.cz:12345/admin-api/author/schema/?format=json
 
 category
 --------
-- `ella doc`__, schema__
+- `ella doc`__
 
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-category-model
-__ http://crawler.bfhost.cz:12345/admin-api/category/schema/?format=json
 
 
 - required attributes:
@@ -488,14 +501,11 @@ __ http://crawler.bfhost.cz:12345/admin-api/category/schema/?format=json
 
 
 
-
-
 listing
 -------
-- `ella doc`__, schema__
+- `ella doc`__
 
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-listing-model
-__ http://crawler.bfhost.cz:12345/admin-api/listing/schema/?format=json
 
 
 - required attributes:
@@ -517,10 +527,9 @@ __ http://crawler.bfhost.cz:12345/admin-api/listing/schema/?format=json
 
 photo
 -----
-- `ella doc`__, schema__
+- `ella doc`__
 
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-photo-model
-__ http://crawler.bfhost.cz:12345/admin-api/photo/schema/?format=json
 
 
 - required attributes:
@@ -547,20 +556,65 @@ __ http://crawler.bfhost.cz:12345/admin-api/photo/schema/?format=json
 
 
 
+format
+------
+- `ella doc`__
+
+__ http://ella.readthedocs.org/en/latest/reference/models.html#the-format-model
+
+
+- required attributes:
+	- name
+	- max_width
+	- max_height
+	- flexible_height
+	- flexible_max_height
+	- stretch
+	- nocrop
+	- resample_quality
+	
+
+- optional attributes:
+	- sites <many-to-many>
+
+- auto-defined attributes:
+	- id
 
 
 
 
+formattedphoto
+--------------
+- `ella doc`__
+
+__ http://ella.readthedocs.org/en/latest/reference/models.html#the-photo-model
+
+
+- required attributes:
+	- photo <fk>
+	- format <fk>
+	- image
+
+- optional attributes:
+	- crop_left
+	- crop_top
+	- crop_width
+	- crop_height
+	- width
+	- height
+	- url
+
+- auto-defined attributes:
+	- id
 
 
 
 
 publishable
 -----------
-- `ella doc`__, schema__
+- `ella doc`__
 
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-publishable-model
-__ http://crawler.bfhost.cz:12345/admin-api/publishable/schema/?format=json
 
 
 - required attributes:
@@ -589,10 +643,6 @@ __ http://crawler.bfhost.cz:12345/admin-api/publishable/schema/?format=json
 
 user
 ----
-- schema__
-
-__ http://crawler.bfhost.cz:12345/admin-api/user/schema/?format=json
-
 
 - required attributes:
 	- password
@@ -614,11 +664,9 @@ __ http://crawler.bfhost.cz:12345/admin-api/user/schema/?format=json
 	- resource_uri
 
 
-Contacts:
-
+Contacts
+========
 ::
 
  vladimir.brigant@business-factory.cz
  michal.belica@business-factory.cz
-
-
