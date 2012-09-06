@@ -1,4 +1,4 @@
-from tastypie.resources import ALL_WITH_RELATIONS
+from tastypie.resources import ALL, ALL_WITH_RELATIONS
 from tastypie import fields
 
 from django.contrib.auth.models import User
@@ -8,7 +8,7 @@ from django.utils import simplejson
 
 from ella_hub.resources import ApiModelResource
 from ella.core.models import Publishable, Listing, Category, Author
-from ella.photos.models import Photo
+from ella.photos.models import Photo, FormatedPhoto, Format
 
 from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe, PagedArticle
 
@@ -17,10 +17,10 @@ class SiteResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Site.objects.all()
         filtering = {
-            'domain': ALL_WITH_RELATIONS,
-            'id' : ALL_WITH_RELATIONS,
-            'name' : ALL_WITH_RELATIONS,
-            'resource_uri' : ALL_WITH_RELATIONS
+            'domain': ('exact',),
+            'id': ALL,
+            'name': ('exact',),
+            'resource_uri': ('exact',),
         }
         public = False
 
@@ -31,16 +31,16 @@ class CategoryResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Category.objects.all()
         filtering = {
-            'app_data': ALL_WITH_RELATIONS,
-            'content': ALL_WITH_RELATIONS,
-            'description': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-            'site_id': ALL_WITH_RELATIONS,
-            'slug': ALL_WITH_RELATIONS,
-            'template': ALL_WITH_RELATIONS,
-            'title': ALL_WITH_RELATIONS,
-            'tree_path': ALL_WITH_RELATIONS,
+            'app_data': ('exact',),
+            'content': ('exact',),
+            'description': ('exact',),
+            'id': ALL,
+            'resource_uri': ('exact',),
+            'site': ALL_WITH_RELATIONS,
+            'slug': ('exact',),
+            'template': ('exact',),
+            'title': ('exact',),
+            'tree_path': ('exact',),
         }
         public = False
 
@@ -59,19 +59,58 @@ class PhotoResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Photo.objects.all()
         filtering = {
-            'app_data': ALL_WITH_RELATIONS,
-            'created': ALL_WITH_RELATIONS,
-            'description': ALL_WITH_RELATIONS,
-            'height': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
+            'app_data': ('exact',),
+            'created': ALL,
+            'description': ('exact',),
+            'height': ALL,
+            'id': ALL,
             'image': ALL_WITH_RELATIONS,
-            'important_bottom': ALL_WITH_RELATIONS,
-            'important_left': ALL_WITH_RELATIONS,
-            'important_right': ALL_WITH_RELATIONS,
-            'important_top': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-            'title': ALL_WITH_RELATIONS,
-            'width': ALL_WITH_RELATIONS,
+            'important_bottom': ALL,
+            'important_left': ALL,
+            'important_right': ALL,
+            'important_top': ALL,
+            'resource_uri': ('exact',),
+            'title': ('exact',),
+            'width': ALL,
+        }
+        public = True
+
+
+class FormatResource(ApiModelResource):
+    sites = fields.ToManyField(SiteResource, 'sites', full=True)
+    
+    class Meta(ApiModelResource.Meta):
+        queryset = Format.objects.all()
+        filtering = {
+            'name': ('exact',),
+            'max_width': ALL,
+            'max_height': ALL,
+            'flexible_height': ('exact',),
+            'flexible_max_height': ('exact',),
+            'stretch': ('exact',),
+            'nocrop': ('exact',),
+            'resample_quality': ALL,
+            'sites': ALL_WITH_RELATIONS,
+        }
+        public = False
+
+
+class FormatedPhotoResource(ApiModelResource):
+    format = fields.ForeignKey(FormatResource, 'format', full=True)
+    photo = fields.ForeignKey(PhotoResource, 'photo', full=True)
+
+    class Meta(ApiModelResource.Meta):
+        queryset = FormatedPhoto.objects.all()
+        filtering = {
+            'crop_left': ALL,
+            'crop_top': ALL,
+            'crop_width': ALL,
+            'crop_height': ALL,
+            'format': ALL_WITH_RELATIONS,
+            'height': ALL,
+            'image': ALL,
+            'photo': ALL_WITH_RELATIONS,
+            'width': ALL,
         }
         public = True
 
@@ -80,13 +119,13 @@ class AuthorResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
         filtering = {
-            'description': ALL_WITH_RELATIONS,
-            'email': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'name': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-            'slug': ALL_WITH_RELATIONS,
-            'text': ALL_WITH_RELATIONS,
+            'description': ('exact',),
+            'email': ('exact',),
+            'id': ALL,
+            'name': ('exact',),
+            'resource_uri': ('exact',),
+            'slug': ('exact',),
+            'text': ('exact',),
         }
         public = False
 
@@ -94,33 +133,30 @@ class AuthorResource(ApiModelResource):
 class PublishableResource(ApiModelResource):
     photo = fields.ForeignKey(PhotoResource, 'photo', null=True)
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
-    #listings = fields.ToManyField(ListingResource, 'listing_set', full=True)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
 
     class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()
         filtering = {
-            'announced': ALL_WITH_RELATIONS,
-            'app_data': ALL_WITH_RELATIONS,
+            'announced': ALL,
+            'app_data': ('exact',),
             'authors': ALL_WITH_RELATIONS,
             'category': ALL_WITH_RELATIONS,
-            'description': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'listings': ALL_WITH_RELATIONS,
+            'description': ('exact',),
+            'id': ALL,
             'photo': ALL_WITH_RELATIONS,
-            'publish_from': ALL_WITH_RELATIONS,
-            'publish_to': ALL_WITH_RELATIONS,
-            'published': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
-            'slug': ALL_WITH_RELATIONS,
-            'static': ALL_WITH_RELATIONS,
-            'title': ALL_WITH_RELATIONS,
+            'publish_from': ALL,
+            'publish_to': ALL,
+            'published': ('exact',),
+            'resource_uri': ('exact',),
+            'slug': ('exact',),
+            'static': ('exact',),
+            'title': ('exact',),
         }
 
     def dehydrate(self, bundle):
         bundle.data['url'] = bundle.obj.get_domain_url()
         return bundle
-
 
 
 class ListingResource(ApiModelResource):
@@ -131,12 +167,12 @@ class ListingResource(ApiModelResource):
         queryset = Listing.objects.all()
         filtering = {
             'category': ALL_WITH_RELATIONS,
-            'commercial': ALL_WITH_RELATIONS,
-            'id': ALL_WITH_RELATIONS,
-            'publish_from': ALL_WITH_RELATIONS,
-            'publish_to': ALL_WITH_RELATIONS,
+            'commercial': ('exact',),
+            'id': ALL,
+            'publish_from': ALL,
+            'publish_to': ALL,
             'publishable': ALL_WITH_RELATIONS,
-            'resource_uri': ALL_WITH_RELATIONS,
+            'resource_uri': ('exact',),
         }
 
 
