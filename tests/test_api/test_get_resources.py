@@ -69,6 +69,14 @@ class TestGetResources(TestCase):
         tools.assert_true("list_endpoint" in resources["photo"])
         tools.assert_true("schema" in resources["photo"])
 
+        tools.assert_true("formatedphoto" in resources)
+        tools.assert_true("list_endpoint" in resources["formatedphoto"])
+        tools.assert_true("schema" in resources["formatedphoto"])
+
+        tools.assert_true("format" in resources)
+        tools.assert_true("list_endpoint" in resources["format"])
+        tools.assert_true("schema" in resources["format"])
+
         tools.assert_true("listing" in resources)
         tools.assert_true("list_endpoint" in resources["listing"])
         tools.assert_true("schema" in resources["listing"])

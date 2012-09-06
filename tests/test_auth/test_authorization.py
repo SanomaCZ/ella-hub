@@ -1,5 +1,4 @@
 import os
-from django.test import TestCase
 from urlparse import urlparse, urlsplit
 
 from PIL import Image
@@ -10,6 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.db import connection
 from django.template import RequestContext
+from django.test import TestCase
 from django.test.client import Client, FakePayload, MULTIPART_CONTENT
 import django.utils.simplejson as json
 
@@ -27,12 +27,12 @@ class PatchClient(Client):
         patch_data = self._encode_data(data, content_type)
         parsed = urlparse(path)
         r = {
-            'CONTENT_LENGTH': len(patch_data),
-            'CONTENT_TYPE':   content_type,
-            'PATH_INFO':      self._get_path(parsed),
-            'QUERY_STRING':   parsed[4],
-            'REQUEST_METHOD': 'PATCH',
-            'wsgi.input':     FakePayload(patch_data),
+            "CONTENT_LENGTH": len(patch_data),
+            "CONTENT_TYPE": content_type,
+            "PATH_INFO": self._get_path(parsed),
+            "QUERY_STRING": parsed[4],
+            "REQUEST_METHOD": "PATCH",
+            "wsgi.input": FakePayload(patch_data),
         }
         r.update(extra)
         return self.request(**r)
@@ -50,7 +50,7 @@ class TestAuthorization(TestCase):
 
         # Creating temporary image.
         self.photo_filename = ".test_image.jpg"
-        image = Image.new('RGB', (200, 100), "black")
+        image = Image.new("RGB", (200, 100), "black")
 
         if not os.path.exists(settings.MEDIA_ROOT):
             os.makedirs(settings.MEDIA_ROOT)
@@ -58,36 +58,39 @@ class TestAuthorization(TestCase):
         image.save(settings.MEDIA_ROOT + "/" + self.photo_filename, format="jpeg")
 
         self.new_author = json.dumps({
-            'description':"this is descr.",
-            'email':"mail@mail.com",
-            'id':100,
-            'name':"dumb_name",
-            'resource_uri':"/admin-api/author/100/",
-            'slug':"dumb-name",
-            'text':"this is text"})
+            "description": "this is descr.",
+            "email": "mail@mail.com",
+            "id": 100,
+            "name": "dumb_name",
+            "resource_uri": "/admin-api/author/100/",
+            "slug": "dumb-name",
+            "text": "this is text"
+            })
 
         self.new_user = json.dumps({
-            'email':"user@mail.com",
-            'first_name': "test",
-            "id":100,
+            "email": "user@mail.com",
+            "first_name": "test",
+            "id": 100,
             "is_staff": True,
-            "is_superuser":True,
+            "is_superuser": True,
             "last_name": "user",
             "password": "heslo",
             "resource_uri": "/admin-api/user/100/",
-            "username":"test_user"})
+            "username": "test_user"
+            })
 
         self.new_category = json.dumps({
             "app_data": "{}",
             "content": "this is content",
-            "description" : "this is a category description",
-            "id":100,
+            "description": "this is a category description",
+            "id": 100,
             "resource_uri": "/admin-api/category/100/",
             "site": "/admin-api/site/100/",
-            "slug":"category1",
+            "slug": "category1",
             "template": "category.html",
-            "title":"category100",
-            "tree_path":"category100"})
+            "title": "category100",
+            "tree_path": "category100"
+            })
 
         self.new_article = json.dumps({
             "authors": [
@@ -101,30 +104,62 @@ class TestAuthorization(TestCase):
                     "text": "this is text"
                 }],
             "category": "/admin-api/category/100/",
-            "content":"this is awesome new-article content",
-            "description":"this is awesome description",
-            "id":100,
+            "content": "this is awesome new-article content",
+            "description": "this is awesome description",
+            "id": 100,
             "publish_from": "2012-08-07T14:51:29",
             "publish_to": "2012-08-15T14:51:35",
-            "resource_uri":"/admin-api/article/100/",
+            "resource_uri": "/admin-api/article/100/",
             "slug": "test-article",
-            "title":"test_article"})
+            "title": "test_article"
+            })
 
         self.new_photo = json.dumps({
-            "title":"photo1",
-            "image":self.photo_filename,
-            "authors":"{}",
+            "title": "photo1",
+            "image": self.photo_filename,
+            "authors": "{}",
             "created": "2012-08-07T14:51:29",
-            "id":100,
-            "resource_uri":"/admin-api/photo/100/",
-            "description":"this is description"
+            "id": 100,
+            "resource_uri": "/admin-api/photo/100/",
+            "description": "this is description"
             })
 
         self.new_site = json.dumps({
-            "domain":"test_domain.com",
-            "id":100,
+            "domain": "test_domain.com",
+            "id": 100,
             "name": "test_domain.com",
             "resource_uri": "/admin-api/site/100/"
+            })
+
+        self.new_format = json.dumps({
+            "flexible_height": False, 
+            "flexible_max_height": None, 
+            "max_height": 200, 
+            "max_width": 200, 
+            "name": "format_name", 
+            "nocrop": True, 
+            "resample_quality": 95, 
+            "sites": [
+                {
+                    "domain": "test_domain.com",
+                    "id": 100,
+                    "name": "test_domain.com",
+                    "resource_uri": "/admin-api/site/100/"
+                }], 
+            "stretch": True
+            })
+
+        self.new_formatedphoto = json.dumps({
+            "resource_uri": "/admin-api/formatedphoto/100/", 
+            "crop_height": 0, 
+            "crop_left": 0, 
+            "crop_top": 0, 
+            "crop_width": 0, 
+            "id": 100, 
+            "format": "/admin-api/format/1/", 
+            "height": 200, 
+            "photo": "/admin-api/photo/100/", 
+            "width": 200
             })
 
         self.new_listing = json.dumps({
@@ -134,7 +169,8 @@ class TestAuthorization(TestCase):
             "publish_from": "2012-08-07T14:51:29",
             "publish_to": "2012-08-15T14:51:35",
             "resource_uri": "/admin-api/listing/100/",
-            "publishable": "/admin-api/article/100/"})
+            "publishable": "/admin-api/article/100/"
+            })
 
     def tearDown(self):
         self.admin_user.delete()
@@ -151,7 +187,7 @@ class TestAuthorization(TestCase):
                               "add_author", "delete_author")
         
         for perm in GROUP1_PERMISSIONS:
-            group1.permissions.add(Permission.objects.get(codename=perm))    
+            group1.permissions.add(Permission.objects.get(codename=perm))
         group1.save()
         return (group1,)
 
@@ -405,6 +441,9 @@ class TestAuthorization(TestCase):
             ("site", self.new_site),
             ("category", self.new_category),
             ("photo", self.new_photo),
+            # TODO: can't add format objects with custom ID
+            #("format", self.new_format),
+            #("formatedphoto", self.new_formatedphoto),
             ("article", self.new_article),
             ("listing", self.new_listing)
         )

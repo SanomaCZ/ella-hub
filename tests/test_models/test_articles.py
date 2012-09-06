@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from django.test import TestCase
-
 from nose import tools
+from django.test import TestCase
 from django.utils.translation import ugettext_lazy as _
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils import timezone
