@@ -13,8 +13,7 @@ test_requires = [
     'coverage',
 ]
 
-with open('README.rst') as file:
-    long_description = file.read()
+long_description = open('README.rst').read() 
 
 setup(
     name='Ella-Hub',
