@@ -150,6 +150,8 @@ then
 	############################
 	# POST formatedphoto resource
 	echo -n "POST formatedphoto: "
+# Problem: tastypie has a bug that doesn’t allow to POST/PUT 3-and-more level nested resources, see: https://github.com/toastdriven/django-tastypie/issues/307, so format may be specified only with resource URI!
+#	curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey $name:$api_key" -X POST --data '{"resource_uri": "/admin-api/formatedphoto/100/", "crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0, "id": 100, "format": { "flexible_height": false, "flexible_max_height": null, "id": 200, "max_height": 200, "max_width": 34, "name": "formatik", "nocrop": true, "resample_quality": 95, "resource_uri": "/admin-api/format/200/", "sites": [{ "domain": "domain2.com", "id": 3, "name": "domain2.com", "resource_uri": "/admin-api/site/3/"}], "stretch": true}, "height": 200, "photo": "/admin-api/photo/1/", "width": 200}' "$server/admin-api/formatedphoto/"
 	curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey $name:$api_key" -X POST --data '{"resource_uri": "/admin-api/formatedphoto/100/", "crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0, "id": 100, "format": "/admin-api/format/100/", "height": 200, "photo": "/admin-api/photo/1/", "width": 200}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/' 
 
 
