@@ -5,9 +5,8 @@
 name=seocity
 pass=seocity
 
-#server=http://crawler.bfhost.cz:12345
-server=http://crawler.bfhost.cz:33333
-#server=http://crawler.bfhost.cz:44444
+# run via ./test_ella_dev_server.sh <port_number>
+server=http://crawler.bfhost.cz:$1
 
 # test top-level & resource-specific schemas?
 test_schemas=0
@@ -150,7 +149,7 @@ then
 	############################
 	# POST formatedphoto resource
 	echo -n "POST formatedphoto: "
-	curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey $name:$api_key" -X POST --data '{"resource_uri": "/admin-api/formatedphoto/100/", "crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0, "id": 100, "format": "/admin-api/format/100/", "height": 200, "photo": "/admin-api/photo/1/", "width": 200}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/' 
+	curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey $name:$api_key" -X POST --data '{"resource_uri": "/admin-api/formatedphoto/100/", "crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0, "id": 100, "format": "/admin-api/format/100/", "height": 200, "photo": "/admin-api/photo/1/", "width": 200}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 
 	echo -n "DELETE formatedphoto: "
