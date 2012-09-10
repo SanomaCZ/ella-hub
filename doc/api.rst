@@ -590,6 +590,10 @@ formattedphoto
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-photo-model
 
 
+*Problem*: tastypie has a bug that doesn't allow to POST/PUT 3-and-more level nested resources, see: 
+https://github.com/toastdriven/django-tastypie/issues/307, so format may be specified only with resource URI!
+
+
 - required attributes:
 	- photo <fk>
 	- format <fk>
