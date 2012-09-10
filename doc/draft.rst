@@ -92,7 +92,6 @@ Drafts is created via POST method by sending attributes below at URL:
  ::
 
     {
-        "user": 1,
         "content_type": "photo",
         "data": {
             "width": 200,
