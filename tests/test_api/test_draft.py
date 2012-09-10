@@ -84,7 +84,6 @@ class TestDraft(TestCase):
 
         data = json.dumps({
             "content_type": "commonarticle",
-            "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
@@ -115,7 +114,6 @@ class TestDraft(TestCase):
 
         data = json.dumps({
             "content_type": "commonarticle",
-            "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
@@ -155,7 +153,6 @@ class TestDraft(TestCase):
         for id in range(6):
             data = json.dumps({
                 "content_type": "commonarticle",
-                "user": "/admin-api/user/%d/" % self.user.pk,
                 "data": {"id": id, "field": "value", "another_field": True},
             })
             response = self.client.post("/admin-api/draft/", data=data,
@@ -188,7 +185,6 @@ class TestDraft(TestCase):
 
         data = json.dumps({
             "content_type": "commonarticle",
-            "user": "/admin-api/user/%d/" % self.user.pk,
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,

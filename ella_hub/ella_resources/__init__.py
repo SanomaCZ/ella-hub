@@ -78,7 +78,7 @@ class PhotoResource(ApiModelResource):
 
 class FormatResource(ApiModelResource):
     sites = fields.ToManyField(SiteResource, 'sites', full=True)
-    
+
     class Meta(ApiModelResource.Meta):
         queryset = Format.objects.all()
         filtering = {
@@ -202,6 +202,8 @@ class DraftResource(ApiModelResource):
         Name of content type is case insensitive and correspond to the name
         of resource.
         """
+        bundle = super(DraftResource, self).hydrate(bundle)
+
         content_type = ContentType.objects.get(model__iexact=bundle.data['content_type'])
         bundle.obj.content_type = content_type
         return bundle
@@ -237,6 +239,7 @@ class DraftResource(ApiModelResource):
             'timestamp': ALL_WITH_RELATIONS,
         }
         public = False
+        user_fields = ("user",)
 
 
 class ArticleResource(PublishableResource):

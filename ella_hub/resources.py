@@ -160,6 +160,13 @@ class ApiModelResource(ModelResource):
         #   del object.data['content']
         return bundle
 
+    def hydrate(self, bundle):
+        """Fills user fields by current logged user."""
+        for field_name in getattr(self._meta, "user_fields", ()):
+            setattr(bundle.obj, field_name, bundle.request.user)
+
+        return bundle
+
     class Meta:
         authentication = Authentication()
         authorization = Authorization()
