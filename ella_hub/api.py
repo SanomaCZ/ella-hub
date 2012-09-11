@@ -130,12 +130,16 @@ class EllaHubApi(Api):
                     'check RESOURCE_MODULES '
                     'in your settings: "%s"' % (module, e))
             else:
-                for attr in mod.__dict__:
-                    resource = getattr(mod, attr)
-                    if self._is_resource_subclass(resource):
-                        resource_modules.append(resource)
+                resource_modules.append(mod)
 
-        return resource_modules
+        resources = []
+        for mod in resource_modules:
+            for attr in mod.__dict__:
+                resource = getattr(mod, attr)
+                if self._is_resource_subclass(resource) and resource not in resources:
+                    resources.append(resource)
+
+        return resources
 
     def _is_resource_subclass(self, resource):
         if not isclass(resource):
