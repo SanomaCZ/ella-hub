@@ -55,7 +55,20 @@ class UserResource(ApiModelResource):
         public = False
 
 
+class SourceResource(ApiModelResource):
+    class Meta(ApiModelResource.Meta):
+        queryset = Source.objects.all()
+        filtering = {
+            'name': ALL,
+            'url': ALL,
+        }
+        public = False
+
+
 class PhotoResource(ApiModelResource):
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
+        full=True)
+
     class Meta(ApiModelResource.Meta):
         queryset = Photo.objects.all()
         filtering = {
@@ -126,16 +139,6 @@ class AuthorResource(ApiModelResource):
             'resource_uri': ('exact',),
             'slug': ('exact',),
             'text': ('exact',),
-        }
-        public = False
-
-
-class SourceResource(ApiModelResource):
-    class Meta(ApiModelResource.Meta):
-        queryset = Source.objects.all()
-        filtering = {
-            'name': ALL,
-            'url': ALL,
         }
         public = False
 
