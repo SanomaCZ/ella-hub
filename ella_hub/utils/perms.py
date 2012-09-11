@@ -40,9 +40,8 @@ def has_user_model_perm(user, model_name, perm=None):
     else:
         found_perm = filter(lambda perm: perm.startswith(ct.app_label+".") and perm.endswith(model_name),
             user.get_all_permissions())
-    if found_perm:
-        return True
-    return False
+
+    return found_perm
 
 
 def has_user_model_object_with_any_perm(user, model_name, perm_list=[]):
@@ -56,17 +55,14 @@ def has_user_model_object_with_any_perm(user, model_name, perm_list=[]):
         return False
 
     ct = ContentType.objects.get(model=model_name)
-    objects = []
 
     try:
         objects = user.get_objects_any_perms(ct.model_class(), perms=perm_list)
     except FieldError:
-        pass
-        #print "Class %s has no registered permissions." % ct.model_class()
+        # print "Class %s has no registered permissions." % ct.model_class()
+        return False
 
-    if objects:
-        return True
-    return False
+    return bool(objects)
 
 
 def is_resource_allowed(user, model_name):
@@ -74,8 +70,5 @@ def is_resource_allowed(user, model_name):
     Return True if user has rights to get schema
     specified by `model_name`.
     """
-    if (has_user_model_perm(user, model_name) or
-        has_user_model_object_with_any_perm(user, model_name)):
-        return True
-    return False
-
+    return (has_user_model_perm(user, model_name) or
+        has_user_model_object_with_any_perm(user, model_name))

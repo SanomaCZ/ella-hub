@@ -254,7 +254,7 @@ class EllaHubApi(Api):
         """
         system_info = {}
         system_info.update({"roles_definition":{}})
-        
+
         pub_states = {}
         for (state_id, state_name) in PUBLISHABLE_STATES:
             pub_states.update({state_id: unicode(state_name)})
@@ -295,13 +295,13 @@ class EllaHubApi(Api):
     def __get_allowed_public_resources(self, user):
         allowed_public_resources = [res_name for res_name, res_obj in self._registry.items()
             # has_user_model_perm(user, EllaHubApi.get_model_name(res_name))
-            if hasattr(res_obj._meta, 'public') and res_obj._meta.public]
+            if getattr(res_obj._meta, "public", False)]
         return allowed_public_resources
 
     def __get_allowed_system_resources(self, user):
         allowed_system_resources = [res_name for res_name, res_obj in self._registry.items()
             # has_user_model_perm(user, EllaHubApi.get_model_name(res_name))
-            if hasattr(res_obj._meta, 'public') and not res_obj._meta.public]
+            if getattr(res_obj._meta, "public", True)]
         return allowed_system_resources
 
     def __create_resource_tree(self, res_name):
