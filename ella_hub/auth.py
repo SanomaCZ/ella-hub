@@ -14,6 +14,9 @@ from tastypie.models import ApiKey
 from ella_hub.utils.perms import has_obj_perm
 
 
+API_KEY_EXPIRATION_IN_DAYS = 14
+
+
 class ApiAuthentication(Authentication):
     def is_authenticated(self, request, **kwargs):
         if super(ApiAuthentication, self).is_authenticated(request, **kwargs) is not True:
@@ -21,7 +24,8 @@ class ApiAuthentication(Authentication):
         username, key = self.extract_credentials(request)
         api_key = ApiKey.objects.get(user__username=username, key=key)
 
-        expiration_time = api_key.created + datetime.timedelta(weeks=2)
+        expiration_time = api_key.created + datetime.timedelta(
+            days=API_KEY_EXPIRATION_IN_DAYS)
         return timezone.now() < expiration_time
 
 
@@ -29,10 +33,10 @@ class ApiAuthorization(Authorization):
     """
     Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
     """
-    __perm_prefixes = {"GET":"view_", 
-                       "POST":"add_", 
+    __perm_prefixes = {"GET":"view_",
+                       "POST":"add_",
                        "PUT":"change_",
-                       "PATCH":"change_", 
+                       "PATCH":"change_",
                        "DELETE":"delete_"}
     # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<class_name>[^/]*)/.*")

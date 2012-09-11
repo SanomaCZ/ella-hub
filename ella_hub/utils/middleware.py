@@ -7,6 +7,8 @@ from tastypie.models import ApiKey
 
 from ella.utils import timezone
 
+from ella_hub.auth import API_KEY_EXPIRATION_IN_DAYS
+
 
 class CrossDomainAccessMiddleware(object):
     """
@@ -44,7 +46,6 @@ class CrossDomainAccessMiddleware(object):
 
 class AuthenticationMiddleware(object):
     __APIKEY_HEADER_PATTERN = re.compile(r"ApiKey ([^:]+):([^\"]+).*", re.IGNORECASE)
-    API_KEY_EXPIRATION_IN_DAYS = 14
 
     def process_request(self, request):
         # ignore authentication to Django admin
@@ -89,7 +90,7 @@ class AuthenticationMiddleware(object):
 
     def _is_api_key_valid(self, api_key):
         expiration_time = api_key.created + datetime.timedelta(
-            days=AuthenticationMiddleware.API_KEY_EXPIRATION_IN_DAYS)
+            days=API_KEY_EXPIRATION_IN_DAYS)
         return timezone.now() < expiration_time
 
     def _refresh_api_key_expiration_time(self, api_key):
