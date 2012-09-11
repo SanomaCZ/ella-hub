@@ -1,5 +1,6 @@
 -r requirements.txt
 
+git+git://github.com/ella/ella-galleries.git
 sphinx
 pysqlite
 nose
