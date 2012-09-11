@@ -7,7 +7,7 @@ from django.contrib.sites.models import Site
 from django.utils import simplejson
 
 from ella_hub.resources import ApiModelResource
-from ella.core.models import Publishable, Listing, Category, Author
+from ella.core.models import Publishable, Listing, Category, Author, Source
 from ella.photos.models import Photo, FormatedPhoto, Format
 
 from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe, PagedArticle
@@ -130,10 +130,23 @@ class AuthorResource(ApiModelResource):
         public = False
 
 
+class SourceResource(ApiModelResource):
+    class Meta(ApiModelResource.Meta):
+        queryset = Source.objects.all()
+        filtering = {
+            'name': ALL,
+            'url': ALL,
+        }
+        public = False
+
+
 class PublishableResource(ApiModelResource):
-    photo = fields.ForeignKey(PhotoResource, 'photo', null=True)
+    photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True,
+        full=True)
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
+        full=True)
 
     class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()

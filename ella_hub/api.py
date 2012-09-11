@@ -1,6 +1,7 @@
 import re
 import datetime
 import ella_hub.signals
+import ella_hub.resources
 
 from inspect import isclass
 from django.conf import settings
@@ -26,7 +27,6 @@ from tastypie.utils.mime import determine_format, build_content_type
 from ella_hub.models import PublishableLock, PUBLISHABLE_STATES
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
-from ella_hub.resources import ApiModelResource
 from ella_hub.ella_resources import PublishableResource
 
 
@@ -132,11 +132,20 @@ class EllaHubApi(Api):
             else:
                 for attr in mod.__dict__:
                     resource = getattr(mod, attr)
-                    if isclass(resource) and issubclass(resource, Resource) \
-                            and resource not in (Resource, ModelResource, ApiModelResource):
+                    if self._is_resource_subclass(resource):
                         resource_modules.append(resource)
 
         return resource_modules
+
+    def _is_resource_subclass(self, resource):
+        if not isclass(resource):
+            return False
+
+        if not issubclass(resource, Resource):
+            return False
+
+        return resource not in (Resource, ModelResource,
+            ella_hub.resources.ApiModelResource)
 
     def register_resources(self, resources):
         "Register one or more resources"

@@ -95,6 +95,7 @@ class TestGetResources(TestCase):
         headers = self.__build_headers("user", api_key)
 
         response = self.client.get("/admin-api/article/", **headers)
+        tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
 
         tools.assert_true(isinstance(resources, list))
