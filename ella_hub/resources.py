@@ -9,8 +9,6 @@ from django.contrib.contenttypes.models import ContentType
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
-# from tastypie.authentication import Authentication
-# from tastypie.authorization import Authorization
 
 
 class ApiModelResource(ModelResource):

@@ -126,7 +126,7 @@ class EllaHubApi(Api):
                 mod = import_module(module)
             except ImportError, e:
                 raise ImproperlyConfigured(
-                    'Error importing resource module %s,'
+                    'Error importing resource module %s, '
                     'check RESOURCE_MODULES '
                     'in your settings: "%s"' % (module, e))
             else:
