@@ -254,7 +254,7 @@ To create new resource (article) send POST request to:
  ::
 
 	http://crawler.bfhost.cz:12345/admin-api/{resource_name}/
-	
+
 
 *example: creation of a new article*
 
@@ -425,7 +425,6 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#module-ella.artic
 	- static *(inherited)*
 
 - optional attributes:
-	- upper_title
 	- updated
 
 	- description *(inherited)*
@@ -572,7 +571,7 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-format-model
 	- stretch
 	- nocrop
 	- resample_quality
-	
+
 
 - optional attributes:
 	- sites <many-to-many>
@@ -590,7 +589,7 @@ formattedphoto
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-photo-model
 
 
-*Problem*: tastypie has a bug that doesn't allow to POST/PUT 3-and-more level nested resources, see: 
+*Problem*: tastypie has a bug that doesn't allow to POST/PUT 3-and-more level nested resources, see:
 https://github.com/toastdriven/django-tastypie/issues/307, so format may be specified only with resource URI!
 
 
