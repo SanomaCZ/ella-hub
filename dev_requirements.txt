@@ -1,10 +1,11 @@
 -r requirements.txt
 
 pysqlite
--e git+gitolite@git.smdev.cz:ella-wikipages#egg=ella-wikipages
+django-taggit
+git+git://github.com/ella/ella-taggit.git
 git+git://github.com/ella/ella-galleries.git
+-e git+gitolite@git.smdev.cz:ella-wikipages#egg=ella-wikipages
 
 sphinx
 nose
 coverage
-
