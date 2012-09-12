@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils import timezone
 
-from ella_hub.models import CommonArticle, Recipe, Encyclopedia, PagedArticle
+from ella_hub.models import CommonArticle, Recipe, Encyclopedia
 
 
 class TestGetResources(TestCase):
@@ -21,15 +21,12 @@ class TestGetResources(TestCase):
             publish_from=timezone.now(), slug="spinach", cook_time=30)
         Encyclopedia.objects.create(title="Jop3", category=self.category,
             publish_from=timezone.now(), slug="jop3")
-        PagedArticle.objects.create(title="Jop4", category=self.category,
-            publish_from=timezone.now(), slug="jop4")
 
     def tearDown(self):
         self.user.delete()
         CommonArticle.objects.all().delete()
         Recipe.objects.all().delete()
         Encyclopedia.objects.all().delete()
-        PagedArticle.objects.all().delete()
 
     def __create_test_user(self, username, password, is_admin=False):
         user = User.objects.create_user(username=username, password=password)

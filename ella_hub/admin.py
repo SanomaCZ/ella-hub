@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 from ella.core.admin import PublishableAdmin, ListingInlineAdmin, RelatedInlineAdmin
-from ella_hub.models import Draft, CommonArticle, Encyclopedia, PagedArticle, ArticlePage, Recipe, RecipeIngredient
+from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe, RecipeIngredient
 
 
 class ArticleAdmin(PublishableAdmin):
@@ -67,32 +67,7 @@ class RecipeAdmin(PublishableAdmin):
     inlines = [IngredientInlineAdmin, ListingInlineAdmin, RelatedInlineAdmin]
 
 
-class PageInlineAdmin(admin.StackedInline):
-    model = ArticlePage
-    fieldsets = ((
-        None, {"fields": (
-            ("page_number", "content"),
-        )}
-    ),)
-
-
-class PagedArticleAdmin(PublishableAdmin):
-    ordering = ("-publish_from",)
-    fieldsets = (
-        (_("Article heading"), {"fields": ("title", "slug", "state")}),
-        (_("Article contents"), {"fields": ("description",)}),
-        (_("Metadata"), {"fields": ("category", "authors", "source",
-            ("photo", "photo_displayed"))}),
-        (_("Publication"), {"fields": (
-            ("publish_from", "publish_to", "updated"),
-            ("enable_comments", "published", "static", "commercial"),
-        )}),
-    )
-    inlines = [PageInlineAdmin, ListingInlineAdmin, RelatedInlineAdmin]
-
-
 admin.site.register(Draft)
 admin.site.register(CommonArticle, ArticleAdmin)
 admin.site.register(Encyclopedia, EncyclopediaAdmin)
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(PagedArticle, PagedArticleAdmin)

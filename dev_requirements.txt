@@ -1,8 +1,10 @@
 -r requirements.txt
 
-git+git://github.com/ella/ella-galleries.git
-sphinx
 pysqlite
+-e git+gitolite@git.smdev.cz:ella-wikipages#egg=ella-wikipages
+git+git://github.com/ella/ella-galleries.git
+
+sphinx
 nose
 coverage
 

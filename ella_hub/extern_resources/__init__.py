@@ -6,3 +6,4 @@ they should be placed into particular apps.
 """
 
 from ella_galleries_resources import GalleryResource, GalleryItemResource
+from ella_wikipages_resources import WikipageResource

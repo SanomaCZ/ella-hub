@@ -136,6 +136,7 @@ INSTALLED_APPS = (
     'object_permissions',
     'tastypie',
     'ella_galleries',
+    'ella_wikipages',
     'ella_hub',  # install it via python setup.py develop
 )
 

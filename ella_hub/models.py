@@ -276,38 +276,6 @@ class RecipeIngredient(models.Model):
         verbose_name_plural = _("Recipe ingredients")
 
 
-class PagedArticle(BaseArticle):
-    """Article with several pages."""
-
-    def __init__(self, *args, **kwargs):
-        super(PagedArticle, self).__init__(*args, **kwargs)
-        self._meta.get_field("photo_displayed").default = False
-        self._meta.get_field("description").verbose_name = _("Perex")
-
-    def __unicode__(self):
-        return u"%s: %s" % (_("Paged article"), self.title)
-
-    class Meta:
-        verbose_name = _("Paged article")
-        verbose_name_plural = _("Paged articles")
-
-
-class ArticlePage(models.Model):
-    """One page of `PagedArticle`"""
-
-    article = models.ForeignKey(PagedArticle, verbose_name=_("Article"))
-    page_number = models.PositiveIntegerField(_("Page number"))
-    content = models.TextField(_("Text"))
-
-    def __unicode__(self):
-        return u"%s#%s: %s" % (_("Article page"), self.page_number,
-            unicode(self.article))
-
-    class Meta:
-        verbose_name = _("Article page")
-        verbose_name_plural = _("Article pages")
-
-
 def register_object_permissions():
     CLASSES = (
         ('author', Author, 'core'),
@@ -318,7 +286,6 @@ def register_object_permissions():
         ('site', Site, 'sites'),
         ('photo', Photo, 'photos'),
         ('article', CommonArticle, 'ella_hub'),
-        ('pagedarticle', PagedArticle, 'ella_hub'),
         ('recipe', Recipe, 'ella_hub'),
         ('encyclopedia', Encyclopedia, 'ella_hub'),
     )

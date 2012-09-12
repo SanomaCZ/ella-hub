@@ -10,7 +10,7 @@ from ella_hub.resources import ApiModelResource
 from ella.core.models import Publishable, Listing, Category, Author, Source
 from ella.photos.models import Photo, FormatedPhoto, Format
 
-from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe, PagedArticle
+from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe
 
 
 class SiteResource(ApiModelResource):
@@ -273,10 +273,4 @@ class EncyclopediaResource(PublishableResource):
 class RecipeResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = Recipe.objects.all()
-        public = True
-
-
-class PagedArticleResource(PublishableResource):
-    class Meta(PublishableResource.Meta):
-        queryset = PagedArticle.objects.all()
         public = True
