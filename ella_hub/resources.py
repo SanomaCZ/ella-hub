@@ -3,12 +3,39 @@ import ella_hub.api
 
 from tastypie import fields
 from tastypie.resources import ModelResource
+from django.utils import simplejson
 from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
 
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
+
+
+
+class MultipartResource(object):
+    def deserialize(self, request, data, format=None):
+        if not format:
+            format = request.META.get('CONTENT_TYPE', 'application/json')
+
+        if format.startswith('multipart'):
+            data = request.POST.copy()
+            data.update(request.FILES)
+            data['photo'] = simplejson.loads(data['photo'])
+            return data
+        return super(MultipartResource, self).deserialize(request, data, format)
+
+    def put_detail(self, request, **kwargs):
+        if request.META.get('CONTENT_TYPE').startswith('multipart') and \
+            not hasattr(request, '_body'):
+            request._body = ''
+        return super(MultipartResource, self).put_detail(request, **kwargs)
+
+    def patch_detail(self, request, **kwargs):
+        if request.META.get('CONTENT_TYPE').startswith('multipart'):
+            request.body
+
+        return super(MultipartResource, self).patch_detail(request, **kwargs)
 
 
 class ApiModelResource(ModelResource):
@@ -124,7 +151,6 @@ class ApiModelResource(ModelResource):
         # plus specifying readonly attribute
         #schema['fields']['app_data']['readonly'] = True
         return self.create_response(request, schema)
-
 
     def alter_list_data_to_serialize(self, request, bundle):
         """
