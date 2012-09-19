@@ -49,13 +49,7 @@ class TestAuthorization(TestCase):
         self.article_model_ct = None
 
         # Creating temporary image.
-        self.photo_filename = ".test_image.jpg"
-        image = Image.new("RGB", (200, 100), "black")
-
-        if not os.path.exists(settings.MEDIA_ROOT):
-            os.makedirs(settings.MEDIA_ROOT)
-
-        image.save(settings.MEDIA_ROOT + "/" + self.photo_filename, format="jpeg")
+        self.photo_filename = self.__create_tmp_image(".test_image.jpg")
 
         self.new_author = json.dumps({
             "description": "this is descr.",
@@ -177,7 +171,7 @@ class TestAuthorization(TestCase):
         self.banned_user.delete()
         self.user.delete()
         self.group1.delete()
-        os.remove(settings.MEDIA_ROOT + "/" + self.photo_filename)
+        os.remove(self.photo_filename)
         connection.close()
 
     def __create_test_groups(self):
@@ -561,6 +555,13 @@ class TestAuthorization(TestCase):
             tools.assert_equals(response.status_code, 204)
 
         self.__logout(headers)
+
+    def __create_tmp_image(self, filename):
+        image = Image.new("RGB", (200, 100), "black")
+        if not os.path.exists(settings.MEDIA_ROOT):
+            os.makedirs(settings.MEDIA_ROOT)
+        image.save(settings.MEDIA_ROOT + "/" + filename, format="jpeg")
+        return settings.MEDIA_ROOT + "/" + filename
 
     def __register_view_model_permission(self):
         for resource_name, resource_obj in EllaHubApi.registered_resources.items():
