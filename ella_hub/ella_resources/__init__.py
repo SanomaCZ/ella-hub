@@ -1,12 +1,15 @@
+import os
+
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
 from tastypie import fields
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.utils import simplejson
 
-from ella_hub.resources import ApiModelResource
+from ella_hub.resources import ApiModelResource, MultipartResource
 from ella.core.models import Publishable, Listing, Category, Author, Source
 from ella.photos.models import Photo, FormatedPhoto, Format
 
@@ -65,7 +68,7 @@ class SourceResource(ApiModelResource):
         public = False
 
 
-class PhotoResource(ApiModelResource):
+class PhotoResource(MultipartResource, ApiModelResource):
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
 
@@ -86,7 +89,27 @@ class PhotoResource(ApiModelResource):
             'title': ('exact',),
             'width': ALL,
         }
-        public = True
+    public = True
+
+    def dehydrate(self, bundle):
+        bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
+        return bundle
+
+    def hydrate(self, bundle):
+        bundle = super(PhotoResource, self).hydrate(bundle)
+
+        if not 'upload_image' in bundle.data.keys():
+            return bundle
+
+        image = bundle.data['upload_image']
+        name, ext = os.path.splitext(image.name)
+        photo = Photo.objects.create(title=name, image=image)
+        
+        bundle.data['photo']['image'] = photo.image.url[len(settings.MEDIA_URL):]
+        photo.delete()
+        bundle.data = bundle.data['photo']
+
+        return bundle
 
 
 class FormatResource(ApiModelResource):
@@ -126,6 +149,10 @@ class FormatedPhotoResource(ApiModelResource):
             'width': ALL,
         }
         public = True
+
+    def dehydrate(self, bundle):
+        bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
+        return bundle
 
 
 class AuthorResource(ApiModelResource):
