@@ -14,7 +14,6 @@ from ella.core.models import Publishable, Listing, Category, Author, Source
 from ella.photos.models import Photo, FormatedPhoto, Format
 
 from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe
-from ella_hub.utils import get_full_path
 
 
 class SiteResource(ApiModelResource):
@@ -94,7 +93,7 @@ class PhotoResource(MultipartResource, ApiModelResource):
 
     def dehydrate(self, bundle):
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
-        bundle.data['public_url'] = get_full_path(bundle.request,
+        bundle.data['public_url'] = bundle.request.build_absolute_uri(
             bundle.obj.image.url)
 
         return bundle
