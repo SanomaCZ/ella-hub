@@ -89,7 +89,7 @@ class PhotoResource(MultipartResource, ApiModelResource):
             'title': ('exact',),
             'width': ALL,
         }
-    public = True
+        public = True
 
     def dehydrate(self, bundle):
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
