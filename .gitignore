@@ -32,6 +32,7 @@ doc/.static
 doc/.templates
 doc/_build
 doc/Makefile.local
+/ella_hub/static/
 
 nosetests.xml
 tests/example_project/*.db
