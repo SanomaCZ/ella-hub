@@ -7,16 +7,18 @@ from ella_hub.api import EllaHubApi
 
 admin.autodiscover()
 
-api = EllaHubApi(api_name='admin-api')
-collected_resources = api.collect_resources()
-api.register_resources(collected_resources)
-api.register_view_model_permission()
+# admin API setup
+admin_api = EllaHubApi("admin-api")
+resources = admin_api.collect_resources()
+admin_api.register_resources(resources)
+admin_api.register_view_model_permission()
+
 
 urlpatterns = patterns('',
     # enable admin
     url(r'^admin/', include(admin.site.urls)),
 
-    (r'^', include(api.urls)),
+    (r'^', include(admin_api.urls)),
     (r'^admin-hope/(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': 'admin-hope',
         'show_indexes': True,
