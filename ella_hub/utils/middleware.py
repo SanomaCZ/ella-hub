@@ -21,8 +21,20 @@ class CrossDomainAccessMiddleware(object):
     __OPTIONS = (
         # (header type, settings variable, default value)
         ("Origin", "XS_SHARING_ALLOWED_ORIGINS", "*"),
-        ("Methods", "XS_SHARING_ALLOWED_METHODS", ("POST", "GET", "OPTIONS", "PUT", "PATCH", "DELETE")),
-        ("Headers", "XS_SHARING_ALLOWED_HEADERS", ("Content-Type", "X-Requested-With", "Authorization")),
+        ("Methods", "XS_SHARING_ALLOWED_METHODS", (
+            "POST",
+            "GET",
+            "OPTIONS",
+            "PUT",
+            "PATCH",
+            "DELETE",
+        )),
+        ("Headers", "XS_SHARING_ALLOWED_HEADERS", (
+            "Content-Type",
+            "X-Requested-With",
+            "Authorization",
+            "X-Mime-Type",
+        )),
         ("Credentials", "XS_SHARING_ALLOWED_CREDENTIALS", "true"),
     )
 
