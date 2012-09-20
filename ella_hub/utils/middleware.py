@@ -34,6 +34,7 @@ class CrossDomainAccessMiddleware(object):
             "X-Requested-With",
             "Authorization",
             "X-Mime-Type",
+            "X-File-Name",
         )),
         ("Credentials", "XS_SHARING_ALLOWED_CREDENTIALS", "true"),
     )
