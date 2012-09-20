@@ -1,7 +1,7 @@
 import os
 
 from PIL import Image
-from nose import tools
+from nose import tools, SkipTest
 from django.test import TestCase
 import django.utils.simplejson as json
 from django.conf import settings
@@ -94,12 +94,13 @@ class TestPhotosResources(TestCase):
 
         self.__logout(headers)
 
-    @tools.nottest
     def test_download_formatedphoto(self):
         """
         This test fails because of issue with Photo model.
         http://stackoverflow.com/questions/3029988/django-gives-i-o-operation-on-closed-file-error-when-reading-from-a-saved-imag
         """
+        raise SkipTest()
+
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
@@ -113,12 +114,13 @@ class TestPhotosResources(TestCase):
 
         self.__logout(headers)
 
-    @tools.nottest
     def test_download_formatedphoto_unauthenticated(self):
         """
         This test fails because of issue with Photo model.
         http://stackoverflow.com/questions/3029988/django-gives-i-o-operation-on-closed-file-error-when-reading-from-a-saved-imag
         """
+        raise SkipTest()
+
         photo = Photo.objects.create(title="photo title", image=self.photo_filename)
         format = Format.objects.create(name="format_name",
             max_height=200, max_width=200)
