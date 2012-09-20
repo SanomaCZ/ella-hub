@@ -16,6 +16,7 @@ Contents:
    draft
    lock
    workflow
+   photos
 
 Indices and tables
 ==================
