@@ -501,6 +501,28 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-category-mode
 
 
 
+source
+--------
+- `ella doc`__
+
+__ http://ella.readthedocs.org/en/latest/reference/models.html#the-source-model
+
+
+- required attributes:
+	- name
+
+- optional attributes:
+	- url
+	- description
+
+- auto-defined attributes:
+	- id
+
+
+
+
+
+
 listing
 -------
 - `ella doc`__
