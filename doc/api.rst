@@ -488,6 +488,7 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-category-mode
 	- content
 	- tree_parent
 	- app_data
+	- parent_category <fk>
 
 - auto-defined attributes:
 	- id

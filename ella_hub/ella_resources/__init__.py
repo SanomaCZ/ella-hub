@@ -29,6 +29,8 @@ class SiteResource(ApiModelResource):
 
 
 class CategoryResource(ApiModelResource):
+    parent_category = fields.ForeignKey('self', 'tree_parent',
+        blank=True, null=True)
     site = fields.ForeignKey(SiteResource, 'site', full=True)
 
     class Meta(ApiModelResource.Meta):
