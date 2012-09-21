@@ -74,21 +74,21 @@ class TestPhotosResources(TestCase):
         headers = self.__build_headers("user", api_key)
         Photo.objects.create(title="photo title", image=self.photo_filename)
 
-        response = self.client.get('/admin-api/download-photo/1/', **headers)
+        response = self.client.get('/admin-api/photo/download/1/', **headers)
         tools.assert_equals(response.status_code, 200)
 
         self.__logout(headers)
 
     def test_download_photo_unauthenticated(self):
         Photo.objects.create(title="photo title", image=self.photo_filename)
-        response = self.client.get('/admin-api/download-photo/1/')
+        response = self.client.get('/admin-api/photo/download/1/')
         tools.assert_equals(response.status_code, 401)
 
     def test_download_photo_not_get(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        response = self.client.post('/admin-api/download-photo/1/', {'a':'b'},
+        response = self.client.post('/admin-api/photo/download/1/', {'a':'b'},
             format='application/json', **headers)
         tools.assert_equals(response.status_code, HttpResponseNotAllowed.status_code)
 
@@ -109,7 +109,7 @@ class TestPhotosResources(TestCase):
             max_height=200, max_width=200)
         FormatedPhoto.objects.create(photo=photo, format=format)
 
-        response = self.client.get('/admin-api/download-formatedphoto/1/', **headers)
+        response = self.client.get('/admin-api/formatedphoto/download/1/', **headers)
         tools.assert_equals(response.status_code, 200)
 
         self.__logout(headers)
@@ -126,14 +126,14 @@ class TestPhotosResources(TestCase):
             max_height=200, max_width=200)
         FormatedPhoto.objects.create(photo=photo, format=format)
 
-        response = self.client.get('/admin-api/download-formatedphoto/1/')
+        response = self.client.get('/admin-api/formatedphoto/download/1/')
         tools.assert_equals(response.status_code, 401)
 
     def test_download_formatedphoto_not_get(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        response = self.client.post('/admin-api/download-formatedphoto/1/', {'a':'b'},
+        response = self.client.post('/admin-api/formatedphoto/download/1/', {'a':'b'},
             format='application/json', **headers)
         tools.assert_equals(response.status_code, HttpResponseNotAllowed.status_code)
 

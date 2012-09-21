@@ -66,7 +66,7 @@ R(ead)
 
  ::
 
-   curl -H "Authorization: ApiKey <name>:<api_key> <server>/admin-api/download-photo/<id>/
+   curl -H "Authorization: ApiKey <name>:<api_key> <server>/admin-api/photo/download/<id>/
 
 
 U(pdate)

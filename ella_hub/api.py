@@ -170,8 +170,8 @@ class EllaHubApi(Api):
             url(r"^%s/unlock-publishable/(?P<id>\d+)/$" % self.api_name, self.wrap_view('unlock_publishable')),
             url(r"^%s/is-publishable-locked/(?P<id>\d+)/$" % self.api_name, self.wrap_view('is_publishable_locked')),
 
-            url(r"^%s/download-photo/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_photo')),
-            url(r"^%s/download-formatedphoto/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_formatedphoto')),
+            url(r"^%s/photo/download/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_photo')),
+            url(r"^%s/formatedphoto/download/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_formatedphoto')),
 
             url(r"^%s/login/$" % self.api_name, self.wrap_view('login_view')),
             url(r"^%s/logout/$" % self.api_name, self.wrap_view('logout_view')),
@@ -276,7 +276,7 @@ class EllaHubApi(Api):
         photo = Photo.objects.get(id=id)
         image_data = photo.image.read()
 
-        return HttpResponse(image_data, 
+        return HttpResponse(image_data,
             mimetype=mimetypes.guess_type(photo.image.url)[0])
 
     def download_formatedphoto(self, request, id):
@@ -289,7 +289,7 @@ class EllaHubApi(Api):
         formated_photo = FormatedPhoto.objects.get(id=id)
         image_data = formated_photo.image.read()
 
-        return HttpResponse(image_data, 
+        return HttpResponse(image_data,
             mimetype=mimetypes.guess_type(formated_photo.image.url)[0])
 
     def __get_system_info(self, request):
