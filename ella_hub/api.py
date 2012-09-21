@@ -170,6 +170,7 @@ class EllaHubApi(Api):
             url(r"^%s/unlock-publishable/(?P<id>\d+)/$" % self.api_name, self.wrap_view('unlock_publishable')),
             url(r"^%s/is-publishable-locked/(?P<id>\d+)/$" % self.api_name, self.wrap_view('is_publishable_locked')),
 
+            url(r"^%s/upload-photo/$" % self.api_name, self.wrap_view('upload_photo')),
             url(r"^%s/download-photo/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_photo')),
             url(r"^%s/download-formatedphoto/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_formatedphoto')),
 
@@ -264,6 +265,15 @@ class EllaHubApi(Api):
                 "locked_at": lock.timestamp,
             })
 
+        return HttpJsonResponse(payload, status=202)
+
+    @cross_domain_api_post_view
+    def upload_photo(self, request):
+        image = request.FILES['image']
+        name, ext = os.path.splitext(image.name)
+        photo = Photo.objects.create(title=name, image=image)
+        photo.delete()
+        payload = photo.image.url[len(settings.MEDIA_URL):]
         return HttpJsonResponse(payload, status=202)
 
     def download_photo(self, request, id):
