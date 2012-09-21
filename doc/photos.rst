@@ -52,19 +52,19 @@ R(ead)
 
  ::
 
-   curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key> <server>/admin-api/photo/
+  curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" <server>/admin-api/photo/
 
 2. Get specific Photo resource
 
  ::
 
-   curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key> <server>/admin-api/photo/<id>/
+  curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" <server>/admin-api/photo/<id>/
 
 3. Download image
 
  ::
 
-   curl -H "Authorization: ApiKey <name>:<api_key> <server>/admin-api/photo/download/<id>/
+  curl -H "Authorization: ApiKey <name>:<api_key>" <server>/admin-api/photo/download/<id>/
 
 
 U(pdate)
@@ -77,15 +77,22 @@ PUT
 
 ::
 
- curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key> -X PUT --data '{"description": "abrakadabra, bro", "title": "another_photo"}' <server>/admin-api/photo/1/
+  curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" \
+  -H "Content-Type: application/json" -X PUT --data '{
+    "title": "Modified photo by PUT method",
+    "description": "Modified description by PUT method."
+  }' "<server>/admin-api/photo/<id>/"
 
 2. with image
 
 ::
 
- new_image_path=/home/vlado/pics/icons/eclipse.png
+  new_image_path=/path/to/writable/dir/file_name.png
 
- curl --dump-header - -H "Authorization: ApiKey <name>:<api_key> -F upload_image=@${new_image_path} -F photo='{"title":"put title"}' -X PUT  <server>/admin-api/photo/1/
+  curl --dump-header - -X PUT -H "Authorization: ApiKey <name>:<api_key>" \
+    -F "image=@${new_image_path}" -F 'photo={
+      "description":"Modified photo by PUT method (image data included)."
+    }' "<server>/admin-api/photo/<id>/"
 
 
 PATCH
@@ -95,15 +102,23 @@ PATCH
 
 ::
 
- curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X PATCH --data '{"description": "hello, bro"}' "<server>/admin-api/photo/1/"
+  curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" \
+  -H "Content-Type: application/json" -X PATCH --data '{
+    "title": "Modified photo by PATCH method",
+    "description": "Modified description by PATCH method."
+  }' "<server>/admin-api/photo/<id>/""
 
 
 2. with image
 
 ::
 
- new_image_path=/home/vlado/pics/icons/eclipse.png
- curl -H "Authorization: ApiKey <name>:<api_key>" -F upload_image=@${new_image_path} -F photo='{"title":"new_title"}' -X PATCH <server>/admin-api/photo/1/
+  new_image_path=/path/to/writable/dir/file_name.png
+
+  curl --dump-header - -X PATCH -H "Authorization: ApiKey <name>:<api_key>" \
+    -F "image=@${new_image_path}" -F 'photo={
+      "description":"Modified photo by PATCH method (image data included)."
+    }' "<server>/admin-api/photo/<id>/"
 
 
 
@@ -114,7 +129,7 @@ D(elete)
 
 ::
 
- curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" -X DELETE <server>/admin-api/photo/<id>/
+  curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" -X DELETE <server>/admin-api/photo/<id>/
 
 
 
@@ -134,28 +149,27 @@ C(reate)
 ::
 
 
- format=
-   {
-     "flexible_height": false,
-     "flexible_max_height": null,
-     "max_height": 200,
-     "max_width": 34,
-     "name": "formatik",
-     "nocrop": true,
-     "resample_quality": 95,
-     "sites":
-       [
-         {
-           "domain": "domain2.com",
-           "id": 3,
-           "name": "domain2.com",
-           "resource_uri": "/admin-api/site/3/"
-         }
-       ],
-     "stretch": true
-   }
+  format=
+    {
+      "flexible_height": false,
+      "flexible_max_height": null,
+      "max_height": 200,
+      "max_width": 34,
+      "name": "formatik",
+      "nocrop": true,
+      "resample_quality": 95,
+      "sites": [
+        {
+          "domain": "domain2.com",
+          "id": 3,
+          "name": "domain2.com",
+          "resource_uri": "/admin-api/site/3/"
+        }
+      ],
+      "stretch": true
+    }
 
- curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X POST --data "$format" <server>/admin-api/format/
+  curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X POST --data "$format" <server>/admin-api/format/
 
 
 
@@ -164,7 +178,7 @@ R(ead)
 
 ::
 
-  curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key> <server>/admin-api/format/
+  curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" <server>/admin-api/format/
 
 
 U(pdate)
@@ -176,20 +190,19 @@ PUT/PATCH
 ::
 
  update_format=
-   {
-     "name": "formatik",
-     "sites":
-       [
-         {
-           "domain": "domain2.com",
-           "id": 3,
-           "name": "domain2.com",
-           "resource_uri": "/admin-api/site/3/"
-         }
-       ]
+    {
+      "name": "formatik",
+      "sites": [
+        {
+          "domain": "domain2.com",
+          "id": 3,
+          "name": "domain2.com",
+          "resource_uri": "/admin-api/site/3/"
+        }
+      ]
     }
 
- curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey $name:$api_key" -X [PUT|PATCH] --data "$update_format" <server>/admin-api/format/<id>/
+  curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey $name:$api_key" -X [PUT|PATCH] --data "$update_format" <server>/admin-api/format/<id>/
 
 
 D(elete)
@@ -197,7 +210,7 @@ D(elete)
 
 ::
 
- curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" -X DELETE <server>/admin-api/format/<id>/
+  curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" -X DELETE <server>/admin-api/format/<id>/
 
 
 
@@ -235,7 +248,7 @@ C(reate)
      "width": 200
    }
 
- curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X POST --data "$formatedphoto" <server>/admin-api/formatedphoto/
+  curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X POST --data "$formatedphoto" <server>/admin-api/formatedphoto/
 
 
 
@@ -244,7 +257,7 @@ R(ead)
 
 ::
 
-  curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key> <server>/admin-api/formatedphoto/
+  curl -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" <server>/admin-api/formatedphoto/
 
 
 U(pdate)
@@ -255,7 +268,7 @@ PUT/PATCH
 
 ::
 
- curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key> -X [PUT|PATCH] --data '{"crop_height": 50, "crop_left": 50, "crop_top": 0, "width": 200}' <server>/admin-api/formatedphoto/<id>/
+  curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X [PUT|PATCH] --data '{"crop_height": 50, "crop_left": 50, "crop_top": 0, "width": 200}' <server>/admin-api/formatedphoto/<id>/
 
 
 D(elete)
@@ -263,5 +276,5 @@ D(elete)
 
 ::
 
- curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" -X DELETE <server>/admin-api/formatedphoto/<id>/
+  curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" -X DELETE <server>/admin-api/formatedphoto/<id>/
 

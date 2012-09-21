@@ -15,13 +15,24 @@ from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
 
 class MultipartResource(object):
     def put_detail(self, request, **kwargs):
-        if request.META.get('CONTENT_TYPE').startswith('multipart') and \
-            not hasattr(request, '_body'):
+        """
+        Hack for problem with error message: "You cannot access body
+        after reading from request's data stream".
+
+        Related issue: https://github.com/toastdriven/django-tastypie/issues/598
+        """
+        content_type = request.META.get('CONTENT_TYPE', '').lower()
+        if (content_type.startswith('multipart/form-data') and
+            not hasattr(request, '_body')):
             request._body = ''
 
         return super(MultipartResource, self).put_detail(request, **kwargs)
 
     def patch_detail(self, request, **kwargs):
+        """
+        Hack for problem with error message: "You cannot access body
+        after reading from request's data stream".
+        """
         if request.META.get('CONTENT_TYPE').startswith('multipart'):
             request.body
 

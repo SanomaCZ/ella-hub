@@ -136,6 +136,8 @@ fi
 if [ $test_photos -eq 1 ];
 then
 	IMAGE_PATH=./media/photos/example_image.png
+	IMAGE_PATH_CHANGED=./media/photos/example_changed_image.png
+
 
 	############################
 	# POST photo resource
@@ -160,7 +162,6 @@ then
 	echo -n "POST format: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X POST --data '{"id": 100, "resource_uri": "/admin-api/format/100/", "flexible_height": false, "flexible_max_height": null, "max_height": 200, "max_width": 34, "name": "formatik", "nocrop": true, "resample_quality": 95, "sites": [{"domain": "domain2.com", "id": 3, "name": "domain2.com", "resource_uri": "/admin-api/site/3/"}], "stretch": true}' "$server/admin-api/format/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-
 	############################
 	# POST formatedphoto resource
 	echo -n "POST formatedphoto: "
@@ -171,14 +172,52 @@ then
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X POST --data '{"resource_uri": "/admin-api/formatedphoto/100/", "crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0, "id": 100, "format": "/admin-api/format/100/", "height": 200, "photo": "/admin-api/photo/100/", "width": 200}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 
+	############################
+	# PUT photo resource
+	echo -n "PUT photo (without image): "
+	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"title": "Modified photo by PUT method",
+		"description": "Modified description by PUT method."
+	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	############################
+	# PUT photo resource
+	echo -n "PUT photo (with image): "
+  	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
+    -F "image=@${IMAGE_PATH_CHANGED}" -F 'photo={
+    	"description":"Modified photo by PUT method (image data included)."
+    }' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	############################
+	# PATCH photo resource
+	echo -n "PATCH photo (without image): "
+	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"title": "Modified photo by PATCH method",
+		"description": "Modified description by PATCH method."
+	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	############################
+	# PATCH photo resource
+	echo -n "PATCH photo (with image): "
+  	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
+    -F "image=@${IMAGE_PATH}" -F 'photo={
+    	"description":"Modified photo by PATCH method (image data included)."
+    }' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+
 	echo -n "DELETE formatedphoto: "
-	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/formatedphoto/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	 "$server/admin-api/formatedphoto/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "DELETE format: "
-	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/format/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	 "$server/admin-api/format/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "DELETE photo: "
-	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	"$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 	echo "-"
 fi
 
