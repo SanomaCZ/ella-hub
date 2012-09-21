@@ -14,21 +14,11 @@ from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
 
 
 class MultipartResource(object):
-    def deserialize(self, request, data, format=None):
-        if not format:
-            format = request.META.get('CONTENT_TYPE', 'application/json')
-
-        if format.startswith('multipart'):
-            data = request.POST.copy()
-            data.update(request.FILES)
-            data['photo'] = simplejson.loads(data['photo'])
-            return data
-        return super(MultipartResource, self).deserialize(request, data, format)
-
     def put_detail(self, request, **kwargs):
         if request.META.get('CONTENT_TYPE').startswith('multipart') and \
             not hasattr(request, '_body'):
             request._body = ''
+
         return super(MultipartResource, self).put_detail(request, **kwargs)
 
     def patch_detail(self, request, **kwargs):

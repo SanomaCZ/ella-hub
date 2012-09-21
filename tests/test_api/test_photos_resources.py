@@ -47,25 +47,32 @@ class TestPhotosResources(TestCase):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        fh = open(self.photo_filename)
-        response = self.client.post("/admin-api/photo/", {'photo': self.new_photo, 'upload_image':fh},
-            **headers)
+        file = open(self.photo_filename)
+        response = self.client.post("/admin-api/photo/",
+            {'photo': self.new_photo, 'image':file}, **headers)
         resource = self.__get_response_json(response)
-        tools.assert_true('image' in resource.keys())
+        tools.assert_true('image' in resource)
         tools.assert_equals(response.status_code, 201)
-        fh.close()
+        file.close()
 
         response = self.client.get('/admin-api/photo/100/', **headers)
+        tools.assert_equals(response.status_code, 200)
         resource = self.__get_response_json(response)
-        tools.assert_false(resource['image'].startswith(settings.MEDIA_URL))
+        tools.assert_true('public_url' in resource)
 
-        fh = open(self.photo_filename)
-        response = self.client.post("/admin-api/photo/", {'photo': self.new_photo, 'upload_image':fh},
+        file = open(self.photo_filename)
+        response = self.client.post("/admin-api/photo/",
+            {'photo': self.new_photo, 'image':file},
             format='application/x-www-form-urlencoded', **headers)
         resource = self.__get_response_json(response)
-        tools.assert_true('image' in resource.keys())
+        tools.assert_true('image' in resource)
         tools.assert_equals(response.status_code, 201)
-        fh.close()
+        file.close()
+
+        response = self.client.get('/admin-api/photo/100/', **headers)
+        tools.assert_equals(response.status_code, 200)
+        resource = self.__get_response_json(response)
+        tools.assert_true('public_url' in resource)
 
         self.__logout(headers)
 

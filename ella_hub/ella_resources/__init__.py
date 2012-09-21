@@ -72,6 +72,25 @@ class PhotoResource(MultipartResource, ApiModelResource):
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
 
+    def dehydrate(self, bundle):
+        """Adds absolute URL of image."""
+        bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
+        bundle.data['public_url'] = bundle.request.build_absolute_uri(
+            bundle.obj.image.url)
+
+        return bundle
+
+    def deserialize(self, request, data, format=None):
+        if not format:
+            format = request.META.get('CONTENT_TYPE', 'application/json')
+
+        if format.lower().startswith('multipart/form-data'):
+            data = simplejson.loads(request.POST['photo'])
+            data['image'] = request.FILES['image']
+            return data
+
+        return super(PhotoResource, self).deserialize(request, data, format)
+
     class Meta(ApiModelResource.Meta):
         queryset = Photo.objects.all()
         filtering = {
@@ -90,29 +109,6 @@ class PhotoResource(MultipartResource, ApiModelResource):
             'width': ALL,
         }
         public = True
-
-    def dehydrate(self, bundle):
-        bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
-        bundle.data['public_url'] = bundle.request.build_absolute_uri(
-            bundle.obj.image.url)
-
-        return bundle
-
-    def hydrate(self, bundle):
-        bundle = super(PhotoResource, self).hydrate(bundle)
-
-        if not 'upload_image' in bundle.data.keys():
-            return bundle
-
-        image = bundle.data['upload_image']
-        name, ext = os.path.splitext(image.name)
-        photo = Photo.objects.create(title=name, image=image)
-
-        bundle.data['photo']['image'] = photo.image.url[len(settings.MEDIA_URL):]
-        photo.delete()
-        bundle.data = bundle.data['photo']
-
-        return bundle
 
 
 class FormatResource(ApiModelResource):
@@ -138,6 +134,10 @@ class FormatedPhotoResource(ApiModelResource):
     format = fields.ForeignKey(FormatResource, 'format', full=True)
     photo = fields.ForeignKey(PhotoResource, 'photo', full=True)
 
+    def dehydrate(self, bundle):
+        bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
+        return bundle
+
     class Meta(ApiModelResource.Meta):
         queryset = FormatedPhoto.objects.all()
         filtering = {
@@ -152,10 +152,6 @@ class FormatedPhotoResource(ApiModelResource):
             'width': ALL,
         }
         public = True
-
-    def dehydrate(self, bundle):
-        bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
-        return bundle
 
 
 class AuthorResource(ApiModelResource):

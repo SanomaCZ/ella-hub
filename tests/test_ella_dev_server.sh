@@ -135,10 +135,25 @@ fi
 
 if [ $test_photos -eq 1 ];
 then
+	IMAGE_PATH=./media/photos/example_image.png
+
 	############################
 	# POST photo resource
 	echo -n "POST photo: "
-	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X POST --data '{"app_data": "{}", "id": 100, "created": "2012-09-05T10:16:32.131517", "description": "this is desc", "image": "1-fotka.png", "height": 256, "important_bottom": null, "important_left": null, "important_right": null, "important_top": null, "resource_uri": "/admin-api/photo/100/", "slug": "1-fotka", "title": "fotka", "width": 256}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	curl --dump-header - -H "$AUTH_HEADER" \
+	-X POST --form "image=@${IMAGE_PATH}" --form 'photo={
+		"id": 100,
+		"title": "Multipart-photo",
+		"slug": "multipart-photo",
+		"description": "Multipart description of photo",
+		"width": 256, "height": 256,
+		"created": "2012-09-05T10:16:32.131517",
+		"important_top": null,
+		"important_left": null,
+		"important_bottom": null,
+		"important_right": null,
+		"app_data": "{}"
+	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	############################
 	# POST format resource
