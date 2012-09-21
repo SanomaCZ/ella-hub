@@ -157,6 +157,9 @@ class FormatedPhotoResource(ApiModelResource):
 
 
 class AuthorResource(ApiModelResource):
+    user = fields.ForeignKey(UserResource, 'user', blank=True, null=True,
+        full=True)
+
     class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
         filtering = {
