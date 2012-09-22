@@ -66,9 +66,9 @@ fi
 echo -n "POST author: "
 curl --dump-header - -X POST -H "$AUTH_HEADER" \
 -H "Content-Type: application/json" --data '{
-    "id": 100, "resource_uri": "/admin-api/author/100/",
-    "name": "dumb_name", "description": "this is descr",
-    "email": "mail@mail.com", "slug":"dumb-name", "text":"this is text"
+	"id": 100, "resource_uri": "/admin-api/author/100/",
+	"name": "dumb_name", "description": "this is descr",
+	"email": "mail@mail.com", "slug":"dumb-name", "text":"this is text"
 }' "$server/admin-api/author/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 
@@ -78,78 +78,78 @@ then
 	# Testing `author` resource -POST/PUT/PATCH/DELETE.
 	echo -n "PUT author: "
 	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri": "/admin-api/author/100/",
-        "name": "dumb_name", "description": "this is descr",
-        "email": "mail@mail.com", "slug":"dumb-name", "text":"this is text"
-    }' "$server/admin-api/author/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri": "/admin-api/author/100/",
+		"name": "dumb_name", "description": "this is descr",
+		"email": "mail@mail.com", "slug":"dumb-name", "text":"this is text"
+	}' "$server/admin-api/author/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "PATCH author: "
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "description": "this is descr"
-    }' "$server/admin-api/author/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"description": "this is descr"
+	}' "$server/admin-api/author/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Testing `user` resource - POST/PUT/PATCH/DELETE.
 	echo -n "POST user: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri":"/admin-api/user/100/",
-        "username":"test_user", "first_name": "test", "last_name": "user",
-        "email": "user@mail.com", "password": "heslo",
-        "is_staff": 1, "is_superuser": 1
-    }' "$server/admin-api/user/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri":"/admin-api/user/100/",
+		"username":"test_user", "first_name": "test", "last_name": "user",
+		"email": "user@mail.com", "password": "heslo",
+		"is_staff": 1, "is_superuser": 1
+	}' "$server/admin-api/user/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "PUT user: "
 	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri":"/admin-api/user/100/",
-        "username":"test_user", "first_name": "test", "last_name": "user",
-        "email": "mail@mail.com", "password": "heslo",
-        "is_staff": 1, "is_superuser": 1
-    }' "$server/admin-api/user/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri":"/admin-api/user/100/",
+		"username":"test_user", "first_name": "test", "last_name": "user",
+		"email": "mail@mail.com", "password": "heslo",
+		"is_staff": 1, "is_superuser": 1
+	}' "$server/admin-api/user/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "PATCH user: "
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "email": "imejl@mejl.com"
-    }' "$server/admin-api/user/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"email": "imejl@mejl.com"
+	}' "$server/admin-api/user/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Testing `site` resource - POST/DELETE.
 	echo -n "POST site: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri": "/admin-api/site/100/",
-        "name": "test_domain.com", "domain": "test_domain.com"
-    }' "$server/admin-api/site/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri": "/admin-api/site/100/",
+		"name": "test_domain.com", "domain": "test_domain.com"
+	}' "$server/admin-api/site/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Testing `category` resource -POST/DELETE.
 	echo -n "POST category: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "app_data": "{}","content": "this is content", "description" : "cat desc",
-        "id":100, "resource_uri": "/admin-api/category/100/",
-        "site": "/admin-api/site/100/","slug":"category1",
-        "template": "category.html",
-        "title": "category100", "tree_path": "category100"
-    }' "$server/admin-api/category/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"app_data": "{}","content": "this is content", "description" : "cat desc",
+		"id":100, "resource_uri": "/admin-api/category/100/",
+		"site": "/admin-api/site/100/","slug":"category1",
+		"template": "category.html",
+		"title": "category100", "tree_path": "category100"
+	}' "$server/admin-api/category/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Testing `article` resource - POST/DELETE.
 	echo -n "POST article: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri":"/admin-api/article/100/",
-        "title":"test_article", "state":3, "slug": "test-article",
-        "authors": [{
-            "id": 100, "resource_uri": "/admin-api/author/100/",
-            "name": "dumb_name", "slug": "dumb-name",
-            "description": "this is descr.", "email": "mail@mail.com", "text": "this is text"
-        }],
-        "category": "/admin-api/category/100/",
-        "content": "this is awesome new-article content",
-        "description": "this is awesome description",
-        "publish_from": "2012-08-07T14:51:29", "publish_to": "2012-08-15T14:51:35"
-    }' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri":"/admin-api/article/100/",
+		"title":"test_article", "state":3, "slug": "test-article",
+		"authors": [{
+			"id": 100, "resource_uri": "/admin-api/author/100/",
+			"name": "dumb_name", "slug": "dumb-name",
+			"description": "this is descr.", "email": "mail@mail.com", "text": "this is text"
+		}],
+		"category": "/admin-api/category/100/",
+		"content": "this is awesome new-article content",
+		"description": "this is awesome description",
+		"publish_from": "2012-08-07T14:51:29", "publish_to": "2012-08-15T14:51:35"
+	}' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Deletion of all created `core` objects.
 	echo -n "DELETE article: "
@@ -179,7 +179,7 @@ then
 	curl --dump-header - -H "$AUTH_HEADER" \
 	-X POST --form "image=@${IMAGE_PATH}" --form 'photo={
 		"id": 100,
-        "resource_uri": "/admin-apo/photo/100/",
+		"resource_uri": "/admin-apo/photo/100/",
 		"title": "Multipart-photo",
 		"slug": "multipart-photo",
 		"description": "Multipart description of photo",
@@ -196,52 +196,52 @@ then
 	# `Format` resource creation.
 	echo -n "POST format: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri": "/admin-api/format/100/",
-        "flexible_height": false, "flexible_max_height": null,
-        "max_height": 200, "max_width": 34,
-        "name": "formatik", "nocrop": true, "resample_quality": 95,
-        "sites": [{
-            "domain": "example.com",
-            "id": 1, "resource_uri": "/admin-api/site/1/",
-            "name": "example.com"
-        }], "stretch": true
-    }' "$server/admin-api/format/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri": "/admin-api/format/100/",
+		"flexible_height": false, "flexible_max_height": null,
+		"max_height": 200, "max_width": 34,
+		"name": "formatik", "nocrop": true, "resample_quality": 95,
+		"sites": [{
+			"domain": "example.com",
+			"id": 1, "resource_uri": "/admin-api/site/1/",
+			"name": "example.com"
+		}], "stretch": true
+	}' "$server/admin-api/format/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# `FormatedPhoto` resource creation.
 	echo -n "POST formatedphoto: "
 	# Problem: tastypie has a bug that doesn’t allow to POST/PUT 3-and-more
 	# level nested resources, see: https://github.com/toastdriven/django-tastypie/issues/307,
 	# so format may be specified only with resource URI!
-    : `
-    curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri": "/admin-api/formatedphoto/100/",
-        "crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0,
-        "format": {
-            "flexible_height": false, "flexible_max_height": null,
-            "id": 100, "resource_uri": "/admin-api/format/100/",
-            "max_height": 200, "max_width": 34,
-            "name": "formatik",
-            "nocrop": true, "resample_quality": 95,
-            "sites": [{
-                "id": 1, "resource_uri": "/admin-api/site/1/",
-                "domain": "example.com", "name": "example.com"
-            }],
-            "stretch": true
-        },
-        "height": 200, "width": 200,
-        "photo": "/admin-api/photo/100/"
-    }' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
-    `
-    curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri": "/admin-api/formatedphoto/100/",
-        "crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0,
-        "format": "/admin-api/format/100/",
-        "height": 200, "width": 200,
-        "photo": "/admin-api/photo/100/"
-    }' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	: `
+	curl --dump-header - -X POST -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri": "/admin-api/formatedphoto/100/",
+		"crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0,
+		"format": {
+			"flexible_height": false, "flexible_max_height": null,
+			"id": 100, "resource_uri": "/admin-api/format/100/",
+			"max_height": 200, "max_width": 34,
+			"name": "formatik",
+			"nocrop": true, "resample_quality": 95,
+			"sites": [{
+				"id": 1, "resource_uri": "/admin-api/site/1/",
+				"domain": "example.com", "name": "example.com"
+			}],
+			"stretch": true
+		},
+		"height": 200, "width": 200,
+		"photo": "/admin-api/photo/100/"
+	}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	`
+	curl --dump-header - -X POST -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"id": 100, "resource_uri": "/admin-api/formatedphoto/100/",
+		"crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0,
+		"format": "/admin-api/format/100/",
+		"height": 200, "width": 200,
+		"photo": "/admin-api/photo/100/"
+	}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# `Photo` resource alteration via PUT - without image, without multipart/form-data Content-Type.
 	echo -n "PUT photo (without image): "
@@ -254,13 +254,13 @@ then
 
 	# `Photo` resource alteration via PUT - with image, with multipart/form-data Content-Type.
 	echo -n "PUT photo (with image): "
-  	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
-    -F "image=@${IMAGE_PATH_CHANGED}" -F 'photo={
+	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
+	-F "image=@${IMAGE_PATH_CHANGED}" -F 'photo={
 		"authors": ["/admin-api/author/100/"],
-    	"description":"Modified photo by PUT method (image data included)."
-    }' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+		"description":"Modified photo by PUT method (image data included)."
+	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-    # `Photo` resource alteration via PATCH - without image, without multipart/form-data Content-Type.
+	# `Photo` resource alteration via PATCH - without image, without multipart/form-data Content-Type.
 	echo -n "PATCH photo (without image): "
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
@@ -268,17 +268,17 @@ then
 		"description": "Modified description by PATCH method."
 	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-    # `Photo` resource alteration via PUT - with image, with multipart/form-data Content-Type.
-    echo -n "PATCH photo (with image): "
-    curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
-    -F "image=@${IMAGE_PATH}" -F 'photo={
-    	"description":"Modified photo by PATCH method (image data included)."
-    }' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	# `Photo` resource alteration via PUT - with image, with multipart/form-data Content-Type.
+	echo -n "PATCH photo (with image): "
+	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
+	-F "image=@${IMAGE_PATH}" -F 'photo={
+		"description":"Modified photo by PATCH method (image data included)."
+	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-    # Deletion of all photo-related objects.
+	# Deletion of all photo-related objects.
 	echo -n "DELETE formatedphoto: "
-    curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
-     "$server/admin-api/formatedphoto/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	 "$server/admin-api/formatedphoto/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "DELETE format: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
