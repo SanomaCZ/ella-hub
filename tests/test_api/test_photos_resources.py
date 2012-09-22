@@ -5,7 +5,6 @@ from PIL import Image
 from nose import tools, SkipTest
 from django.test import TestCase
 from django.conf import settings
-from django.core.files.images import ImageFile
 from django.test.client import Client, BOUNDARY
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotAllowed
