@@ -70,6 +70,7 @@ curl --dump-header - -X POST -H "$AUTH_HEADER" \
 	"name": "dumb_name", "description": "this is descr",
 	"email": "mail@mail.com", "slug":"dumb-name", "text":"this is text"
 }' "$server/admin-api/author/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+echo "-"
 
 
 
