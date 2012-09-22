@@ -63,17 +63,19 @@ fi
 
 
 
+echo -n "POST author: "
+curl --dump-header - -X POST -H "$AUTH_HEADER" \
+-H "Content-Type: application/json" --data '{
+    "id": 100, "resource_uri": "/admin-api/author/100/",
+    "name": "dumb_name", "description": "this is descr",
+    "email": "mail@mail.com", "slug":"dumb-name", "text":"this is text"
+}' "$server/admin-api/author/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+
+
 if [ $test_core -eq 1 ];
 then
 	# Testing `author` resource -POST/PUT/PATCH/DELETE.
-	echo -n "POST author: "
-	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" --data '{
-        "id": 100, "resource_uri": "/admin-api/author/100/",
-        "name": "dumb_name", "description": "this is descr",
-        "email": "mail@mail.com", "slug":"dumb-name", "text":"this is text"
-    }' "$server/admin-api/author/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
-
 	echo -n "PUT author: "
 	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
     -H "Content-Type: application/json" --data '{
@@ -161,9 +163,6 @@ then
 
 	echo -n "DELETE user: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/user/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
-
-	echo -n "DELETE author: "
-	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/author/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 	echo "-"
 fi
 
@@ -186,6 +185,7 @@ then
 		"description": "Multipart description of photo",
 		"width": 256, "height": 256,
 		"created": "2012-09-05T10:16:32.131517",
+		"authors": ["/admin-api/author/100/"],
 		"important_top": null,
 		"important_left": null,
 		"important_bottom": null,
@@ -248,6 +248,7 @@ then
 	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
 		"title": "Modified photo by PUT method",
+		"authors": ["/admin-api/author/100/"],
 		"description": "Modified description by PUT method."
 	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
@@ -255,6 +256,7 @@ then
 	echo -n "PUT photo (with image): "
   	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
     -F "image=@${IMAGE_PATH_CHANGED}" -F 'photo={
+		"authors": ["/admin-api/author/100/"],
     	"description":"Modified photo by PUT method (image data included)."
     }' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
@@ -289,4 +291,12 @@ then
 fi
 
 
-exit 1
+
+echo -n "DELETE author: "
+curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+"$server/admin-api/author/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+echo "-"
+
+
+
+exit 0

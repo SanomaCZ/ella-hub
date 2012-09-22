@@ -60,6 +60,24 @@ class UserResource(ApiModelResource):
         public = False
 
 
+class AuthorResource(ApiModelResource):
+    user = fields.ForeignKey(UserResource, 'user', blank=True, null=True,
+        full=True)
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Author.objects.all()
+        filtering = {
+            'description': ('exact',),
+            'email': ('exact',),
+            'id': ALL,
+            'name': ('exact',),
+            'resource_uri': ('exact',),
+            'slug': ('exact',),
+            'text': ('exact',),
+        }
+        public = False
+
+
 class SourceResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Source.objects.all()
@@ -71,6 +89,7 @@ class SourceResource(ApiModelResource):
 
 
 class PhotoResource(MultipartResource, ApiModelResource):
+    authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
 
@@ -154,24 +173,6 @@ class FormatedPhotoResource(ApiModelResource):
             'width': ALL,
         }
         public = True
-
-
-class AuthorResource(ApiModelResource):
-    user = fields.ForeignKey(UserResource, 'user', blank=True, null=True,
-        full=True)
-
-    class Meta(ApiModelResource.Meta):
-        queryset = Author.objects.all()
-        filtering = {
-            'description': ('exact',),
-            'email': ('exact',),
-            'id': ALL,
-            'name': ('exact',),
-            'resource_uri': ('exact',),
-            'slug': ('exact',),
-            'text': ('exact',),
-        }
-        public = False
 
 
 class PublishableResource(ApiModelResource):
