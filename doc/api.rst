@@ -15,6 +15,57 @@ Ella doc__
 __ http://ella.readthedocs.org/en/latest/index.html
 
 
+Develop servers
+===============
+
+Main
+----
+``http://crawler.bfhost.cz:12345``
+
+root_dir: ``/home/seocity/elladev/ella-hope-new/``
+
+virtual_env: ``/home/seocity/elladev/env_ella-hope/``
+
+
+Alternative
+-----------
+``http://crawler.bfhost.cz:33333``
+
+root_dir: ``/home/brigant/elladev/ella-hope/``
+
+virtual_env: ``/home/brigant/elladev/env_ella-hope_brigant/``
+
+
+Basic commands
+--------------
+To activate proper virtual environment:
+
+::
+
+ source <virtual_env>/bin/activate
+
+To deactivate virtual environment:
+
+::
+
+ deactivate
+
+
+To kill server running on <port>:
+
+::
+
+ kill `ps -ef | grep "runserver 0.0.0.0:<port>" | grep -v grep | awk '{print $2}'`
+
+To start server running on <port>:
+
+::
+
+ python <root_dir>/manage.py syncdb
+ python <root_dir>/manage.py runserver 0.0.0.0:<port>
+
+
+
 
 Login and logout
 ================
