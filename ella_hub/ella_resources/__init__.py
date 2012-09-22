@@ -16,6 +16,7 @@ from ella.photos.models import Photo, FormatedPhoto, Format
 from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe
 
 
+
 class SiteResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Site.objects.all()
@@ -251,9 +252,11 @@ class DraftResource(ApiModelResource):
         of resource.
         """
         bundle = super(DraftResource, self).hydrate(bundle)
+        content_type = ContentType.objects.get(
+            name__iexact=bundle.data['content_type'])
 
-        content_type = ContentType.objects.get(model__iexact=bundle.data['content_type'])
         bundle.obj.content_type = content_type
+        bundle.obj.user = User.objects.get(username=bundle.request.user)
         return bundle
 
     def alter_list_data_to_serialize(self, request, bundle):
@@ -261,9 +264,9 @@ class DraftResource(ApiModelResource):
         Deserializes `data` JSONField into JSON data.
         """
         bundle = super(DraftResource, self).alter_list_data_to_serialize(request, bundle)
+
         for object in bundle:
             self.__alter_data_to_serialize(object)
-
         return bundle
 
     def alter_detail_data_to_serialize(self, request, bundle):
@@ -275,7 +278,7 @@ class DraftResource(ApiModelResource):
 
     def __alter_data_to_serialize(self, bundle):
         bundle.data["data"] = bundle.obj.data
-        bundle.data["content_type"] = bundle.obj.content_type.model.lower()
+        bundle.data['content_type'] = bundle.obj.content_type.name.lower()
         return bundle
 
     class Meta(ApiModelResource.Meta):

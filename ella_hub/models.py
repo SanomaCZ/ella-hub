@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import models, IntegrityError
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
@@ -15,13 +16,21 @@ from ella.photos.models import Photo
 from jsonfield import JSONField
 
 
+class SimpleDateTimeField(models.DateTimeField):
+
+    def get_prep_value(self, value):
+        value_cut_str = str(value)[:str(value).rfind('.')]
+        return value.strptime(value_cut_str, "%Y-%m-%d %H:%M:%S")
+
+
 class Draft(models.Model):
     """Auto-saved objects and user templates."""
 
     content_type = models.ForeignKey(ContentType, verbose_name=_("Model"))
     user = models.ForeignKey(User, verbose_name=_("User"))
     name = models.CharField(_("Name"), max_length=64, blank=True)
-    timestamp = models.DateTimeField(editable=False, auto_now=True)
+
+    timestamp = SimpleDateTimeField(editable=False, auto_now=True)
     data = JSONField(_("Data"))
 
     def __unicode__(self):

@@ -83,7 +83,7 @@ class TestDraft(TestCase):
         headers = self.__build_headers("user", api_key)
 
         data = json.dumps({
-            "content_type": "commonarticle",
+            "content_type": "article",
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
@@ -113,7 +113,7 @@ class TestDraft(TestCase):
         headers = self.__build_headers("user", api_key)
 
         data = json.dumps({
-            "content_type": "commonarticle",
+            "content_type": "article",
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
@@ -152,7 +152,7 @@ class TestDraft(TestCase):
 
         for id in range(6):
             data = json.dumps({
-                "content_type": "commonarticle",
+                "content_type": "article",
                 "data": {"id": id, "field": "value", "another_field": True},
             })
             response = self.client.post("/admin-api/draft/", data=data,
@@ -184,7 +184,7 @@ class TestDraft(TestCase):
         headers = self.__build_headers("user", api_key)
 
         data = json.dumps({
-            "content_type": "commonarticle",
+            "content_type": "article",
             "data": {"id": 222, "field": "value", "another_field": True},
         })
         response = self.client.post("/admin-api/draft/", data=data,
