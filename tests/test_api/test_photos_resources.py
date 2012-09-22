@@ -5,6 +5,7 @@ from PIL import Image
 from nose import tools, SkipTest
 from django.test import TestCase
 from django.conf import settings
+from django.core.files.images import ImageFile
 from django.test.client import Client, BOUNDARY
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotAllowed
@@ -129,6 +130,31 @@ class TestPhotosResources(TestCase):
         tools.assert_equals(response.status_code, HttpResponseNotAllowed.status_code)
 
         self.__logout(headers)
+
+    @tools.raises(FormatedPhoto.DoesNotExist)
+    def test_update_photo_of_formated_photo(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        format = Format.objects.create(name="Base format", max_height=200,
+            max_width=200)
+        photo = FormatedPhoto.objects.create(
+            photo=Photo.objects.get(pk=self.photo.pk), format=format)
+
+        # update photo via API
+        payload = {
+            "image": open(self.photo_filename),
+            "photo": json.dumps({
+                "authors": ["/admin-api/author/%d/" % self.author.id],
+                "description": "Modified by PUT method (image data included)."
+            }),
+        }
+        response = self.client.put('/admin-api/photo/999/', payload, **headers)
+        tools.assert_equals(response.status_code, 202)
+
+        self.__logout(headers)
+
+        FormatedPhoto.objects.get(pk=photo.pk)
 
     def __create_tmp_image(self, filename):
         image = Image.new("RGB", (200, 100), "black")
