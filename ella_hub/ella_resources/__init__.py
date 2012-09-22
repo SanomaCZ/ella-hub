@@ -29,6 +29,8 @@ class SiteResource(ApiModelResource):
 
 
 class CategoryResource(ApiModelResource):
+    parent_category = fields.ForeignKey('self', 'tree_parent',
+        blank=True, null=True)
     site = fields.ForeignKey(SiteResource, 'site', full=True)
 
     class Meta(ApiModelResource.Meta):
@@ -155,6 +157,9 @@ class FormatedPhotoResource(ApiModelResource):
 
 
 class AuthorResource(ApiModelResource):
+    user = fields.ForeignKey(UserResource, 'user', blank=True, null=True,
+        full=True)
+
     class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
         filtering = {
