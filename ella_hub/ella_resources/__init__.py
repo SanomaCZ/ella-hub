@@ -277,7 +277,6 @@ class DraftResource(ApiModelResource):
 
     def __alter_data_to_serialize(self, bundle):
         bundle.data["data"] = bundle.obj.data
-        bundle.data["timestamp"] = bundle.obj.timestamp.strftime("%Y-%m-%d %H:%M:%S")
         bundle.data['content_type'] = bundle.obj.content_type.name.lower()
         return bundle
 
