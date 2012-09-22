@@ -3,7 +3,6 @@ import ella_hub.api
 
 from tastypie import fields
 from tastypie.resources import ModelResource
-from django.utils import simplejson
 from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
 
