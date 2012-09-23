@@ -70,6 +70,9 @@ R(ead)
 U(pdate)
 ========
 
+If ``image`` field is updated, all related ``FormatedPhoto`` objects are deleted.
+
+
 PUT
 '''
 
@@ -127,6 +130,8 @@ PATCH
 D(elete)
 ========
 
+If ``Photo`` object is deleted, all related FormatedPhoto objects are deleted too.
+
 ::
 
   curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" -X DELETE <server>/admin-api/photo/<id>/
@@ -140,7 +145,7 @@ Format resource
 
 __ http://ella.readthedocs.org/en/latest/reference/models.html#the-format-model
 
-*Note: Can't create Format resource with specified custom (not-existing) id.*
+*Note: Format resource cannot be created with specified custom (not-existing) id right now, see* https://github.com/ella/ella/pull/127
 
 
 C(reate)
@@ -184,6 +189,8 @@ R(ead)
 U(pdate)
 ========
 
+If ``Format`` is updated, all related ``FormatedPhoto`` objects are deleted.
+
 PUT/PATCH
 '''''''''
 
@@ -207,6 +214,8 @@ PUT/PATCH
 
 D(elete)
 ========
+
+If ``Format`` object is deleted, all related FormatedPhoto objects are deleted too.
 
 ::
 
