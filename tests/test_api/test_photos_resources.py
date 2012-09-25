@@ -98,9 +98,9 @@ class TestPhotosResources(TestCase):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        format = Format.objects.create(name="format_name",
+        format = Format.objects.create(id=999, name="format_name",
             max_height=200, max_width=200)
-        FormatedPhoto.objects.create(photo=self.photo, format=format)
+        FormatedPhoto.objects.create(id=999, photo=self.photo, format=format)
 
         response = self.client.get('/admin-api/formatedphoto/download/999/', **headers)
         tools.assert_equals(response.status_code, 200)
@@ -114,9 +114,9 @@ class TestPhotosResources(TestCase):
         """
         raise SkipTest()
 
-        format = Format.objects.create(name="format_name",
+        format = Format.objects.create(id=999, name="format_name",
             max_height=200, max_width=200)
-        FormatedPhoto.objects.create(photo=self.photo, format=format)
+        FormatedPhoto.objects.create(id=999, photo=self.photo, format=format)
 
         response = self.client.get('/admin-api/formatedphoto/download/999/')
         tools.assert_equals(response.status_code, 401)
