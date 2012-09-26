@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
-from ella_hub.resources import ApiModelResource, MultipartResource
+from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
 from ella.core.models import Publishable, Listing, Category, Author, Source
 from ella.photos.models import Photo, FormatedPhoto, Format
 
@@ -88,7 +88,7 @@ class SourceResource(ApiModelResource):
         public = False
 
 
-class PhotoResource(MultipartResource, ApiModelResource):
+class PhotoResource(MultipartFormDataModelResource):
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
@@ -101,7 +101,7 @@ class PhotoResource(MultipartResource, ApiModelResource):
 
         return bundle
 
-    class Meta(ApiModelResource.Meta):
+    class Meta(MultipartFormDataModelResource.Meta):
         queryset = Photo.objects.all()
         filtering = {
             'app_data': ('exact',),

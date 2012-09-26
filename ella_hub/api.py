@@ -151,7 +151,8 @@ class EllaHubApi(Api):
             return False
 
         return resource not in (Resource, ModelResource,
-            ella_hub.resources.ApiModelResource)
+            ella_hub.resources.ApiModelResource,
+            ella_hub.resources.MultipartFormDataModelResource)
 
     def register_resources(self, resources):
         "Register one or more resources"
