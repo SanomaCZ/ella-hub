@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from django.utils import simplejson
 
 from ella_hub.resources import ApiModelResource, MultipartResource
 from ella.core.models import Publishable, Listing, Category, Author, Source
@@ -101,17 +100,6 @@ class PhotoResource(MultipartResource, ApiModelResource):
             bundle.obj.image.url)
 
         return bundle
-
-    def deserialize(self, request, data, format=None):
-        if not format:
-            format = request.META.get('CONTENT_TYPE', 'application/json')
-
-        if format.lower().startswith('multipart/form-data'):
-            data = simplejson.loads(request.POST['photo'])
-            data['image'] = request.FILES['image']
-            return data
-
-        return super(PhotoResource, self).deserialize(request, data, format)
 
     class Meta(ApiModelResource.Meta):
         queryset = Photo.objects.all()

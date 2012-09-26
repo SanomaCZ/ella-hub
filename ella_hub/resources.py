@@ -5,6 +5,7 @@ from tastypie import fields
 from tastypie.resources import ModelResource
 from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
+from django.utils import simplejson
 
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
@@ -13,6 +14,22 @@ from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
 
 
 class MultipartResource(object):
+    def deserialize(self, request, data, format=None):
+        if not format:
+            format = request.META.get('CONTENT_TYPE', 'application/json')
+
+        if format.lower().startswith('multipart/form-data'):
+            data = simplejson.loads(request.POST['resource_data'])
+            for object in data['objects']:
+                for key, value in object.items():
+                    if isinstance(value, unicode) and value.startswith('attached_object_id'):
+                        attached_object_id = value.split()[1]
+                        object[key] = request.FILES[attached_object_id]
+
+            return data
+
+        return super(MultipartResource, self).deserialize(request, data, format)
+
     def put_detail(self, request, **kwargs):
         """
         Hack for problem with error message: "You cannot access body
@@ -33,10 +50,22 @@ class MultipartResource(object):
         Hack for problem with error message: "You cannot access body
         after reading from request's data stream".
         """
-        if request.META.get('CONTENT_TYPE').startswith('multipart/form-data'):
+        content_type = request.META.get('CONTENT_TYPE', '').lower()
+        if content_type.startswith('multipart/form-data'):
             request.body
 
         return super(MultipartResource, self).patch_detail(request, **kwargs)
+
+    def patch_list(self, request, **kwargs):
+        """
+        Hack for problem with error message: "You cannot access body
+        after reading from request's data stream".
+        """
+        content_type = request.META.get('CONTENT_TYPE', '').lower()
+        if content_type.startswith('multipart/form-data'):
+            request.body
+
+        return super(MultipartResource, self).patch_list(request, **kwargs)
 
 
 class ApiModelResource(ModelResource):

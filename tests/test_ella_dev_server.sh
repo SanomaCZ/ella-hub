@@ -178,20 +178,18 @@ then
 	# `Photo` resource creation. (file & JSON in one multipart/form request).
 	echo -n "POST photo: "
 	curl --dump-header - -H "$AUTH_HEADER" \
-	-X POST --form "image=@${IMAGE_PATH}" --form 'photo={
-		"id": 100,
-		"resource_uri": "/admin-apo/photo/100/",
-		"title": "Multipart-photo",
-		"slug": "multipart-photo",
-		"description": "Multipart description of photo",
-		"width": 256, "height": 256,
-		"created": "2012-09-05T10:16:32.131517",
-		"authors": ["/admin-api/author/100/"],
-		"important_top": null,
-		"important_left": null,
-		"important_bottom": null,
-		"important_right": null,
-		"app_data": "{}"
+	-X PATCH --form "image=@${IMAGE_PATH}" --form 'resource_data={
+		"objects": [{
+			"id": 100,
+			"title": "Multipart photo",
+			"slug": "multipart-photo",
+			"description": "Multipart description of photo",
+			"width": 256, "height": 256,
+			"created": "2012-09-05T10:16:32.131517",
+			"authors": ["/admin-api/author/100/"],
+			"app_data": "{}",
+			"image": "attached_object_id image"
+		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# `Format` resource creation.
@@ -253,14 +251,6 @@ then
 		"description": "Modified description by PUT method."
 	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-	# `Photo` resource alteration via PUT - with image, with multipart/form-data Content-Type.
-	echo -n "PUT photo (with image): "
-	curl --dump-header - -X PUT -H "$AUTH_HEADER" \
-	-F "image=@${IMAGE_PATH_CHANGED}" -F 'photo={
-		"authors": ["/admin-api/author/100/"],
-		"description":"Modified photo by PUT method (image data included)."
-	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
-
 	# `Photo` resource alteration via PATCH - without image, without multipart/form-data Content-Type.
 	echo -n "PATCH photo (without image): "
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
@@ -272,9 +262,13 @@ then
 	# `Photo` resource alteration via PUT - with image, with multipart/form-data Content-Type.
 	echo -n "PATCH photo (with image): "
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
-	-F "image=@${IMAGE_PATH}" -F 'photo={
-		"description":"Modified photo by PATCH method (image data included)."
-	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	--form "some_unique_id=@${IMAGE_PATH_CHANGED}" --form 'resource_data={
+		"objects": [{
+			"resource_uri": "/admin-api/photo/100/",
+			"image": "attached_object_id some_unique_id",
+			"description":"Modified photo by PATCH method (image data included)."
+		}]
+	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Deletion of all photo-related objects.
 	echo -n "DELETE formatedphoto: "
