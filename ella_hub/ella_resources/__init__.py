@@ -251,13 +251,10 @@ class DraftResource(ApiModelResource):
         Name of content type is case insensitive and correspond to the name
         of resource.
         """
-        bundle = super(DraftResource, self).hydrate(bundle)
-        content_type = ContentType.objects.get(
+        bundle.obj.content_type = ContentType.objects.get(
             name__iexact=bundle.data['content_type'])
 
-        bundle.obj.content_type = content_type
-        bundle.obj.user = User.objects.get(username=bundle.request.user)
-        return bundle
+        return super(DraftResource, self).hydrate(bundle)
 
     def alter_list_data_to_serialize(self, request, bundle):
         """
