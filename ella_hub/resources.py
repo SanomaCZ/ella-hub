@@ -18,7 +18,8 @@ class MultipartResource(object):
         Hack for problem with error message: "You cannot access body
         after reading from request's data stream".
 
-        Related issue: https://github.com/toastdriven/django-tastypie/issues/598
+        Related issue:
+        https://github.com/toastdriven/django-tastypie/issues/42#issuecomment-6069008
         """
         content_type = request.META.get('CONTENT_TYPE', '').lower()
         if (content_type.startswith('multipart/form-data') and
@@ -32,7 +33,7 @@ class MultipartResource(object):
         Hack for problem with error message: "You cannot access body
         after reading from request's data stream".
         """
-        if request.META.get('CONTENT_TYPE').startswith('multipart'):
+        if request.META.get('CONTENT_TYPE').startswith('multipart/form-data'):
             request.body
 
         return super(MultipartResource, self).patch_detail(request, **kwargs)
