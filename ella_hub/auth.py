@@ -72,6 +72,7 @@ class ApiAuthorization(Authorization):
             if has_obj_perm(request.user, obj, permission_string):
                 allowed_objects.append(obj)
 
+        # TODO: proper response when user is not authorized & object_list is empty
         if not allowed_objects and object_list:
             raise ImmediateHttpResponse(response=HttpForbidden())
 
