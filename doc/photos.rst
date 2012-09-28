@@ -31,17 +31,18 @@ The pointer identifies file which will be assigned to corresponding resource.
 *Format of image pointer*
  ::
 
-   attached_object_id:<some_unique_id_without_whitespaces>
+   attached_object_id:<filename_attribute_of_attached_file>
 
 
 *Curl example:*
  ::
 
   image_path=/path/to/image.png
+  image_path_basename=$(basename $image_path)
   server=http://www.server-domain.cz
 
   curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" \
-  -X PATCH --form "image-UUID=@${image_path}" --form 'resource_data={
+  -X PATCH --form "attached_object=@${image_path}" --form 'resource_data={
     "objects": [{
       "title": "Multipart photo",
       "slug": "multipart-photo",
@@ -50,7 +51,7 @@ The pointer identifies file which will be assigned to corresponding resource.
       "created": "2012-09-05T10:16:32.131517",
       "authors": ["/admin-api/author/100/"],
       "app_data": "{}",
-      "image": "attached_object_id:image-UUID"
+      "image": "attached_object_id:'$image_path_basename'"
     }]
   }' "$server/admin-api/photo/"
 
@@ -129,12 +130,13 @@ For each object in objects:
 ::
 
   new_image_path=/path/to/writable/dir/file_name.png
+  new_image_path_basename=$(basename $new_image_path)
 
   curl --dump-header - -X PATCH -H "Authorization: ApiKey <name>:<api_key>" \
-    --form "some_unique_id=@${new_image_path}" --form 'resource_data={
+    --form "attached_object=@${new_image_path}" --form 'resource_data={
     "objects": [{
       "resource_uri": "/admin-api/photo/<id>/",
-      "image": "attached_object_id:some_unique_id",
+      "image": "attached_object_id:'$new_image_path_basename'",
       "description":"Modified photo by PATCH method (image data included)."
     }]
   }' "<server>/admin-api/photo/"

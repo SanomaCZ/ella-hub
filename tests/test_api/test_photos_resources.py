@@ -44,13 +44,13 @@ class TestPhotosResources(TestCase):
 
         file = open(self.photo_filename)
         payload = {
-            "image": file,
+            "attached_object": file,
             "resource_data": json.dumps({
                 "objects": [
                     {
                         "id": 100,
                         "title": "Title of photo",
-                        "image": "attached_object_id:image",
+                        "image": "attached_object_id:" + os.path.basename(self.photo_filename),
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "created": "2012-08-07T14:51:29",
                         "description": "this is description"
@@ -79,9 +79,11 @@ class TestPhotosResources(TestCase):
         blue_image_path = self.__create_tmp_image(".blue.jpg", "blue")
 
         payload = {
-            "red-photo": open(red_image_path),
-            "green-photo": open(green_image_path),
-            "blue-photo": open(blue_image_path),
+            "attached_object": (
+                open(red_image_path),
+                open(green_image_path),
+                open(blue_image_path),
+            ),
             "resource_data": json.dumps({
                 "objects": [
                     {
@@ -92,7 +94,7 @@ class TestPhotosResources(TestCase):
                         "created": "2012-09-05T10:16:32.131517",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "app_data": '{"dominant_color": "red"}',
-                        "image": "attached_object_id:red-photo"
+                        "image": "attached_object_id:" + os.path.basename(red_image_path)
                     }, {
                         "title": "GREEN photo",
                         "slug": "green-photo",
@@ -101,7 +103,7 @@ class TestPhotosResources(TestCase):
                         "created": "2012-09-05T10:16:32.131517",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "app_data": '{"dominant_color": "green"}',
-                        "image": "attached_object_id:green-photo"
+                        "image": "attached_object_id:" + os.path.basename(green_image_path)
                     }, {
                         "title": "BLUE photo",
                         "slug": "blue-photo",
@@ -110,7 +112,7 @@ class TestPhotosResources(TestCase):
                         "created": "2012-09-05T10:16:32.131517",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "app_data": '{"dominant_color": "blue"}',
-                        "image": "attached_object_id:blue-photo"
+                        "image": "attached_object_id:" + os.path.basename(blue_image_path)
                     }
                 ]
             }),
@@ -137,14 +139,14 @@ class TestPhotosResources(TestCase):
         # update photo via API
         file = open(self.photo_filename)
         payload = {
-            "unique_id": file,
+            "attached_object": file,
             "resource_data": json.dumps({
                 "objects": [
                     {
                         "resource_uri": "/admin-api/photo/999/",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "description": "PATCHed (image data included).",
-                        "image": "attached_object_id:unique_id",
+                        "image": "attached_object_id:" + os.path.basename(self.photo_filename),
                     }
                 ]
             }),

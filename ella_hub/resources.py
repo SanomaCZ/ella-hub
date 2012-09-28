@@ -176,13 +176,17 @@ class MultipartFormDataModelResource(ApiModelResource):
         if not format:
             format = request.META.get('CONTENT_TYPE', 'application/json')
 
+        attached_objects = {}
+        for file in request.FILES.getlist('attached_object'):
+            attached_objects[file.name] = file
+
         if format.lower().startswith('multipart/form-data'):
             data = simplejson.loads(request.POST['resource_data'])
             for object in data['objects']:
                 for key, value in object.items():
                     if isinstance(value, unicode) and value.startswith('attached_object_id'):
-                        attached_object_id = value.split(":")[1]
-                        object[key] = request.FILES[attached_object_id]
+                        attached_object_id = value.split(':')[1]
+                        object[key] = attached_objects[attached_object_id]
 
             return data
 

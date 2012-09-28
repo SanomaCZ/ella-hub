@@ -172,13 +172,15 @@ fi
 if [ $test_photos -eq 1 ];
 then
 	IMAGE_PATH=./media/photos/example_image.png
+	IMAGE_PATH_BASENAME=$(basename $IMAGE_PATH)
 	IMAGE_PATH_CHANGED=./media/photos/example_changed_image.png
+	IMAGE_PATH_CHANGED_BASENAME=$(basename $IMAGE_PATH_CHANGED)
 
 
 	# `Photo` resource creation. (file & JSON in one multipart/form request).
 	echo -n "POST photo: "
 	curl --dump-header - -H "$AUTH_HEADER" \
-	-X PATCH --form "image=@${IMAGE_PATH}" --form 'resource_data={
+	-X PATCH --form "attached_object=@${IMAGE_PATH}" --form 'resource_data={
 		"objects": [{
 			"id": 100,
 			"title": "Multipart photo",
@@ -188,7 +190,7 @@ then
 			"created": "2012-09-05T10:16:32.131517",
 			"authors": ["/admin-api/author/100/"],
 			"app_data": "{}",
-			"image": "attached_object_id:image"
+			"image": "attached_object_id:'$IMAGE_PATH_BASENAME'"
 		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
@@ -262,10 +264,10 @@ then
 	# `Photo` resource alteration via PUT - with image, with multipart/form-data Content-Type.
 	echo -n "PATCH photo (with image): "
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
-	--form "some_unique_id=@${IMAGE_PATH_CHANGED}" --form 'resource_data={
+	--form "attached_object=@${IMAGE_PATH_CHANGED}" --form 'resource_data={
 		"objects": [{
 			"resource_uri": "/admin-api/photo/100/",
-			"image": "attached_object_id:some_unique_id",
+			"image": "attached_object_id:'$IMAGE_PATH_CHANGED_BASENAME'",
 			"description":"Modified photo by PATCH method (image data included)."
 		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
