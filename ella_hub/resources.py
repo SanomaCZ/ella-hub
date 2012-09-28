@@ -181,7 +181,7 @@ class MultipartFormDataModelResource(ApiModelResource):
             for object in data['objects']:
                 for key, value in object.items():
                     if isinstance(value, unicode) and value.startswith('attached_object_id'):
-                        attached_object_id = value.split()[1]
+                        attached_object_id = value.split(":")[1]
                         object[key] = request.FILES[attached_object_id]
 
             return data

@@ -31,7 +31,7 @@ The pointer identifies file which will be assigned to corresponding resource.
 *Format of image pointer*
  ::
 
-   attached_object_id <some_unique_id_without_whitespaces>
+   attached_object_id:<some_unique_id_without_whitespaces>
 
 
 *Curl example:*
@@ -50,7 +50,7 @@ The pointer identifies file which will be assigned to corresponding resource.
       "created": "2012-09-05T10:16:32.131517",
       "authors": ["/admin-api/author/100/"],
       "app_data": "{}",
-      "image": "attached_object_id image-UUID"
+      "image": "attached_object_id:image-UUID"
     }]
   }' "$server/admin-api/photo/"
 
@@ -134,7 +134,7 @@ For each object in objects:
     --form "some_unique_id=@${new_image_path}" --form 'resource_data={
     "objects": [{
       "resource_uri": "/admin-api/photo/<id>/",
-      "image": "attached_object_id some_unique_id",
+      "image": "attached_object_id:some_unique_id",
       "description":"Modified photo by PATCH method (image data included)."
     }]
   }' "<server>/admin-api/photo/"

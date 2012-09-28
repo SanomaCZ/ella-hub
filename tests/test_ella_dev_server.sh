@@ -188,7 +188,7 @@ then
 			"created": "2012-09-05T10:16:32.131517",
 			"authors": ["/admin-api/author/100/"],
 			"app_data": "{}",
-			"image": "attached_object_id image"
+			"image": "attached_object_id:image"
 		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
@@ -265,7 +265,7 @@ then
 	--form "some_unique_id=@${IMAGE_PATH_CHANGED}" --form 'resource_data={
 		"objects": [{
 			"resource_uri": "/admin-api/photo/100/",
-			"image": "attached_object_id some_unique_id",
+			"image": "attached_object_id:some_unique_id",
 			"description":"Modified photo by PATCH method (image data included)."
 		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'

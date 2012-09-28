@@ -50,7 +50,7 @@ class TestPhotosResources(TestCase):
                     {
                         "id": 100,
                         "title": "Title of photo",
-                        "image": "attached_object_id image",
+                        "image": "attached_object_id:image",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "created": "2012-08-07T14:51:29",
                         "description": "this is description"
@@ -92,7 +92,7 @@ class TestPhotosResources(TestCase):
                         "created": "2012-09-05T10:16:32.131517",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "app_data": '{"dominant_color": "red"}',
-                        "image": "attached_object_id red-photo"
+                        "image": "attached_object_id:red-photo"
                     }, {
                         "title": "GREEN photo",
                         "slug": "green-photo",
@@ -101,7 +101,7 @@ class TestPhotosResources(TestCase):
                         "created": "2012-09-05T10:16:32.131517",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "app_data": '{"dominant_color": "green"}',
-                        "image": "attached_object_id green-photo"
+                        "image": "attached_object_id:green-photo"
                     }, {
                         "title": "BLUE photo",
                         "slug": "blue-photo",
@@ -110,7 +110,7 @@ class TestPhotosResources(TestCase):
                         "created": "2012-09-05T10:16:32.131517",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "app_data": '{"dominant_color": "blue"}',
-                        "image": "attached_object_id blue-photo"
+                        "image": "attached_object_id:blue-photo"
                     }
                 ]
             }),
@@ -144,7 +144,7 @@ class TestPhotosResources(TestCase):
                         "resource_uri": "/admin-api/photo/999/",
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "description": "PATCHed (image data included).",
-                        "image": "attached_object_id unique_id",
+                        "image": "attached_object_id:unique_id",
                     }
                 ]
             }),
