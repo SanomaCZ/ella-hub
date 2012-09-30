@@ -7,9 +7,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from django.utils import simplejson
 
-from ella_hub.resources import ApiModelResource, MultipartResource
+from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
 from ella.core.models import Publishable, Listing, Category, Author, Source
 from ella.photos.models import Photo, FormatedPhoto, Format
 
@@ -89,7 +88,7 @@ class SourceResource(ApiModelResource):
         public = False
 
 
-class PhotoResource(MultipartResource, ApiModelResource):
+class PhotoResource(MultipartFormDataModelResource):
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
@@ -102,18 +101,7 @@ class PhotoResource(MultipartResource, ApiModelResource):
 
         return bundle
 
-    def deserialize(self, request, data, format=None):
-        if not format:
-            format = request.META.get('CONTENT_TYPE', 'application/json')
-
-        if format.lower().startswith('multipart/form-data'):
-            data = simplejson.loads(request.POST['photo'])
-            data['image'] = request.FILES['image']
-            return data
-
-        return super(PhotoResource, self).deserialize(request, data, format)
-
-    class Meta(ApiModelResource.Meta):
+    class Meta(MultipartFormDataModelResource.Meta):
         queryset = Photo.objects.all()
         filtering = {
             'app_data': ('exact',),
@@ -251,13 +239,10 @@ class DraftResource(ApiModelResource):
         Name of content type is case insensitive and correspond to the name
         of resource.
         """
-        bundle = super(DraftResource, self).hydrate(bundle)
-        content_type = ContentType.objects.get(
+        bundle.obj.content_type = ContentType.objects.get(
             name__iexact=bundle.data['content_type'])
 
-        bundle.obj.content_type = content_type
-        bundle.obj.user = User.objects.get(username=bundle.request.user)
-        return bundle
+        return super(DraftResource, self).hydrate(bundle)
 
     def alter_list_data_to_serialize(self, request, bundle):
         """

@@ -14,34 +14,45 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-photo-model
 
 C(reate)
 ========
-Image upload is needed to create Photo resource. Creation is made via HTTP request with ``multipart/form-data`` content-type. Uploaded image is implicitely saved to:
+Image upload is needed to create Photo resource. Creation is made via
+HTTP **PATCH** request with ``multipart/form-data`` content-type.
+This method allows to create multiple resources with image.
+Uploaded images is implicitely saved to:
 
  ::
 
    settings.MEDIA_URL + photos/<year>/<month>/<day>/filename
 
-``image`` attribute isn't needed to specify, it is set internaly.
+``id`` attribute is't needed to specify, it is set internaly.
+
+``image`` has special meaning and contains pointer to uploaded image.
+The pointer identifies file which will be assigned to corresponding resource.
+
+*Format of image pointer*
+ ::
+
+   attached_object_id:<filename_attribute_of_attached_file>
+
 
 *Curl example:*
-
  ::
 
   image_path=/path/to/image.png
+  image_path_basename=$(basename $image_path)
   server=http://www.server-domain.cz
 
   curl --dump-header - -H "Authorization: ApiKey <name>:<api_key>" \
-  -X POST --form "image=@${image_path}" --form 'photo={
-    "id": 100,
-    "title": "Multipart-photo",
-    "slug": "multipart-photo",
-    "description": "Multipart description of photo",
-    "width": 256, "height": 256,
-    "created": "2012-09-05T10:16:32.131517",
-    "important_top": null,
-    "important_left": null,
-    "important_bottom": null,
-    "important_right": null,
-    "app_data": "{}"
+  -X PATCH --form "attached_object=@${image_path}" --form 'resource_data={
+    "objects": [{
+      "title": "Multipart photo",
+      "slug": "multipart-photo",
+      "description": "Multipart description of photo",
+      "width": 256, "height": 256,
+      "created": "2012-09-05T10:16:32.131517",
+      "authors": ["/admin-api/author/100/"],
+      "app_data": "{}",
+      "image": "attached_object_id:'$image_path_basename'"
+    }]
   }' "$server/admin-api/photo/"
 
 
@@ -70,13 +81,12 @@ R(ead)
 U(pdate)
 ========
 
-If ``image`` field is updated, all related ``FormatedPhoto`` objects are deleted.
+PUT method does't allow to update ``image`` attribute of ``Photo`` resource.
+For updating ``image`` attribute see PATCH method.
 
 
 PUT
 '''
-
-1. without image
 
 ::
 
@@ -85,17 +95,6 @@ PUT
     "title": "Modified photo by PUT method",
     "description": "Modified description by PUT method."
   }' "<server>/admin-api/photo/<id>/"
-
-2. with image
-
-::
-
-  new_image_path=/path/to/writable/dir/file_name.png
-
-  curl --dump-header - -X PUT -H "Authorization: ApiKey <name>:<api_key>" \
-    -F "image=@${new_image_path}" -F 'photo={
-      "description":"Modified photo by PUT method (image data included)."
-    }' "<server>/admin-api/photo/<id>/"
 
 
 PATCH
@@ -114,14 +113,33 @@ PATCH
 
 2. with image
 
+Updating ``Photo`` resource is similar to creating one, but ``resource_uri``
+attribute has to be specified. If ``resource_uri`` is't specified new
+object is created if possible.
+
+For each object in objects:
+
+- If the object does not have a ``resource_uri`` attribute then the item
+  is considered new and is handled like a POST to the resource list.
+- If the object has a ``resource_uri`` attribute and the ``resource_uri``
+  refers to an existing resource then the item is a update. It's treated like
+  a PATCH to the corresponding resource detail.
+- If the object has a ``resource_uri`` but the resource doesn't exist,
+  then this is considered to be a create-via-PUT.
+
 ::
 
   new_image_path=/path/to/writable/dir/file_name.png
+  new_image_path_basename=$(basename $new_image_path)
 
   curl --dump-header - -X PATCH -H "Authorization: ApiKey <name>:<api_key>" \
-    -F "image=@${new_image_path}" -F 'photo={
+    --form "attached_object=@${new_image_path}" --form 'resource_data={
+    "objects": [{
+      "resource_uri": "/admin-api/photo/<id>/",
+      "image": "attached_object_id:'$new_image_path_basename'",
       "description":"Modified photo by PATCH method (image data included)."
-    }' "<server>/admin-api/photo/<id>/"
+    }]
+  }' "<server>/admin-api/photo/"
 
 
 
