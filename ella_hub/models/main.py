@@ -11,7 +11,7 @@ from object_permissions import register
 from ella.core.models import Author, Category, Source, Listing, Publishable
 from ella.core.admin import PublishableAdmin
 from ella.articles.models import Article
-from ella.photos.models import Photo
+from ella.photos.models import Photo, Format, FormatedPhoto
 
 from jsonfield import JSONField
 
@@ -41,6 +41,7 @@ class Draft(models.Model):
                 date(self.timestamp, "y-m-d H:i"))
 
     class Meta:
+        app_label = "ella_hub"
         verbose_name = _("Draft item")
         verbose_name_plural = _("Draft items")
         ordering = ("-timestamp",)
@@ -81,6 +82,7 @@ class PublishableLock(models.Model):
         )
 
     class Meta:
+        app_label = "ella_hub"
         verbose_name = _("Publishable lock")
         verbose_name_plural = _("Publishable locks")
 
@@ -126,6 +128,7 @@ class CommonArticle(BaseArticle):
         return u"%s: %s" % (_("Article"), self.title)
 
     class Meta:
+        app_label ="ella_hub"
         verbose_name = _("Article")
         verbose_name_plural = _("Articles")
 
@@ -143,6 +146,7 @@ class Encyclopedia(BaseArticle):
         return u"%s: %s" % (_("Encyclopedia"), self.title)
 
     class Meta:
+        app_label = "ella_hub"
         verbose_name = _("Encyclopedia")
         verbose_name_plural = _("Encyclopedia")
 
@@ -263,6 +267,7 @@ class Recipe(BaseArticle):
         return u"%s: %s" % (_("Recipe"), self.title)
 
     class Meta:
+        app_label = "ella_hub"
         verbose_name = _("Recipe")
         verbose_name_plural = _("Recipes")
 
@@ -281,6 +286,7 @@ class RecipeIngredient(models.Model):
         return u"%s: %s" % (_("Recipe ingredient"), self.recipe.title)
 
     class Meta:
+        app_label = "ella_hub"
         verbose_name = _("Recipe ingredient")
         verbose_name_plural = _("Recipe ingredients")
 
@@ -294,6 +300,8 @@ def register_object_permissions():
         ('listing', Listing, 'core'),
         ('site', Site, 'sites'),
         ('photo', Photo, 'photos'),
+        ('format', Format, 'photos'),
+        ('formatedphoto', FormatedPhoto, 'photos'),
         ('article', CommonArticle, 'ella_hub'),
         ('recipe', Recipe, 'ella_hub'),
         ('encyclopedia', Encyclopedia, 'ella_hub'),
@@ -301,6 +309,5 @@ def register_object_permissions():
     for class_str, class_, app_label in CLASSES:
         register(['view_%s' % class_str, 'change_%s' %class_str,
             'delete_%s' %class_str], class_ , app_label)
-
 
 register_object_permissions()
