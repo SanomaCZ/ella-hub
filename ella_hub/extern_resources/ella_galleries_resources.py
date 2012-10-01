@@ -6,9 +6,9 @@ git://github.com/ella/ella-galleries.git
 
 from tastypie import fields
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
+from ella_galleries.models import Gallery, GalleryItem
 from ella_hub.resources import ApiModelResource
 from ella_hub.ella_resources import PublishableResource, PhotoResource
-from ella_galleries.models import Gallery, GalleryItem
 
 
 class GalleryResource(PublishableResource):

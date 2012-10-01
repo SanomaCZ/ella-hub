@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from nose import tools
-from django.test import TestCase
-from django.utils.translation import ugettext_lazy as _
-from django.template.defaultfilters import date
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
+from django.template.defaultfilters import date
+from django.test import TestCase
+from django.utils.translation import ugettext_lazy as _
+
 from ella.core.models import Author
 from ella.articles.models import Article
 

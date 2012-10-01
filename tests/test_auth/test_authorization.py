@@ -172,8 +172,10 @@ class TestAuthorization(TestCase):
     def __create_test_groups(self):
         # Group 1 - can handle articles
         group1 = Group.objects.create(name="group1")
-        GROUP1_PERMISSIONS = ("view_author", "change_author",
-                              "add_author", "delete_author")
+        GROUP1_PERMISSIONS = (
+            "view_author", "change_author",
+            "add_author", "delete_author"
+        )
 
         for perm in GROUP1_PERMISSIONS:
             group1.permissions.add(Permission.objects.get(codename=perm))
@@ -253,7 +255,7 @@ class TestAuthorization(TestCase):
         headers = self.__build_headers("user", api_key)
 
         author = Author(name="viewable_name", slug="viewable-name", email="mailik@m.com",
-                                 text="this is text", description="what should i say", id=101)
+            text="this is text", description="what should i say", id=101)
         author.save()
         self.user.grant('view_author', author)
 
@@ -338,23 +340,23 @@ class TestAuthorization(TestCase):
         self.user.groups.add(self.group1)
 
         response = self.client.post("/admin-api/author/", data=self.new_author,
-                                    content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 201)
 
         response = self.client.get("/admin-api/author/100/", **headers)
         tools.assert_equals(response.status_code, 200)
 
         response = self.client.put("/admin-api/author/100/", data=self.new_author,
-                                   content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 202)
 
         response = self.client.patch("/admin-api/author/100/", data=self.new_author,
-                                   content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_true(response.status_code, 202)
 
         # Can't handle other resources, f.e. site.
         response = self.client.post("/admin-api/site/", data=self.new_site,
-                                    content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 403)
 
         self.__logout(headers)
@@ -393,7 +395,7 @@ class TestAuthorization(TestCase):
         headers = self.__build_headers("user", api_key)
 
         author = Author(name="dumb_name", slug="dumb-name", email="mail@mail.com",
-                   text="dasdasd", description="dsadasd", id=100)
+            text="dasdasd", description="dsadasd", id=100)
         author.save()
 
         PERMISSIONS = ("view_author", "change_author", "delete_author")
@@ -522,8 +524,10 @@ class TestAuthorization(TestCase):
         response = self.client.get("/admin-api/", **headers)
         tools.assert_equals(response.status_code, 403)
 
-        RESOURCES = ("author", "user", "site", "category",
-                     "photo", "article", "listing")
+        RESOURCES = (
+            "author", "user", "site", "category",
+            "photo", "article", "listing"
+        )
 
         for res in RESOURCES:
             response = self.client.get("/admin-api/%s/schema/" % res, **headers)
@@ -542,9 +546,10 @@ class TestAuthorization(TestCase):
         response = self.client.get("/admin-api/", **headers)
         tools.assert_equals(response.status_code, 200)
 
-        RESOURCES = ("author", "user", "site", "category",
-                     "photo", "listing", "article",
-                    )
+        RESOURCES = (
+            "author", "user", "site", "category",
+            "photo", "listing", "article",
+        )
 
         for res in RESOURCES:
             response = self.client.get("/admin-api/%s/schema/" % res, **headers)

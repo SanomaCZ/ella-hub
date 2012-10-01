@@ -4,8 +4,8 @@ gitolite@git.smdev.cz:ella-wikipages
 """
 
 from tastypie import fields
-from ella_hub.ella_resources import PublishableResource
 from ella_wikipages.models import Wikipage
+from ella_hub.ella_resources import PublishableResource
 
 
 class WikipageResource(PublishableResource):

@@ -1,10 +1,9 @@
-from django.test import TestCase
-import django.utils.simplejson as json
-
 from nose import tools
-from django.test.client import Client
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+import django.utils.simplejson as json
+from django.test import TestCase
+from django.test.client import Client
 
 from ella_hub.models import Draft
 

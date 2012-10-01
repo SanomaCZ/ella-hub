@@ -1,8 +1,8 @@
-from django.test import TestCase
-
 from nose import tools
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase
+
 from ella_hub.api import EllaHubApi
 
 

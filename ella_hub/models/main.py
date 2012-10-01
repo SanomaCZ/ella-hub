@@ -1,4 +1,8 @@
 from datetime import datetime
+
+from jsonfield import JSONField
+from object_permissions import register
+
 from django.db import models, IntegrityError
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
@@ -6,14 +10,11 @@ from django.contrib.auth.models import User, Permission
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import date
-from object_permissions import register
 
 from ella.core.models import Author, Category, Source, Listing, Publishable
 from ella.core.admin import PublishableAdmin
 from ella.articles.models import Article
 from ella.photos.models import Photo, Format, FormatedPhoto
-
-from jsonfield import JSONField
 
 
 class SimpleDateTimeField(models.DateTimeField):
@@ -101,6 +102,7 @@ PUBLISHABLE_STATES = (
         ("postponed", _("Postponed")),
         ("deleted", _("Deleted")),
     )
+
 
 class BaseArticle(Publishable):
     updated = models.DateTimeField(_("Updated"), null=True)

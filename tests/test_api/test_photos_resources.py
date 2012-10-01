@@ -1,14 +1,16 @@
 import os
-import django.utils.simplejson as json
 
 from PIL import Image
 from nose import tools, SkipTest
-from django.test import TestCase
+
 from django.conf import settings
-from django.test.client import Client
-from django.test.client import MULTIPART_CONTENT
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotAllowed
+import django.utils.simplejson as json
+from django.test import TestCase
+from django.test.client import Client
+from django.test.client import MULTIPART_CONTENT
+
 from ella.core.models import Author
 from ella.photos.models import Photo, Format, FormatedPhoto
 

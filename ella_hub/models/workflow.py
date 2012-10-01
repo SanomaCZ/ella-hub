@@ -67,7 +67,8 @@ class State(models.Model):
     description = models.TextField(_('Description'), blank=True)
     workflow = models.ForeignKey("Workflow", verbose_name=_("Workflow"),
         blank=True, null=True, related_name="state_workflow")
-    transitions = models.ManyToManyField("Transition", verbose_name=_("Transitions"), blank=True, null=True)
+    transitions = models.ManyToManyField("Transition", verbose_name=_("Transitions"),
+        blank=True, null=True)
 
     def __unicode__(self):
         return u"%s (%d transitions)" % (self.title, self.transitions.count())
@@ -79,8 +80,7 @@ class State(models.Model):
 
 
 class Transition(models.Model):
-    """
-    """
+
     title = models.CharField(_("Title"), max_length=128, blank=False)
     description = models.TextField(_("Description"), blank=True)
     workflow = models.ForeignKey("Workflow", verbose_name=_("Workflow"), blank=True)
@@ -96,6 +96,7 @@ class Transition(models.Model):
 
 
 class StatePermissionRelation(models.Model):
+
     state = models.ForeignKey("State", verbose_name=_("State"))
     permission = models.ForeignKey("Permission", verbose_name=_("Permission"))
     role = models.ForeignKey("Role", verbose_name=_("Role"))
@@ -110,6 +111,7 @@ class StatePermissionRelation(models.Model):
 
 
 class StateModelRelation(models.Model):
+
     content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"),
         related_name="state_model", blank=True, null=True)
     state = models.ForeignKey(State, verbose_name = _("State"))
@@ -124,8 +126,11 @@ class StateModelRelation(models.Model):
 
 
 class WorkflowModelRelation(models.Model):
-    content_type = models.ForeignKey(ContentType, verbose_name=_("Content Type"), unique=True)
-    workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"), related_name="wmr_workflow")
+
+    content_type = models.ForeignKey(ContentType, verbose_name=_("Content Type"),
+        unique=True)
+    workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"),
+        related_name="wmr_workflow")
 
     def __unicode__(self):
         return "%s / %s" % (self.content_type.name, self.workflow.title)
@@ -137,7 +142,9 @@ class WorkflowModelRelation(models.Model):
 
 
 class WorkflowPermissionRelation(models.Model):
-    workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"), related_name="wpr_workflow")
+
+    workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"),
+        related_name="wpr_workflow")
     permission = models.ForeignKey(Permission, related_name="permissions")
 
     def __unicode__(self):
