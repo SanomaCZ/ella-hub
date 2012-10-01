@@ -186,6 +186,33 @@ class TestPhotosResources(TestCase):
             file.close()
             self.__logout(headers)
 
+    @tools.raises(ValueError)
+    def test_wrong_format_in_field_with_attachment(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        file = open(self.photo_filename)
+        try:
+            payload = {
+                "attached_object": file,
+                "resource_data": json.dumps({
+                    "objects": [
+                        {
+                            "id": 100,
+                            "title": "Title of photo",
+                            "image": "attached_object_id:part1:part2",
+                            "authors": ["/admin-api/author/%d/" % self.author.id],
+                            "created": "2012-08-07T02:29:29",
+                            "description": "this is description"
+                        }
+                    ]
+                }),
+            }
+            response = self.patch("/admin-api/photo/", payload, **headers)
+        finally:
+            file.close()
+            self.__logout(headers)
+
     def patch(self, path, data={}, content_type=MULTIPART_CONTENT, follow=False, **kwargs):
         """Performs a simulated PATCH request to the provided URI."""
         kwargs.update({

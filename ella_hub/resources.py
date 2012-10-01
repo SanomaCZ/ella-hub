@@ -185,14 +185,24 @@ class MultipartFormDataModelResource(ApiModelResource):
             data = simplejson.loads(request.POST['resource_data'])
             for object in data['objects']:
                 for key, value in object.items():
-                    if isinstance(value, unicode) and value.startswith('attached_object_id'):
-                        attached_object_id = value.split(':')[1]
-                        object[key] = attached_objects[attached_object_id]
+                    self.__attach_object(attached_objects, object, key, value)
 
             return data
 
         return super(MultipartFormDataModelResource, self).deserialize(
             request, data, format)
+
+    def __attach_object(self, attached_objects, object, key, value):
+        if not isinstance(value, unicode):
+            return
+
+        if value.startswith('attached_object_id:'):
+            parts = value.split(':')
+            if len(parts) != 2:
+                raise ValueError("Invalid format in field '%s' with attachment: %s" % (key, value))
+
+            attached_object_id = parts[1]
+            object[key] = attached_objects[attached_object_id]
 
     def put_detail(self, request, **kwargs):
         """
