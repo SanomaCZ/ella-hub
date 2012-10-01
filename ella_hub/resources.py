@@ -178,6 +178,7 @@ class MultipartFormDataModelResource(ApiModelResource):
 
         attached_objects = {}
         for file in request.FILES.getlist('attached_object'):
+            assert file.name not in attached_objects, "Uploaded 2 files with the same name."
             attached_objects[file.name] = file
 
         if format.lower().startswith('multipart/form-data'):

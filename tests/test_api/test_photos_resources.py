@@ -159,6 +159,33 @@ class TestPhotosResources(TestCase):
 
         FormatedPhoto.objects.get(pk=photo.pk)
 
+    @tools.raises(AssertionError)
+    def test_upload_multiple_files_with_same_filename(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        file = open(self.photo_filename)
+        try:
+            payload = {
+                "attached_object": [file, file],
+                "resource_data": json.dumps({
+                    "objects": [
+                        {
+                            "id": 100,
+                            "title": "Title of photo",
+                            "image": "attached_object_id:" + os.path.basename(self.photo_filename),
+                            "authors": ["/admin-api/author/%d/" % self.author.id],
+                            "created": "2012-08-07T02:29:29",
+                            "description": "this is description"
+                        }
+                    ]
+                }),
+            }
+            response = self.patch("/admin-api/photo/", payload, **headers)
+        finally:
+            file.close()
+            self.__logout(headers)
+
     def patch(self, path, data={}, content_type=MULTIPART_CONTENT, follow=False, **kwargs):
         """Performs a simulated PATCH request to the provided URI."""
         kwargs.update({
