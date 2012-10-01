@@ -178,7 +178,7 @@ then
 
 
 	# `Photo` resource creation. (file & JSON in one multipart/form request).
-	echo -n "POST photo: "
+	echo -n "PATCH new photos (like a POST for all included objects): "
 	curl --dump-header - -H "$AUTH_HEADER" \
 	-X PATCH --form "attached_object=@${IMAGE_PATH}" --form 'resource_data={
 		"objects": [{
