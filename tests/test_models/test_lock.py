@@ -1,7 +1,6 @@
-from django.test import TestCase
-
 from nose import tools
 from django.contrib.auth.models import User
+from django.test import TestCase
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils.timezone import now
 

@@ -1,14 +1,15 @@
 import re
 import datetime
 
-from tastypie.exceptions import ImmediateHttpResponse
-from tastypie.http import HttpUnauthorized, HttpForbidden
 from django.template import RequestContext
 from django.contrib.auth.models import User
-from ella.utils import timezone
+
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
+from tastypie.exceptions import ImmediateHttpResponse
+from tastypie.http import HttpUnauthorized, HttpForbidden
 from tastypie.models import ApiKey
+from ella.utils import timezone
 from ella_hub import utils
 from ella_hub.utils.perms import has_obj_perm
 
@@ -32,11 +33,13 @@ class ApiAuthorization(Authorization):
     """
     Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
     """
-    __perm_prefixes = {"GET":"view_",
-                       "POST":"add_",
-                       "PUT":"change_",
-                       "PATCH":"change_",
-                       "DELETE":"delete_"}
+    __perm_prefixes = {
+        "GET":"view_",
+        "POST":"add_",
+        "PUT":"change_",
+        "PATCH":"change_",
+        "DELETE":"delete_"
+    }
     # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
 
@@ -71,6 +74,7 @@ class ApiAuthorization(Authorization):
             if has_obj_perm(request.user, obj, permission_string):
                 allowed_objects.append(obj)
 
+        # TODO: proper response when user is not authorized & object_list is empty
         if not allowed_objects and object_list:
             raise ImmediateHttpResponse(response=HttpForbidden())
 

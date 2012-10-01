@@ -1,9 +1,9 @@
-from django.test import TestCase
-
 from nose import tools
+from django.conf import settings
 from django.contrib.auth.models import User, AnonymousUser
 from django.test.client import RequestFactory
-from django.conf import settings
+from django.test import TestCase
+
 from tastypie.models import ApiKey
 
 from ella_hub.utils.middleware import CrossDomainAccessMiddleware, AuthenticationMiddleware

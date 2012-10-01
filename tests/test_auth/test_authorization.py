@@ -106,15 +106,14 @@ class TestAuthorization(TestCase):
             "title": "test_article"
             })
 
-        self.new_photo = json.dumps({
+        self.new_photo = {
             "title": "photo1",
-            "image": self.photo_filename,
             "authors": ["/admin-api/author/100/"],
-            "created": "2012-08-07T14:51:29",
+            "image": "attached_object_id:" + os.path.basename(self.photo_filename),
             "id": 100,
             "resource_uri": "/admin-api/photo/100/",
             "description": "this is description"
-            })
+            }
 
         self.new_site = json.dumps({
             "domain": "test_domain.com",
@@ -124,6 +123,8 @@ class TestAuthorization(TestCase):
             })
 
         self.new_format = json.dumps({
+            "id": 100,
+            "resource_uri": "/admin-api/format/100/",
             "flexible_height": False,
             "flexible_max_height": None,
             "max_height": 200,
@@ -131,24 +132,18 @@ class TestAuthorization(TestCase):
             "name": "format_name",
             "nocrop": True,
             "resample_quality": 95,
-            "sites": [
-                {
-                    "domain": "test_domain.com",
-                    "id": 100,
-                    "name": "test_domain.com",
-                    "resource_uri": "/admin-api/site/100/"
-                }],
+            "sites": ["/admin-api/site/100/"],
             "stretch": True
             })
 
         self.new_formatedphoto = json.dumps({
+            "id": 100,
             "resource_uri": "/admin-api/formatedphoto/100/",
             "crop_height": 0,
             "crop_left": 0,
             "crop_top": 0,
             "crop_width": 0,
-            "id": 100,
-            "format": "/admin-api/format/1/",
+            "format": "/admin-api/format/100/",
             "height": 200,
             "photo": "/admin-api/photo/100/",
             "width": 200
@@ -175,8 +170,10 @@ class TestAuthorization(TestCase):
     def __create_test_groups(self):
         # Group 1 - can handle articles
         group1 = Group.objects.create(name="group1")
-        GROUP1_PERMISSIONS = ("view_author", "change_author",
-                              "add_author", "delete_author")
+        GROUP1_PERMISSIONS = (
+            "view_author", "change_author",
+            "add_author", "delete_author"
+        )
 
         for perm in GROUP1_PERMISSIONS:
             group1.permissions.add(Permission.objects.get(codename=perm))
@@ -224,7 +221,6 @@ class TestAuthorization(TestCase):
         viewable_author.save()
         self.user.grant('view_author', viewable_author)
 
-
         # User can change changable_author,
         response = self.client.put("/admin-api/author/100/", data=self.new_author,
             content_type='application/json', **headers)
@@ -257,7 +253,7 @@ class TestAuthorization(TestCase):
         headers = self.__build_headers("user", api_key)
 
         author = Author(name="viewable_name", slug="viewable-name", email="mailik@m.com",
-                                 text="this is text", description="what should i say", id=101)
+            text="this is text", description="what should i say", id=101)
         author.save()
         self.user.grant('view_author', author)
 
@@ -342,23 +338,23 @@ class TestAuthorization(TestCase):
         self.user.groups.add(self.group1)
 
         response = self.client.post("/admin-api/author/", data=self.new_author,
-                                    content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 201)
 
         response = self.client.get("/admin-api/author/100/", **headers)
         tools.assert_equals(response.status_code, 200)
 
         response = self.client.put("/admin-api/author/100/", data=self.new_author,
-                                   content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 202)
 
         response = self.client.patch("/admin-api/author/100/", data=self.new_author,
-                                   content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_true(response.status_code, 202)
 
         # Can't handle other resources, f.e. site.
         response = self.client.post("/admin-api/site/", data=self.new_site,
-                                    content_type='application/json', **headers)
+            content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 403)
 
         self.__logout(headers)
@@ -397,7 +393,7 @@ class TestAuthorization(TestCase):
         headers = self.__build_headers("user", api_key)
 
         author = Author(name="dumb_name", slug="dumb-name", email="mail@mail.com",
-                   text="dasdasd", description="dsadasd", id=100)
+            text="dasdasd", description="dsadasd", id=100)
         author.save()
 
         PERMISSIONS = ("view_author", "change_author", "delete_author")
@@ -424,6 +420,7 @@ class TestAuthorization(TestCase):
         """
         Banned user has no permissions.
         """
+
         api_key = self.__login("admin_user", "pass1")
         headers = self.__build_headers("admin_user", api_key)
 
@@ -432,18 +429,37 @@ class TestAuthorization(TestCase):
             ("user", self.new_user),
             ("site", self.new_site),
             ("category", self.new_category),
-            ("photo", self.new_photo),
-            # TODO: can't add format objects with custom ID
-            #("format", self.new_format),
-            #("formatedphoto", self.new_formatedphoto),
             ("article", self.new_article),
             ("listing", self.new_listing)
+        )
+
+        TEST_PHOTOS_CASES = (
+            ("format", self.new_format),
+            ("formatedphoto", self.new_formatedphoto)
         )
 
         for (resource_type, new_resource_obj) in TEST_CASES:
             response = self.client.post("/admin-api/%s/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
             tools.assert_equals(response.status_code, 201)
+
+        payload = {
+            "attached_object": open(self.photo_filename),
+            "resource_data": json.dumps({
+                "objects": [self.new_photo]
+            })
+        }
+
+        response = self.client.patch("/admin-api/photo/", payload, **headers)
+        tools.assert_equals(response.status_code, 202)
+
+        response = self.client.post("/admin-api/format/",
+                data=self.new_format, content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 201)
+
+        response = self.client.post("/admin-api/formatedphoto/",
+                data=self.new_formatedphoto, content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 201)
 
         self.__logout(headers)
 
@@ -469,6 +485,30 @@ class TestAuthorization(TestCase):
             response = self.client.delete("/admin-api/%s/100/" % resource_type, **headers)
             tools.assert_equals(response.status_code, 403)
 
+        response = self.client.patch("/admin-api/photo/", payload, **headers)
+        tools.assert_equals(response.status_code, 403)
+
+        TEST_FORMAT_CASES =(
+            ("format", self.new_format),
+            ("formatedphoto", self.new_formatedphoto)
+        )
+
+        for (resource_type, new_resource_obj) in TEST_FORMAT_CASES:
+            response = self.client.get("/admin-api/%s/" % resource_type, **headers)
+            tools.assert_equals(response.status_code, 403)
+
+            response = self.client.post("/admin-api/%s/" % resource_type,
+                data=new_resource_obj, content_type='application/json', **headers)
+            tools.assert_equals(response.status_code, 403)
+
+            response = self.client.put("/admin-api/%s/100/" % resource_type,
+                data=new_resource_obj, content_type='application/json', **headers)
+            tools.assert_equals(response.status_code, 403)
+
+            response = self.client.patch("/admin-api/%s/100/" % resource_type,
+                data=new_resource_obj, content_type='application/json', **headers)
+            tools.assert_equals(response.status_code, 403)
+
         self.__logout(headers)
 
     def test_banned_user_schema_authorization(self):
@@ -482,8 +522,10 @@ class TestAuthorization(TestCase):
         response = self.client.get("/admin-api/", **headers)
         tools.assert_equals(response.status_code, 403)
 
-        RESOURCES = ("author", "user", "site", "category",
-                     "photo", "article", "listing")
+        RESOURCES = (
+            "author", "user", "site", "category",
+            "photo", "article", "listing"
+        )
 
         for res in RESOURCES:
             response = self.client.get("/admin-api/%s/schema/" % res, **headers)
@@ -495,16 +537,17 @@ class TestAuthorization(TestCase):
         """
         Superuser has access to all registered resources.
         """
+
         api_key = self.__login("admin_user", "pass1")
         headers = self.__build_headers("admin_user", api_key)
 
         response = self.client.get("/admin-api/", **headers)
         tools.assert_equals(response.status_code, 200)
 
-        RESOURCES = ("author", "user", "site", "category",
-                     "photo", "listing", "article",
-                     #"commonarticle", "encyclopedia", "recipe", "pagedarticle",
-                    )
+        RESOURCES = (
+            "author", "user", "site", "category",
+            "photo", "listing", "article",
+        )
 
         for res in RESOURCES:
             response = self.client.get("/admin-api/%s/schema/" % res, **headers)
@@ -524,7 +567,6 @@ class TestAuthorization(TestCase):
             ("user", self.new_user),
             ("site", self.new_site),
             ("category", self.new_category),
-            ("photo", self.new_photo),
             ("article", self.new_article),
             ("listing", self.new_listing)
         )
@@ -545,12 +587,55 @@ class TestAuthorization(TestCase):
                 data=new_resource_obj, content_type='application/json', **headers)
             tools.assert_true(response.status_code, 202)
 
+        response = self.client.get("/admin-api/photo/", **headers)
+        tools.assert_equals(response.status_code, 200)
+
+        payload = {
+            "attached_object": open(self.photo_filename),
+            "resource_data": json.dumps({
+                "objects": [self.new_photo]
+            })
+        }
+
+        response = self.client.patch("/admin-api/photo/", payload, **headers)
+        tools.assert_equals(response.status_code, 202)
+
+        TEST_FORMAT_CASES =(
+            ("format", self.new_format),
+            ("formatedphoto", self.new_formatedphoto)
+        )
+
+        for (resource_type, new_resource_obj) in TEST_FORMAT_CASES:
+            response = self.client.get("/admin-api/%s/" % resource_type, **headers)
+            tools.assert_equals(response.status_code, 200)
+
+            response = self.client.post("/admin-api/%s/" % resource_type,
+                data=new_resource_obj, content_type='application/json', **headers)
+            tools.assert_equals(response.status_code, 201)
+
+            response = self.client.put("/admin-api/%s/100/" % resource_type,
+                data=new_resource_obj, content_type='application/json', **headers)
+            tools.assert_true(response.status_code in (201, 202))
+
+            response = self.client.patch("/admin-api/%s/100/" % resource_type,
+                data=new_resource_obj, content_type='application/json', **headers)
+            tools.assert_equals(response.status_code, 202)
+
         TEST_CASES = list(TEST_CASES)
         TEST_CASES.reverse()
 
         for (resource_type, new_resource_obj) in TEST_CASES:
             response = self.client.delete("/admin-api/%s/100/" % resource_type, **headers)
             tools.assert_equals(response.status_code, 204)
+
+        response = self.client.delete("/admin-api/formatedphoto/100/", **headers)
+        tools.assert_equals(response.status_code, 204)
+
+        response = self.client.delete("/admin-api/format/100/", **headers)
+        tools.assert_equals(response.status_code, 204)
+
+        response = self.client.delete("/admin-api/photo/100/", **headers)
+        tools.assert_equals(response.status_code, 204)
 
         self.__logout(headers)
 

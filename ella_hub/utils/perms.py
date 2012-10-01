@@ -1,10 +1,66 @@
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import FieldError
-from django.contrib.auth.models import AnonymousUser
 from object_permissions import get_users_any
+
+from django.core.exceptions import FieldError
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import AnonymousUser
 
 from ella.articles.models import Article
 from ella.core.models import Author
+
+from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
+
+
+##############################################
+# Utils fot ella_hub.models.permissions module
+def has_permission(model, user, codename, roles=None):
+    """
+    Returns True if <user> has at least one of <roles> which
+    has permission specified by <codename> for specified <model>,
+    otherwise returns False.
+
+    If roles is None, all user roles are considered.
+    """
+    ct = ContentType.objects.get_for_model(model)
+
+    # Checking if specified <codenane> Permission exists.
+    try:
+        perm = Permission.objects.get(codename=codename)
+    except Permission.DoesNotExist:
+        return False
+
+    if user.is_superuser:
+        return True
+
+    if not roles:
+        relations = PrincipalRoleRelation.objects.filter(user=user)
+        roles = [relation.role for relation in relations]
+
+    o_perms = ModelPermission.objects.filter(role__in=roles,
+        content_type=ct, permission=perm)
+
+    return o_perms is not None
+
+
+def grant_permission(model, role, permission):
+    """
+    Grants <permission> to <model> for specified <role>.
+    <permission> - can be codename or Permission object
+    """
+    if not isinstance(permission, Permission):
+        try:
+            permission = Permission.objects.get(codename = permission)
+        except Permission.DoesNotExist:
+            return False
+
+    ct = ContentType.objects.get_for_model(model)
+
+    try:
+        ModelPermission.objects.get(role=role, content_type = ct, permission=permission)
+    except ModelPermission.DoesNotExist:
+        ModelPermission.objects.create(role=role, content_type=ct, permission=permission)
+
+    return True
+##############################################
 
 
 def has_obj_perm(user, obj, perm=None):
