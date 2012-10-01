@@ -2,7 +2,7 @@ import os
 from urlparse import urlparse, urlsplit
 
 from PIL import Image
-from nose import tools, SkipTest
+from nose import tools
 from django.conf import settings
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -108,13 +108,14 @@ class TestAuthorization(TestCase):
             "title": "test_article"
             })
 
-        self.new_photo = json.dumps({
+        self.new_photo = {
             "title": "photo1",
             "authors": ["/admin-api/author/100/"],
+            "image": "attached_object_id:" + os.path.basename(self.photo_filename),
             "id": 100,
             "resource_uri": "/admin-api/photo/100/",
             "description": "this is description"
-            })
+            }
 
         self.new_site = json.dumps({
             "domain": "test_domain.com",
@@ -418,10 +419,7 @@ class TestAuthorization(TestCase):
     def test_banned_user_authorization(self):
         """
         Banned user has no permissions.
-        This test fails because of issue with Format model.
-        https://github.com/ella/ella/pull/127
         """
-        raise SkipTest()
 
         api_key = self.__login("admin_user", "pass1")
         headers = self.__build_headers("admin_user", api_key)
@@ -445,9 +443,15 @@ class TestAuthorization(TestCase):
                 data=new_resource_obj, content_type='application/json', **headers)
             tools.assert_equals(response.status_code, 201)
 
-        response = self.client.post("/admin-api/photo/",
-                data={"image": open(self.photo_filename), "photo": self.new_photo}, **headers)
-        tools.assert_equals(response.status_code, 201)
+        payload = {
+            "attached_object": open(self.photo_filename),
+            "resource_data": json.dumps({
+                "objects": [self.new_photo]
+            })
+        }
+
+        response = self.client.patch("/admin-api/photo/", payload, **headers)
+        tools.assert_equals(response.status_code, 202)
 
         response = self.client.post("/admin-api/format/",
                 data=self.new_format, content_type='application/json', **headers)
@@ -481,26 +485,8 @@ class TestAuthorization(TestCase):
             response = self.client.delete("/admin-api/%s/100/" % resource_type, **headers)
             tools.assert_equals(response.status_code, 403)
 
-        response = self.client.post("/admin-api/photo/",
-            data={"image": open(self.photo_filename), "photo": self.new_photo}, **headers)
+        response = self.client.patch("/admin-api/photo/", payload, **headers)
         tools.assert_equals(response.status_code, 403)
-
-        new_photo_res = {
-            "image": open(self.photo_filename),
-            "photo": self.new_photo,
-        }
-        response = self.client.put("/admin-api/photo/100/",
-            data=new_photo_res, **headers)
-        tools.assert_equals(response.status_code, 403)
-
-        new_photo_res = {
-            "image": open(self.photo_filename),
-            "photo": self.new_photo,
-        }
-
-        response = self.client.patch("/admin-api/photo/100/",
-            data=new_photo_res, **headers)
-        tools.assert_true(response.status_code, 403)
 
         TEST_FORMAT_CASES =(
             ("format", self.new_format),
@@ -548,10 +534,7 @@ class TestAuthorization(TestCase):
     def test_admin_user_schema_authorization(self):
         """
         Superuser has access to all registered resources.
-        This test fails because of issue with Format model.
-        https://github.com/ella/ella/pull/127
         """
-        raise SkipTest()
 
         api_key = self.__login("admin_user", "pass1")
         headers = self.__build_headers("admin_user", api_key)
@@ -561,7 +544,6 @@ class TestAuthorization(TestCase):
 
         RESOURCES = ("author", "user", "site", "category",
                      "photo", "listing", "article",
-                     #"commonarticle", "encyclopedia", "recipe", "pagedarticle",
                     )
 
         for res in RESOURCES:
@@ -605,26 +587,15 @@ class TestAuthorization(TestCase):
         response = self.client.get("/admin-api/photo/", **headers)
         tools.assert_equals(response.status_code, 200)
 
-        response = self.client.post("/admin-api/photo/",
-            data={"image": open(self.photo_filename), "photo": self.new_photo}, **headers)
-        tools.assert_equals(response.status_code, 201)
-
-        new_photo_res = {
-            "image": open(self.photo_filename),
-            "photo": self.new_photo,
+        payload = {
+            "attached_object": open(self.photo_filename),
+            "resource_data": json.dumps({
+                "objects": [self.new_photo]
+            })
         }
-        response = self.client.put("/admin-api/photo/100/",
-            data=new_photo_res, **headers)
+
+        response = self.client.patch("/admin-api/photo/", payload, **headers)
         tools.assert_equals(response.status_code, 202)
-
-        new_photo_res = {
-            "image": open(self.photo_filename),
-            "photo": self.new_photo,
-        }
-
-        response = self.client.patch("/admin-api/photo/100/",
-            data=new_photo_res, **headers)
-        tools.assert_true(response.status_code, 202)
 
         TEST_FORMAT_CASES =(
             ("format", self.new_format),
