@@ -1,5 +1,4 @@
 import re
-import ella_hub.api
 
 from tastypie import fields
 from tastypie.resources import ModelResource
@@ -9,6 +8,7 @@ from django.utils import simplejson
 
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
+from ella_hub import utils
 from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
 
 
@@ -104,8 +104,8 @@ class ApiModelResource(ModelResource):
 
         user_perms = request.user.get_all_permissions()
 
-        (objects_class_name,) = re.match(r"/[^/]*/([^/]*)/.*", request.path).groups()
-        model_name = ella_hub.api.EllaHubApi.get_model_name(objects_class_name)
+        resource_name = re.match(r"/[^/]*/([^/]*)/.*", request.path).group(1)
+        model_name = utils.get_model_name_of_resource(resource_name)
         ct = ContentType.objects.get(model=model_name)
 
         allowed_methods = []
@@ -143,8 +143,7 @@ class ApiModelResource(ModelResource):
         return self.__filter_according_to_perms(request, bundle)
 
     def __filter_according_to_perms(self, request, bundle):
-        model_name = ella_hub.api.EllaHubApi.get_model_name(
-            self._meta.resource_name)
+        model_name = utils.get_model_name_of_resource(self._meta.resource_name)
 
         if (not has_user_model_perm(request.user, model_name, 'change') and not
             has_obj_perm(request.user, bundle.obj, 'change_%s' % model_name)):

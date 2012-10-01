@@ -1,6 +1,5 @@
 import re
 import datetime
-import ella_hub.api
 
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpUnauthorized, HttpForbidden
@@ -10,7 +9,7 @@ from ella.utils import timezone
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.models import ApiKey
-
+from ella_hub import utils
 from ella_hub.utils.perms import has_obj_perm
 
 
@@ -39,16 +38,16 @@ class ApiAuthorization(Authorization):
                        "PATCH":"change_",
                        "DELETE":"delete_"}
     # Regular Expression parsing resource name from `request.path`.
-    __re_objects_class = re.compile(r"/[^/]*/(?P<class_name>[^/]*)/.*")
+    __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
 
     def is_authorized(self, request, object=None):
         self.request_method = request.META['REQUEST_METHOD']
-        self.objects_class_name = self.__re_objects_class.match(request.path).group("class_name")
+        self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
 
         if self.request_method == "POST":
             # `apply_limits` method is not called for POST requests.
             permission_string = self.__perm_prefixes[request.method] + \
-                ella_hub.api.EllaHubApi.get_model_name(self.objects_class_name)
+                utils.get_model_name_of_resource(self.resource_name)
             found_perm = filter(lambda perm: perm.endswith(permission_string),
                 request.user.get_all_permissions())
             if not found_perm:
@@ -66,7 +65,7 @@ class ApiAuthorization(Authorization):
 
         allowed_objects = []
         permission_string = self.__perm_prefixes[self.request_method] + \
-            ella_hub.api.EllaHubApi.get_model_name(self.objects_class_name)
+            utils.get_model_name_of_resource(self.resource_name)
 
         for obj in object_list:
             if has_obj_perm(request.user, obj, permission_string):

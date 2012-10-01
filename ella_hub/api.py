@@ -27,6 +27,7 @@ from tastypie.serializers import Serializer
 from tastypie.utils import is_valid_jsonp_callback_value
 from tastypie.utils.mime import determine_format, build_content_type
 from ella_hub.models import PublishableLock, PUBLISHABLE_STATES
+from ella_hub import utils
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
@@ -42,17 +43,6 @@ class HttpJsonResponse(HttpResponse):
 
 
 class EllaHubApi(Api):
-    """
-    """
-
-    registered_resources = {}
-
-    @classmethod
-    def get_model_name(cls, resource_name):
-        """Returns name of DB model for given resource name."""
-        resource = cls.registered_resources[resource_name]
-        return resource._meta.object_class.__name__.lower()
-
     def top_level(self, request, api_name=None):
         """
         Overriding top_level method to serialize only resources
@@ -65,7 +55,7 @@ class EllaHubApi(Api):
             api_name = self.api_name
 
         for resource_name in sorted(self._registry.keys()):
-            model_name = EllaHubApi.get_model_name(resource_name)
+            model_name = utils.get_model_name_of_resource(resource_name)
             if not is_resource_allowed(request.user, model_name):
                 continue
 
@@ -102,8 +92,7 @@ class EllaHubApi(Api):
         Register view model permission for all resource classes.
         - view_<className>
         """
-        for resource_name, resource_obj in EllaHubApi.registered_resources.items():
-            model_name = resource_obj._meta.object_class.__name__.lower()
+        for model_name in utils.get_all_resource_model_names():
             ct = ContentType.objects.get(model=model_name)
 
             perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
@@ -159,8 +148,8 @@ class EllaHubApi(Api):
 
         for resource_class in resources:
             resource = resource_class()
-            EllaHubApi.registered_resources[resource._meta.resource_name] = resource
             self.register(resource)
+            utils.save_registered_resource(resource)
 
     def prepend_urls(self):
         """
@@ -339,13 +328,13 @@ class EllaHubApi(Api):
 
     def __get_allowed_public_resources(self, user):
         allowed_public_resources = [res_name for res_name, res_obj in self._registry.items()
-            # has_user_model_perm(user, EllaHubApi.get_model_name(res_name))
+            # has_user_model_perm(user, utils.get_model_name_of_resource(res_name))
             if getattr(res_obj._meta, "public", False)]
         return allowed_public_resources
 
     def __get_allowed_system_resources(self, user):
         allowed_system_resources = [res_name for res_name, res_obj in self._registry.items()
-            # has_user_model_perm(user, EllaHubApi.get_model_name(res_name))
+            # has_user_model_perm(user, utils.get_model_name_of_resource(res_name))
             if getattr(res_obj._meta, "public", True)]
         return allowed_system_resources
 

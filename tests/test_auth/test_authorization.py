@@ -1,7 +1,8 @@
 import os
-from urlparse import urlparse, urlsplit
+import django.utils.simplejson as json
 
 from PIL import Image
+from urlparse import urlparse, urlsplit
 from nose import tools
 from django.conf import settings
 from django.contrib.auth.models import User, Group, Permission
@@ -11,12 +12,9 @@ from django.db import connection
 from django.template import RequestContext
 from django.test import TestCase
 from django.test.client import Client, FakePayload, MULTIPART_CONTENT
-import django.utils.simplejson as json
-
 from ella.articles.models import Article
 from ella.core.models import Author
-
-from ella_hub.api import EllaHubApi
+from ella_hub import utils
 
 
 class PatchClient(Client):
@@ -564,8 +562,7 @@ class TestAuthorization(TestCase):
         return settings.MEDIA_ROOT + "/" + filename
 
     def __register_view_model_permission(self):
-        for resource_name, resource_obj in EllaHubApi.registered_resources.items():
-            model_name = resource_obj._meta.object_class.__name__.lower()
+        for model_name in utils.get_all_resource_model_names():
             ct = ContentType.objects.get(model=model_name)
 
             perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
