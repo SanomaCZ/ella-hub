@@ -6,6 +6,7 @@ install_requires = [
     'ella>=3.0',
     'PIL',
     'django-tastypie',
+    'django-object-permissions',
 ]
 
 test_requires = [
