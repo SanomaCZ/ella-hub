@@ -81,6 +81,10 @@ class TestGetResources(TestCase):
         tools.assert_true("list_endpoint" in resources["publishable"])
         tools.assert_true("schema" in resources["publishable"])
 
+        tools.assert_true("tag" in resources)
+        tools.assert_true("list_endpoint" in resources["tag"])
+        tools.assert_true("schema" in resources["tag"])
+
         self.__logout(headers)
 
     def test_ella_resources_accessible(self):

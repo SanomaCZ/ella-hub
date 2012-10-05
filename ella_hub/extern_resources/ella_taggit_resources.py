@@ -12,6 +12,17 @@ from ella_hub.ella_resources import PublishableResource
 
 
 class TagResource(ApiModelResource):
+    @staticmethod
+    def initialize(resources):
+        for resource in resources:
+            if issubclass(resource, PublishableResource):
+                field = fields.ToManyField(TagResource, "tags", blank=True,
+                    null=True, full=True)
+                # call `contribute_to_class` manually because
+                # `DeclarativeMetaclass` already created `Resource` classes
+                field.contribute_to_class(resource, "tags")
+                resource.base_fields["tags"] = field
+
     class Meta(ApiModelResource.Meta):
         queryset = PublishableTag.objects.all()
         filtering = {
@@ -19,5 +30,3 @@ class TagResource(ApiModelResource):
             "slug": ALL,
         }
         public = False
-
-

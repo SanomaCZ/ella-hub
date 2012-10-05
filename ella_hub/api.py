@@ -151,6 +151,10 @@ class EllaHubApi(Api):
         "Register one or more resources"
 
         for resource_class in resources:
+            if hasattr(resource_class, "initialize"):
+                resource_class.initialize(tuple(resources))
+
+        for resource_class in resources:
             resource = resource_class()
             self.register(resource)
             utils.save_registered_resource(resource)
