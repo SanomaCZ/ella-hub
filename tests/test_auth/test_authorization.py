@@ -573,22 +573,31 @@ class TestAuthorization(TestCase):
 
         for (resource_type, new_resource_obj) in TEST_CASES:
             response = self.client.get("/admin-api/%s/" % resource_type, **headers)
-            tools.assert_equals(response.status_code, 200)
+            tools.assert_equals(response.status_code, 200,
+                "status %d for resource '%s' with error: %s" % (
+                    response.status_code, resource_type, response.content))
 
             response = self.client.post("/admin-api/%s/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 201)
+            tools.assert_equals(response.status_code, 201,
+                "status %d for resource '%s' with error: %s" % (
+                    response.status_code, resource_type, response.content))
 
             response = self.client.put("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 202)
+            tools.assert_equals(response.status_code, 202,
+                "status %d for resource '%s' with error: %s" % (
+                    response.status_code, resource_type, response.content))
 
             response = self.client.patch("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_true(response.status_code, 202)
+            tools.assert_equals(response.status_code, 202,
+                "status %d for resource '%s' with error: %s" % (
+                    response.status_code, resource_type, response.content))
 
         response = self.client.get("/admin-api/photo/", **headers)
-        tools.assert_equals(response.status_code, 200)
+        tools.assert_equals(response.status_code, 200,
+            "code %d with error: %s" % (response.status_code, response.content))
 
         payload = {
             "attached_object": open(self.photo_filename),
