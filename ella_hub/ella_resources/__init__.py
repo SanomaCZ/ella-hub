@@ -164,33 +164,33 @@ class FormatedPhotoResource(ApiModelResource):
 
 
 class PublishableResource(ApiModelResource):
-    photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True,
-        full=True)
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
+    photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True,
+        full=True)
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
 
     class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()
         filtering = {
-            'announced': ALL,
-            'app_data': ('exact',),
-            'authors': ALL_WITH_RELATIONS,
-            'category': ALL_WITH_RELATIONS,
-            'description': ('exact',),
             'id': ALL,
-            'photo': ALL_WITH_RELATIONS,
+            'title': ('exact', 'iexact', 'contains', 'startswith', 'endswith',),
+            'slug': ('exact', 'iexact', 'contains', 'startswith', 'endswith',),
+            'published': ALL,
+            'static': ('exact',),
+            'description': ('contains', 'startswith', 'endswith',),
             'publish_from': ALL,
             'publish_to': ALL,
-            'published': ('exact',),
-            'resource_uri': ('exact',),
-            'slug': ('exact',),
-            'static': ('exact',),
-            'title': ('exact',),
+            'announced': ALL,
+            'authors': ALL_WITH_RELATIONS,
+            'category': ALL_WITH_RELATIONS,
+            'photo': ALL_WITH_RELATIONS,
         }
 
     def dehydrate(self, bundle):
+        bundle = super(PublishableResource, self).dehydrate(bundle)
+
         bundle.data['url'] = bundle.obj.get_domain_url()
         return bundle
 
