@@ -2,9 +2,10 @@ import os
 import re
 import datetime
 import mimetypes
-from inspect import isclass
 import ella_hub.signals
 import ella_hub.resources
+
+from inspect import isclass
 
 from django.conf import settings
 from django.conf.urls.defaults import url

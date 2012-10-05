@@ -6,9 +6,9 @@ git://github.com/ella/ella-taggit.git
 
 from tastypie import fields
 from tastypie.resources import ALL
+from ella_taggit.models import PublishableTag
 from ella_hub.resources import ApiModelResource
 from ella_hub.ella_resources import PublishableResource
-from ella_taggit.models import PublishableTag
 
 
 class TagResource(ApiModelResource):
