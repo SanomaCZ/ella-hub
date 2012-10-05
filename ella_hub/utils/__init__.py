@@ -1,4 +1,9 @@
+__RESOURCE_CLASSES = []
 __REGISTERED_RESOURCES = {}
+
+
+def save_resource_class(cls):
+    __RESOURCE_CLASSES.append(cls)
 
 
 def save_registered_resource(resource):
@@ -14,3 +19,7 @@ def get_model_name_of_resource(resource_name):
 def get_all_resource_model_names():
     return tuple(r._meta.object_class.__name__.lower()
         for r in __REGISTERED_RESOURCES.values())
+
+
+def get_all_resource_classes():
+    return tuple(__RESOURCE_CLASSES)

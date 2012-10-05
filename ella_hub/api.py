@@ -131,6 +131,7 @@ class EllaHubApi(Api):
             for attr in mod.__dict__:
                 resource = getattr(mod, attr)
                 if self._is_resource_subclass(resource) and resource not in resources:
+                    utils.save_resource_class(resource)
                     resources.append(resource)
 
         return resources
