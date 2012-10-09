@@ -53,11 +53,8 @@ def grant_permission(model, role, permission):
             return False
 
     ct = ContentType.objects.get_for_model(model)
-
-    try:
-        ModelPermission.objects.get(role=role, content_type = ct, permission=permission)
-    except ModelPermission.DoesNotExist:
-        ModelPermission.objects.create(role=role, content_type=ct, permission=permission)
+    ModelPermission.objects.get_or_create(role=role, content_type=ct,
+        permission=permission)
 
     return True
 ##############################################
@@ -69,7 +66,7 @@ def has_obj_perm(user, obj, perm=None):
     if `perm` is not specified, return True
     if user has any perm to `obj`.
     """
-    ct = ContentType.objects.get(model=obj.__class__.__name__.lower())
+    ct = ContentType.objects.get_for_model(obj.__class__)
 
     if perm:
         if ((ct.app_label + '.' + perm) in user.get_all_permissions() or
@@ -81,50 +78,47 @@ def has_obj_perm(user, obj, perm=None):
     return False
 
 
-def has_user_model_perm(user, model_name, perm=None):
+def has_user_model_perm(user, model_class, perm=None):
     """
-    Return True if user has `perm` to `model_name` model.
+    Return True if user has `perm` to `model_class` model.
     If `perm` is not specified, return True if user
-    has any perm to `model_name` mode.
+    has any perm to `model_class` mode.
     """
-    ct = ContentType.objects.get(model=model_name)
+    ct = ContentType.objects.get_for_model(model_class)
     found_perm = False
 
     permission = ct.app_label + "."
     if perm:
-        found_perm = (ct.app_label + "." + perm + "_" + model_name) in user.get_all_permissions()
+        found_perm = (ct.app_label + "." + perm + "_" + ct.model) in user.get_all_permissions()
     else:
-        found_perm = filter(lambda perm: perm.startswith(ct.app_label+".") and perm.endswith(model_name),
+        found_perm = filter(lambda perm: perm.startswith(ct.app_label+".") and perm.endswith(ct.model),
             user.get_all_permissions())
 
     return found_perm
 
 
-def has_user_model_object_with_any_perm(user, model_name, perm_list=[]):
+def has_user_model_object_with_any_perm(user, model_class, perm_list=[]):
     """
     Return True if user has any permission from `perm_list`
-    to any object of `model_name` model,
+    to any object of `model_class` model,
     if `perm_list` is not specified, return True if user
-    has any permission to any object of `model_name` model.
+    has any permission to any object of `model_class` model.
     """
     if isinstance(user, AnonymousUser):
         return False
 
-    ct = ContentType.objects.get(model=model_name)
-
     try:
-        objects = user.get_objects_any_perms(ct.model_class(), perms=perm_list)
+        objects = user.get_objects_any_perms(model_class, perms=perm_list)
     except FieldError:
-        # print "Class %s has no registered permissions." % ct.model_class()
         return False
 
     return bool(objects)
 
 
-def is_resource_allowed(user, model_name):
+def is_resource_allowed(user, model_class):
     """
     Return True if user has rights to get schema
-    specified by `model_name`.
+    specified by `model_class`.
     """
-    return (has_user_model_perm(user, model_name) or
-        has_user_model_object_with_any_perm(user, model_name))
+    return (has_user_model_perm(user, model_class) or
+        has_user_model_object_with_any_perm(user, model_class))

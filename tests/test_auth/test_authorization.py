@@ -656,11 +656,10 @@ class TestAuthorization(TestCase):
         return settings.MEDIA_ROOT + "/" + filename
 
     def __register_view_model_permission(self):
-        for model_name in utils.get_all_resource_model_names():
-            ct = ContentType.objects.get(model=model_name)
+        for ct in utils.get_all_resource_content_types():
+            perm = Permission.objects.get_or_create(codename='view_' + ct.model,
+                name='Can view %s.' % ct.model, content_type=ct)
 
-            perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
-                name='Can view %s.' % model_name, content_type=ct)
             if not isinstance(perm, tuple):
                 perm.save()
 

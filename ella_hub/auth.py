@@ -46,11 +46,12 @@ class ApiAuthorization(Authorization):
     def is_authorized(self, request, object=None):
         self.request_method = request.META['REQUEST_METHOD']
         self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
+        content_type = utils.get_content_type_for_resource(self.resource_name)
 
         if self.request_method == "POST":
             # `apply_limits` method is not called for POST requests.
             permission_string = self.__perm_prefixes[request.method] + \
-                utils.get_model_name_of_resource(self.resource_name)
+                content_type.model
             found_perm = filter(lambda perm: perm.endswith(permission_string),
                 request.user.get_all_permissions())
             if not found_perm:
@@ -62,13 +63,14 @@ class ApiAuthorization(Authorization):
         Applying permission limits, this method is NOT called by POST requests.
         """
         user = request.user
+        content_type = utils.get_content_type_for_resource(self.resource_name)
 
         if user.is_superuser:
             return object_list
 
         allowed_objects = []
         permission_string = self.__perm_prefixes[self.request_method] + \
-            utils.get_model_name_of_resource(self.resource_name)
+            content_type.model
 
         for obj in object_list:
             if has_obj_perm(request.user, obj, permission_string):
