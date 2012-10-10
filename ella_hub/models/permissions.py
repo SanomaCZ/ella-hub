@@ -26,6 +26,7 @@ class Permission(models.Model):
     title = models.CharField(_("Name"), max_length=128, unique=True)
     codename = models.CharField(_("Codename"), max_length=128, unique=True)
     description = models.TextField(_("Description"), blank=True)
+    restriction = models.BooleanField(_("Restriction"), default=False)
     content_types = models.ManyToManyField(ContentType, verbose_name=_("Content Types"),
         blank=True, null=True, related_name="content_types")
 
