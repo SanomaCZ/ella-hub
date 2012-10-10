@@ -21,14 +21,13 @@ def has_permission(model, user, codename, roles=None):
     If roles is None, all user roles are considered.
     """
     ct = ContentType.objects.get_for_model(model)
-
     # Checking if specified <codenane> Permission exists.
     try:
         perm = Permission.objects.get(codename=codename)
     except Permission.DoesNotExist:
         return False
 
-    if user.is_superuser:
+    if user.is_superuser and not perm.restriction:
         return True
 
     if not roles:
@@ -37,8 +36,7 @@ def has_permission(model, user, codename, roles=None):
 
     o_perms = ModelPermission.objects.filter(role__in=roles,
         content_type=ct, permission=perm)
-
-    return o_perms is not None
+    return o_perms.exists()
 
 
 def grant_permission(model, role, permission):
