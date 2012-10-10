@@ -1,9 +1,11 @@
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from ella.core.models import Publishable
 
-from ella_hub.models import Role, Permission, ModelPermission
+from ella_hub.models import CommonArticle
+from ella_hub.models import Role, Permission, ModelPermission, PrincipalRoleRelation
 from ella_hub.models import State, Transition, Workflow
 from ella_hub.models import (StateModelRelation, WorkflowModelRelation,
     WorkflowPermissionRelation, StatePermissionRelation)
@@ -16,29 +18,32 @@ def init_ella_workflow(resources):
     workflow = Workflow.objects.get_or_create(title="Ella workflow",
         description="Workflow for Ella publishable-based models.")[0]
 
-    models = []
+    publishable_models = []
+    all_models = []
 
     # resources filtering, set workflow to only Publishable-subclassed models
     for resource in resources:
         res_model = resource._meta.object_class
         if issubclass(res_model, Publishable) and res_model != Publishable:
-            models.append(res_model)
+            publishable_models.append(res_model)
+        all_models.append(res_model)
 
     STATES = (
-        _("Added"),
-        _("Ready"),
-        _("Approved"),
-        _("Published"),
-        _("Postponed"),
-        _("Deleted")
+        (_("Added"), "added"),
+        (_("Ready"), "ready"),
+        (_("Approved"), "approved"),
+        (_("Published"), "published"),
+        (_("Postponed"), "postponed"),
+        (_("Deleted"), "deleted")
     )
 
     state_obj_list = []
     perm_obj_list = []
 
     # create states
-    for state_name in STATES:
-        s = State.objects.get_or_create(title=unicode(state_name), workflow=workflow)[0]
+    for state_name, state_codename in STATES:
+        s = State.objects.get_or_create(title=unicode(state_name),
+            codename=state_codename, workflow=workflow)[0]
         state_obj_list.append(s)
 
     # make all possible transitions
@@ -51,9 +56,8 @@ def init_ella_workflow(resources):
             state_obj_src.save()
 
     # set workflow to all registered models
-    for model in models:
+    for model in publishable_models:
         workflow.set_to_model(model)
-
 
     ROLES = (
         _("Photographer"),
@@ -66,8 +70,6 @@ def init_ella_workflow(resources):
         (_("Can add"), "can_add"),
         (_("Can edit"), "can_edit"),
         (_("Can delete"), "can_delete"),
-        (_("Can publish"), "can_publish"),
-        (_("Can view content"), "can_view_content"),
     )
 
     # create basic roles
@@ -81,12 +83,13 @@ def init_ella_workflow(resources):
 
     # map permissions to models for roles (only for editor in chief)
     editor_in_chief = Role.objects.get(title="Editor in chief")
-    for model in models:
+    for model in all_models:
         content_type = ContentType.objects.get_for_model(model)
-
         for perm_obj in perm_obj_list:
             ModelPermission.objects.get_or_create(role=editor_in_chief,
                 permission=perm_obj, content_type=content_type)
+
+    for model in publishable_models:
         # editor in chief can do anything in every state
         for state_obj in state_obj_list:
             StateModelRelation.objects.get_or_create(state=state_obj,
@@ -99,6 +102,29 @@ def init_ella_workflow(resources):
         for state_obj in state_obj_list:
             StatePermissionRelation.objects.get_or_create(state=state_obj,
                 permission=perm_obj, role=editor_in_chief)
+
+    # create permission to test readonly & disabled model attributes
+    r = Permission.objects.get_or_create(title="Readonly content",
+        restriction=True, codename="readonly_content")[0]
+    d = Permission.objects.get_or_create(title="Disabled authors",
+        restriction=True, codename="disabled_authors")[0]
+
+    content_type = ContentType.objects.get_for_model(CommonArticle)
+
+    ModelPermission.objects.get_or_create(role=editor_in_chief,
+        permission=r, content_type=content_type)
+    ModelPermission.objects.get_or_create(role=editor_in_chief,
+        permission=d, content_type=content_type)
+
+
+    WorkflowPermissionRelation.objects.get_or_create(workflow=workflow,
+        permission=r)
+
+    for state_obj in state_obj_list:
+        StatePermissionRelation.objects.get_or_create(state=state_obj,
+            permission=r, role=editor_in_chief)
+        StatePermissionRelation.objects.get_or_create(state=state_obj,
+            permission=d, role=editor_in_chief)
 
     return workflow
 
@@ -153,3 +179,13 @@ def get_state(model):
         return None
     else:
         return relation.state
+
+
+def get_states(model, workflow = None):
+    content_type = ContentType.objects.get_for_model(model)
+    relations = StateModelRelation.objects.filter(content_type=content_type)
+    states = [relation.state for relation in relations]
+
+    if workflow:
+        states = states.filter(workflow=workflow)
+    return states
