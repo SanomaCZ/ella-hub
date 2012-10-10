@@ -6,10 +6,13 @@ from django.test import TestCase
 from django.test.client import Client
 
 from ella_hub.models import Draft
+from ella_hub.utils import get_all_resource_classes
+from ella_hub.utils.workflow import init_ella_workflow
 
 
 class TestDraft(TestCase):
     def setUp(self):
+        init_ella_workflow(get_all_resource_classes())
         self.user = self.__create_test_user("user", "pass", True)
         self.client = Client()
 
