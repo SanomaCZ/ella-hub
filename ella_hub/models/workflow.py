@@ -37,7 +37,12 @@ class Workflow(models.Model):
     description = models.TextField(_("Description"), blank=True)
     initial_state =models.ForeignKey("State", verbose_name=_("Initial state"),
         blank=True, null=True, related_name="workflow_initial_state")
-    permissions = models.ManyToManyField(Permission, verbose_name=_("Permissions"))
+
+    permissions = models.ManyToManyField(Permission, verbose_name=_("Permissions"),
+        through="WorkflowPermissionRelation")
+
+    content_types = models.ManyToManyField(ContentType, verbose_name=_("Content Types"),
+        blank=True, null=True, related_name="c_types")
 
     def set_to_model(self, model):
         content_type = ContentType.objects.get_for_model(model)
@@ -64,7 +69,8 @@ class Workflow(models.Model):
 class State(models.Model):
 
     title = models.CharField(_("Title"), max_length=128, blank=False)
-    description = models.TextField(_('Description'), blank=True)
+    codename = models.CharField(_("Codename"), max_length=128, unique=True, blank=False)
+    description = models.TextField(_("Description"), blank=True)
     workflow = models.ForeignKey("Workflow", verbose_name=_("Workflow"),
         blank=True, null=True, related_name="state_workflow")
     transitions = models.ManyToManyField("Transition", verbose_name=_("Transitions"),
