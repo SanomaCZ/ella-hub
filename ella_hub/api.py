@@ -31,11 +31,14 @@ from ella.core.models import Publishable
 from ella.photos.models import Photo, FormatedPhoto
 from ella.utils import timezone
 
-from ella_hub.models import PublishableLock, PUBLISHABLE_STATES
+from ella_hub.models import PublishableLock, CommonArticle
 from ella_hub import utils
 from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
+
+from ella_hub.utils.perms import has_permission
+from ella_hub.utils.workflow import get_states
 
 
 class HttpJsonResponse(HttpResponse):
@@ -298,16 +301,20 @@ class EllaHubApi(Api):
         system_info.update({"roles_definition":{}})
 
         pub_states = {}
-        for (state_id, state_name) in PUBLISHABLE_STATES:
-            pub_states.update({state_id: unicode(state_name)})
+        states = get_states(CommonArticle)
+
+        for state in states:
+            pub_states.update({state.codename: unicode(state.title)})
         system_info.update({"publishable_states": pub_states})
 
         system_res_tree = {}
         allowed_system_resources = self.__get_allowed_system_resources(request.user)
-        for res_name in allowed_system_resources:
-            system_res_tree.update({res_name: self.__create_resource_tree(res_name)})
-        system_info.update({"resources": system_res_tree})
+        for res_obj in allowed_system_resources:
+            system_res_tree.update({
+                res_obj._meta.resource_name: self.__create_resource_tree(res_obj, request.user)
+            })
 
+        system_info.update({"resources": system_res_tree})
         return system_info
 
     def __create_auth_tree(self, request):
@@ -318,44 +325,57 @@ class EllaHubApi(Api):
         auth_tree = {}
         allowed_public_resources = self.__get_allowed_public_resources(request.user)
 
-        for res_name in allowed_public_resources:
-            auth_tree.update({res_name: self.__create_resource_tree(res_name)})
+        for res_obj in allowed_public_resources:
+            auth_tree.update({
+                res_obj._meta.resource_name: self.__create_resource_tree(res_obj,request.user)
+            })
 
         # covering article types under "articles" node
-        article_resources = [res_name for res_name, res_obj in self._registry.items()
+        article_resources = [res_obj for res_name, res_obj in self._registry.items()
             if issubclass(res_obj.__class__, PublishableResource) and \
                 type(res_obj) is not PublishableResource]
 
         articles_dict = {}
-        for article in article_resources:
-            if article in allowed_public_resources:
-                articles_dict.update({article: auth_tree[article]})
-                del auth_tree[article]
+
+        for article_obj in article_resources:
+            if article_obj in allowed_public_resources:
+                article_name = article_obj._meta.resource_name
+                articles_dict.update({article_name: auth_tree[article_name]})
+                del auth_tree[article_name]
+
         auth_tree.update({"articles": articles_dict})
         return auth_tree
 
     def __get_allowed_public_resources(self, user):
-        allowed_public_resources = [res_name for res_name, res_obj in self._registry.items()
-            # has_user_model_perm(user, utils.get_model_name_of_resource(res_name))
+        allowed_public_resources = [res_obj for res_name, res_obj in self._registry.items()
             if getattr(res_obj._meta, "public", False)]
         return allowed_public_resources
 
     def __get_allowed_system_resources(self, user):
-        allowed_system_resources = [res_name for res_name, res_obj in self._registry.items()
-            # has_user_model_perm(user, utils.get_model_name_of_resource(res_name))
+        allowed_system_resources = [res_obj for res_name, res_obj in self._registry.items()
             if getattr(res_obj._meta, "public", True)]
         return allowed_system_resources
 
-    def __create_resource_tree(self, res_name):
+    def __create_resource_tree(self, res_obj, user):
+        res_name = res_obj._meta.resource_name
+        res_model = res_obj._meta.object_class
+
         schema = self._registry[res_name].build_schema()
         res_tree = {"allowed_http_methods":[], "fields":{}}
 
         for fn, attrs in schema['fields'].items():
             field_attrs = {"readonly": False, "nullable": False}
-            field_attrs["readonly"] = attrs["readonly"]
+
+            if has_permission(res_model, user, "readonly_" + fn):
+                field_attrs["readonly"] = True
+            else:
+                field_attrs["readonly"] = attrs["readonly"]
             field_attrs["nullable"] = attrs["nullable"]
-            # TODO: set "show" true/false, no roles defined -> true
-            field_attrs["disabled"] = False
+
+            if has_permission(res_model, user, "disabled_" + fn):
+                field_attrs["disabled"] = True
+            else:
+                field_attrs["disabled"] = False
             res_tree["fields"].update({fn: field_attrs})
 
         res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
