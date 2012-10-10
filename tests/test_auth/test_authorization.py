@@ -366,7 +366,7 @@ class TestAuthorization(TestCase):
 
         response = self.client.patch("/admin-api/author/100/", data=self.new_author,
             content_type='application/json', **headers)
-        tools.assert_true(response.status_code, 202)
+        tools.assert_equals(response.status_code, 202)
 
         # Can't handle other resources, f.e. site.
         response = self.client.post("/admin-api/site/", data=self.new_site,
@@ -482,24 +482,29 @@ class TestAuthorization(TestCase):
         api_key = self.__login("banned_user", "pass2")
         headers = self.__build_headers("banned_user", api_key)
 
-        for (resource_type, new_resource_obj) in TEST_CASES:
+        for resource_type, new_resource_obj in TEST_CASES:
             response = self.client.get("/admin-api/%s/100/" % resource_type, **headers)
-            tools.assert_equals(response.status_code, 403)
+            tools.assert_equals(response.status_code, 403,
+                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
 
             response = self.client.post("/admin-api/%s/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 403)
+            tools.assert_equals(response.status_code, 403,
+                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
 
             response = self.client.put("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 403)
+            tools.assert_equals(response.status_code, 403,
+                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
 
             response = self.client.patch("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_true(response.status_code, 403)
+            tools.assert_equals(response.status_code, 403,
+                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
 
             response = self.client.delete("/admin-api/%s/100/" % resource_type, **headers)
-            tools.assert_equals(response.status_code, 403)
+            tools.assert_equals(response.status_code, 403,
+                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
 
         response = self.client.patch("/admin-api/photo/", payload, **headers)
         tools.assert_equals(response.status_code, 403)
@@ -672,11 +677,10 @@ class TestAuthorization(TestCase):
         return settings.MEDIA_ROOT + "/" + filename
 
     def __register_view_model_permission(self):
-        for model_name in utils.get_all_resource_model_names():
-            ct = ContentType.objects.get(model=model_name)
+        for ct in utils.get_all_resource_content_types():
+            perm = Permission.objects.get_or_create(codename='view_' + ct.model,
+                name='Can view %s.' % ct.model, content_type=ct)
 
-            perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
-                name='Can view %s.' % model_name, content_type=ct)
             if not isinstance(perm, tuple):
                 perm.save()
 

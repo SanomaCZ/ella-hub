@@ -106,14 +106,13 @@ class ApiModelResource(ModelResource):
         user_perms = request.user.get_all_permissions()
 
         resource_name = re.match(r"/[^/]*/([^/]*)/.*", request.path).group(1)
-        model_name = utils.get_model_name_of_resource(resource_name)
-        ct = ContentType.objects.get(model=model_name)
+        ct = utils.get_content_type_for_resource(resource_name)
 
         allowed_methods = []
 
         for (prefix, method) in methods_prefixes:
-            permission_string = prefix + model_name
-            if (ct.app_label + '.' + permission_string) in user_perms:
+            permission_string = ct.app_label + '.' + prefix + ct.model
+            if permission_string in user_perms:
                 allowed_methods.append(method)
 
         if not allowed_methods:
@@ -144,19 +143,23 @@ class ApiModelResource(ModelResource):
         return self.__filter_according_to_perms(request, bundle)
 
     def __filter_according_to_perms(self, request, bundle):
-        model_name = utils.get_model_name_of_resource(self._meta.resource_name)
+        user = request.user
+        content_type = utils.get_content_type_for_resource(
+            self._meta.resource_name)
 
-        if (not has_user_model_perm(request.user, model_name, 'change') and not
-            has_obj_perm(request.user, bundle.obj, 'change_%s' % model_name)):
+        if not self.__has_user_perm(user, content_type, 'change', bundle.obj):
             bundle.data['_patch'] = False
-
-        if (not has_user_model_perm(request.user, model_name, 'delete') and not
-            has_obj_perm(request.user, bundle.obj, 'delete_%s' % model_name)):
+        if not self.__has_user_perm(user, content_type, 'delete', bundle.obj):
             bundle.data['_delete'] = False
 
-        #filter according to user's permissions, f.e.:
-        #   del object.data['content']
         return bundle
+
+    def __has_user_perm(self, user, content_type, permission, object):
+        if has_user_model_perm(user, content_type.model_class(), permission):
+            return True
+
+        permission_string = '%s_%s' % (permission, content_type.model)
+        return has_obj_perm(user, object, permission_string)
 
     def hydrate(self, bundle):
         """Fills user fields by current logged user."""

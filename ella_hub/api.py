@@ -61,8 +61,8 @@ class EllaHubApi(Api):
             api_name = self.api_name
 
         for resource_name in sorted(self._registry.keys()):
-            model_name = utils.get_model_name_of_resource(resource_name)
-            if not is_resource_allowed(request.user, model_name):
+            ct = utils.get_content_type_for_resource(resource_name)
+            if not is_resource_allowed(request.user, ct.model_class()):
                 continue
 
             available_resources[resource_name] = {
@@ -98,11 +98,10 @@ class EllaHubApi(Api):
         Register view model permission for all resource classes.
         - view_<className>
         """
-        for model_name in utils.get_all_resource_model_names():
-            ct = ContentType.objects.get(model=model_name)
+        for ct in utils.get_all_resource_content_types():
+            perm = Permission.objects.get_or_create(codename='view_' + ct.model,
+                name='Can view %s.' % ct.model, content_type=ct)
 
-            perm = Permission.objects.get_or_create(codename='view_%s' % model_name,
-                name='Can view %s.' % model_name, content_type=ct)
             if not isinstance(perm, tuple):
                 perm.save()
 
