@@ -47,9 +47,8 @@ The pointer identifies file which will be assigned to corresponding resource.
       "title": "Multipart photo",
       "slug": "multipart-photo",
       "description": "Multipart description of photo",
-      "width": 256, "height": 256,
       "created": "2012-09-05T10:16:32.131517",
-      "authors": ["/admin-api/author/100/"],
+      "authors": ["/admin-api/author/<id>/"],
       "app_data": "{}",
       "image": "attached_object_id:'$image_path_basename'"
     }]
@@ -174,22 +173,16 @@ C(reate)
 
   format=
     {
-      "flexible_height": false,
-      "flexible_max_height": null,
-      "max_height": 200,
-      "max_width": 34,
-      "name": "formatik",
+      "name": "Perex photo",
+      "max_width": 300, "max_height": 200,
       "nocrop": true,
+      "stretch": true,
       "resample_quality": 95,
-      "sites": [
-        {
-          "domain": "domain2.com",
-          "id": 3,
-          "name": "domain2.com",
-          "resource_uri": "/admin-api/site/3/"
-        }
-      ],
-      "stretch": true
+      "flexible_height": false,
+      "sites": [{
+        "domain": "domain2.com",
+        "name": "domain2.com"
+      }]
     }
 
   curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X POST --data "$format" <server>/admin-api/format/
@@ -216,15 +209,12 @@ PUT/PATCH
 
  update_format=
     {
-      "name": "formatik",
-      "sites": [
-        {
-          "domain": "domain2.com",
-          "id": 3,
-          "name": "domain2.com",
-          "resource_uri": "/admin-api/site/3/"
-        }
-      ]
+      "name": "New name",
+      "max_width": 400,
+      "sites": [{
+        "domain": "domain2.com",
+        "name": "domain2.com"
+      }]
     }
 
   curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey $name:$api_key" -X [PUT|PATCH] --data "$update_format" <server>/admin-api/format/<id>/
@@ -263,16 +253,8 @@ C(reate)
 
  formatedphoto=
    {
-     "resource_uri": "/admin-api/formatedphoto/100/",
-     "crop_height": 0,
-     "crop_left": 0,
-     "crop_top": 0,
-     "crop_width": 0,
-     "id": 100,
-     "format": "/admin-api/format/100/",
-     "height": 200,
-     "photo": "/admin-api/photo/1/",
-     "width": 200
+     "photo": "/admin-api/photo/<id>/",
+     "format": "/admin-api/format/<id>/"
    }
 
   curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X POST --data "$formatedphoto" <server>/admin-api/formatedphoto/
@@ -295,7 +277,13 @@ PUT/PATCH
 
 ::
 
-  curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" -X [PUT|PATCH] --data '{"crop_height": 50, "crop_left": 50, "crop_top": 0, "width": 200}' <server>/admin-api/formatedphoto/<id>/
+  curl --dump-header - -H "Content-Type: application/json" -H "Authorization: ApiKey <name>:<api_key>" \
+  -X [PUT|PATCH] --data '{
+    "crop_top": 0,
+    "crop_left": 50,
+    "crop_height": 50,
+    "width": 200
+  }' <server>/admin-api/formatedphoto/<id>/
 
 
 D(elete)

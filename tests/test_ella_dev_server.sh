@@ -199,50 +199,46 @@ then
 	echo -n "POST format: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
-		"id": 100, "resource_uri": "/admin-api/format/100/",
-		"flexible_height": false, "flexible_max_height": null,
-		"max_height": 200, "max_width": 34,
-		"name": "formatik", "nocrop": true, "resample_quality": 95,
+		"id": 100,
+		"name": "formatik",
+		"nocrop": true,
+		"stretch": true,
+		"flexible_height": false,
+		"resample_quality": 95,
+		"max_width": 50, "max_height": 50,
 		"sites": [{
-			"domain": "example.com",
-			"id": 1, "resource_uri": "/admin-api/site/1/",
-			"name": "example.com"
-		}], "stretch": true
+			"domain": "web-domain.com",
+			"name": "WEB domain"
+		}]
 	}' "$server/admin-api/format/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# `FormatedPhoto` resource creation.
-	echo -n "POST formatedphoto: "
+	echo -n "POST formatedphoto with new format: "
 	# Problem: tastypie has a bug that doesn’t allow to POST/PUT 3-and-more
 	# level nested resources, see: https://github.com/toastdriven/django-tastypie/issues/307,
-	# so format may be specified only with resource URI!
-	: `
-	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-	-H "Content-Type: application/json" --data '{
-		"id": 100, "resource_uri": "/admin-api/formatedphoto/100/",
-		"crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0,
+	# so site may be specified only with resource URI!
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+	-X POST --data '{
+		"id": 100,
+		"photo": "/admin-api/photo/100/",
 		"format": {
-			"flexible_height": false, "flexible_max_height": null,
-			"id": 100, "resource_uri": "/admin-api/format/100/",
-			"max_height": 200, "max_width": 34,
-			"name": "formatik",
-			"nocrop": true, "resample_quality": 95,
-			"sites": [{
-				"id": 1, "resource_uri": "/admin-api/site/1/",
-				"domain": "example.com", "name": "example.com"
-			}],
-			"stretch": true
-		},
-		"height": 200, "width": 200,
-		"photo": "/admin-api/photo/100/"
+			"id": 101,
+			"name": "Thumbnail",
+			"nocrop": false,
+			"stretch": false,
+			"flexible_height": false,
+			"resample_quality": 95,
+			"max_width": 50, "max_height": 50,
+			"sites": ["/admin-api/site/1/"]
+		}
 	}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
-	`
-	curl --dump-header - -X POST -H "$AUTH_HEADER" \
-	-H "Content-Type: application/json" --data '{
-		"id": 100, "resource_uri": "/admin-api/formatedphoto/100/",
-		"crop_height": 0, "crop_left": 0, "crop_top": 0, "crop_width": 0,
-		"format": "/admin-api/format/100/",
-		"height": 200, "width": 200,
-		"photo": "/admin-api/photo/100/"
+
+	echo -n "POST formatedphoto: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+	-X POST --data '{
+		"id": 101,
+		"photo": "/admin-api/photo/100/",
+		"format": "/admin-api/format/100/"
 	}' "$server/admin-api/formatedphoto/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# `Photo` resource alteration via PUT - without image, without multipart/form-data Content-Type.
@@ -262,6 +258,15 @@ then
 		"description": "Modified description by PATCH method."
 	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
+	# all formated photos will be deleted by image change, so delete them now
+	echo -n "DELETE formatedphoto#100: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	 "$server/admin-api/formatedphoto/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "DELETE formatedphoto#101: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	 "$server/admin-api/formatedphoto/101/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
 	# `Photo` resource alteration via PUT - with image, with multipart/form-data Content-Type.
 	echo -n "PATCH photo (with image): "
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
@@ -273,14 +278,13 @@ then
 		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-	# Deletion of all photo-related objects.
-	echo -n "DELETE formatedphoto: "
-	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
-	 "$server/admin-api/formatedphoto/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
-
-	echo -n "DELETE format: "
+	echo -n "DELETE format#100: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
 	 "$server/admin-api/format/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "DELETE format#101: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	 "$server/admin-api/format/101/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "DELETE photo: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
