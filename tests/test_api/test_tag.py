@@ -2,15 +2,20 @@ from nose import tools
 from django.test import TestCase
 from django.utils import simplejson
 from django.contrib.auth.models import User
+
 from ella.core.models import Author
 from ella.utils import timezone
 from ella.utils.test_helpers import create_basic_categories
 from ella_taggit.models import PublishableTag
+
 from ella_hub.models import CommonArticle
+from ella_hub.utils import get_all_resource_classes
+from ella_hub.utils.workflow import init_ella_workflow
 
 
 class TestTag(TestCase):
     def setUp(self):
+        init_ella_workflow(get_all_resource_classes())
         self.user = self.__create_test_user("user", "pass", is_admin=True)
         create_basic_categories(self)
         self.article = CommonArticle.objects.create(title="Art title",
