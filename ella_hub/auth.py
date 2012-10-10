@@ -3,6 +3,7 @@ import datetime
 
 from django.template import RequestContext
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
@@ -10,8 +11,10 @@ from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpUnauthorized, HttpForbidden
 from tastypie.models import ApiKey
 from ella.utils import timezone
+
 from ella_hub import utils
-from ella_hub.utils.perms import has_obj_perm
+from ella_hub.models import ModelPermission
+from ella_hub.utils.perms import has_obj_perm, has_permission
 
 
 API_KEY_EXPIRATION_IN_DAYS = 14
@@ -34,12 +37,13 @@ class ApiAuthorization(Authorization):
     Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
     """
     __perm_prefixes = {
-        "GET":"view_",
-        "POST":"add_",
-        "PUT":"change_",
-        "PATCH":"change_",
-        "DELETE":"delete_"
+        "GET":"can_view",
+        "POST":"can_add",
+        "PUT":"can_change",
+        "PATCH":"can_change",
+        "DELETE":"can_delete"
     }
+
     # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
 
@@ -48,34 +52,24 @@ class ApiAuthorization(Authorization):
         self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
 
         if self.request_method == "POST":
-            # `apply_limits` method is not called for POST requests.
-            permission_string = self.__perm_prefixes[request.method] + \
-                utils.get_model_name_of_resource(self.resource_name)
-            found_perm = filter(lambda perm: perm.endswith(permission_string),
-                request.user.get_all_permissions())
-            if not found_perm:
+            resource_model = utils.get_resource_model(self.resource_name)
+            if not has_permission(resource_model, request.user, self.__perm_prefixes[self.request_method]):
                 raise ImmediateHttpResponse(response=HttpForbidden())
         return True
 
     def apply_limits(self, request, object_list):
         """
         Applying permission limits, this method is NOT called by POST requests.
+        TODO: object-level permissions
         """
         user = request.user
 
         if user.is_superuser:
             return object_list
 
-        allowed_objects = []
-        permission_string = self.__perm_prefixes[self.request_method] + \
-            utils.get_model_name_of_resource(self.resource_name)
+        resource_model = utils.get_resource_model(self.resource_name)
 
-        for obj in object_list:
-            if has_obj_perm(request.user, obj, permission_string):
-                allowed_objects.append(obj)
-
-        # TODO: proper response when user is not authorized & object_list is empty
-        if not allowed_objects and object_list:
+        if not has_permission(resource_model, request.user, self.__perm_prefixes[self.request_method]):
             raise ImmediateHttpResponse(response=HttpForbidden())
 
-        return allowed_objects
+        return object_list
