@@ -11,7 +11,7 @@ from ella_hub.models import (Workflow, State, Transition, StatePermissionRelatio
 class ArticleAdmin(PublishableAdmin):
     ordering = ("-publish_from",)
     fieldsets = (
-        (_("Article heading"), {"fields": ("title", "slug", "state")}),
+        (_("Article heading"), {"fields": ("title", "slug")}),
         (_("Article contents"), {"fields": ("description", "content")}),
         (_("Metadata"), {"fields": ("category", "authors", "source",
             ("photo", "photo_displayed"))}),
@@ -26,7 +26,7 @@ class ArticleAdmin(PublishableAdmin):
 class EncyclopediaAdmin(PublishableAdmin):
     ordering = ("-publish_from",)
     fieldsets = (
-        (_("Article heading"), {"fields": ("title", "slug", "state")}),
+        (_("Article heading"), {"fields": ("title", "slug")}),
         (_("Article contents"), {"fields": ("description", "content")}),
         (_("Metadata"), {"fields": ("category", "authors", "source",
             ("photo", "photo_displayed"))}),
@@ -52,7 +52,7 @@ class IngredientInlineAdmin(admin.StackedInline):
 class RecipeAdmin(PublishableAdmin):
     ordering = ("-publish_from",)
     fieldsets = (
-        (_("Article heading"), {"fields": ("title", "slug", "state")}),
+        (_("Article heading"), {"fields": ("title", "slug")}),
         (_("Article contents"), {"fields": (
             "description",
             "redaction_note",
