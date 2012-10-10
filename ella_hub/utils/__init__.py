@@ -15,6 +15,10 @@ def get_model_name_of_resource(resource_name):
     resource = __REGISTERED_RESOURCES[resource_name]
     return resource._meta.object_class.__name__.lower()
 
+def get_resource_model(resource_name):
+    """Returns DB model for give resource name."""
+    resource = __REGISTERED_RESOURCES[resource_name]
+    return resource._meta.object_class
 
 def get_all_resource_model_names():
     return tuple(r._meta.object_class.__name__.lower()
