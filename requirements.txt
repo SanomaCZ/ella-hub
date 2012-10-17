@@ -1,4 +1,3 @@
 ella>=3.0
 PIL
 git+git://github.com/toastdriven/django-tastypie.git
-django-object-permissions
