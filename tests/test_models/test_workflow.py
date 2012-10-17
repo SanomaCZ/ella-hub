@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from ella.utils import timezone
 
 from ella_hub.models import State, Transition, Workflow, Permission, Role, CommonArticle
-from ella_hub.models import (StatePermissionRelation, StateModelRelation,
+from ella_hub.models import (StatePermissionRelation, StateObjectRelation,
     WorkflowModelRelation, WorkflowPermissionRelation)
 
 
@@ -26,7 +26,7 @@ class TestWorkflowModels(TestCase):
 
         self.spr = StatePermissionRelation.objects.create(state=self.state,
             permission=self.permission, role=self.role)
-        self.smr = StateModelRelation.objects.create(state=self.state,
+        self.sor = StateObjectRelation.objects.create(state=self.state,
             content_type=self.content_type)
         self.wmr = WorkflowModelRelation.objects.create(workflow=self.workflow,
             content_type=self.content_type)
@@ -65,9 +65,9 @@ class TestWorkflowModels(TestCase):
         tools.assert_equals(unicode(self.spr), u"%s / %s / %s" % (
             self.spr.state.title, self.spr.role.title, self.spr.permission.title))
 
-        # state_model_relation
-        tools.assert_equals(unicode(self.smr), u"%s / %s" % (
-            self.smr.content_type.name, self.smr.state.title))
+        # state_object_relation
+        tools.assert_equals(unicode(self.sor), u"%s %s - %s" % (
+            self.sor.content_type.name, self.sor.content_id, self.sor.state.title))
 
         # workflow_model_relation
         tools.assert_equals(unicode(self.wmr), u"%s / %s" % (

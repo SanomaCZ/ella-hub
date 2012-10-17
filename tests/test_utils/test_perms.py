@@ -5,8 +5,7 @@ from django.test.client import Client
 
 from ella.core.models import Author
 
-from ella_hub.utils.perms import (has_obj_perm, has_user_model_perm,
-    has_user_model_object_with_any_perm, is_resource_allowed)
+from ella_hub.utils.perms import is_resource_allowed
 
 
 class TestPermsFunctions(TestCase):
@@ -16,18 +15,6 @@ class TestPermsFunctions(TestCase):
 
     def tearDown(self):
         self.user.delete()
-
-    def test_has_obj_perm(self):
-        author = Author(name="awesome_name", slug="awesome-name",
-            email="mail@mail.com", text="like a boss", description="what can i say", id=100)
-        author.save()
-        self.user.grant('change_author', author)
-        tools.assert_equals(has_obj_perm(self.user, author), True)
-
-    def test_no_perms_anonymous_user(self):
-        anonym_user = AnonymousUser()
-        tools.assert_equals(has_user_model_object_with_any_perm(anonym_user, 'article'),
-            False)
 
     def __create_test_user(self, username, password, is_admin=False):
         user = User.objects.create_user(username=username, password=password)

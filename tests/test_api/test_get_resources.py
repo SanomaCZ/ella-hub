@@ -4,16 +4,23 @@ from nose import tools
 from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
+
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils import timezone
+
 from ella_hub.models import CommonArticle, Recipe, Encyclopedia
+from ella_hub.utils import get_all_resource_classes
+from ella_hub.utils.workflow import init_ella_workflow
 
 
 class TestGetResources(TestCase):
     def setUp(self):
         self.user = self.__create_test_user("user", "pass", True)
         self.client = Client()
+
+        init_ella_workflow(get_all_resource_classes())
         create_basic_categories(self)
+
         CommonArticle.objects.create(title="Jop",
             category=self.category, publish_from=timezone.now(), slug="jop")
         Recipe.objects.create(title="Spinach", category=self.category_nested,

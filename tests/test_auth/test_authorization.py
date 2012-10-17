@@ -5,7 +5,7 @@ from PIL import Image
 from urlparse import urlparse, urlsplit
 from nose import tools, SkipTest
 from django.conf import settings
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.db import connection
@@ -17,8 +17,12 @@ from ella.core.models import Author
 
 from ella_hub import utils
 from ella_hub.utils import get_all_resource_classes
-from ella_hub.utils.workflow import init_ella_workflow
-from ella_hub.models import Role, PrincipalRoleRelation
+from ella_hub.utils.workflow import init_ella_workflow, set_state
+from ella_hub.utils.perms import grant_permission
+from ella_hub.utils.test_helpers import create_basic_workflow
+from ella_hub.models import Permission, Role, PrincipalRoleRelation, ModelPermission
+from ella_hub.models import Workflow, State, Transition, StateObjectRelation, StatePermissionRelation
+from ella_hub.models import WorkflowPermissionRelation
 
 
 class PatchClient(Client):
@@ -43,15 +47,11 @@ class PatchClient(Client):
 class TestAuthorization(TestCase):
     def setUp(self):
         self.client = PatchClient()
-        self.__register_view_model_permission()
-        init_ella_workflow(get_all_resource_classes())
+        create_basic_workflow(self)
 
-        (self.admin_user, self.banned_user, self.user) = self.__create_test_users()
-        (self.group1,) = self.__create_test_groups()
+        (self.admin_user, self.banned_user, self.role_user) = self.__create_test_users(self.test_role)
 
         self.article_model_ct = None
-
-        # Creating temporary image.
         self.photo_filename = self.__create_tmp_image(".test_image.jpg")
 
         self.new_author = json.dumps({
@@ -165,28 +165,29 @@ class TestAuthorization(TestCase):
             })
 
     def tearDown(self):
+
         self.admin_user.delete()
         self.banned_user.delete()
-        self.user.delete()
-        self.group1.delete()
+        self.role_user.delete()
+
+        Author.objects.all().delete()
+        Permission.objects.all().delete()
+        Role.objects.all().delete()
+        PrincipalRoleRelation.objects.all().delete()
+        ModelPermission.objects.all().delete()
+        Workflow.objects.all().delete()
+        State.objects.all().delete()
+        Transition.objects.all().delete()
+        StateObjectRelation.objects.all().delete()
+        StatePermissionRelation.objects.all().delete()
+        WorkflowPermissionRelation.objects.all().delete()
+
         os.remove(self.photo_filename)
         connection.close()
 
-    def __create_test_groups(self):
-        # Group 1 - can handle articles
-        group1 = Group.objects.create(name="group1")
-        GROUP1_PERMISSIONS = (
-            "view_author", "change_author",
-            "add_author", "delete_author"
-        )
 
-        for perm in GROUP1_PERMISSIONS:
-            group1.permissions.add(Permission.objects.get(codename=perm))
-        group1.save()
-        return (group1,)
-
-    def __create_test_users(self):
-    	# Creating admin user.
+    def __create_test_users(self, test_role):
+        # Creating admin user.
         admin_user = User.objects.create_user(username="admin_user", password="pass1")
         admin_user.is_staff = True
         admin_user.is_superuser = True
@@ -198,160 +199,26 @@ class TestAuthorization(TestCase):
         banned_user.is_superuser = False
         banned_user.save()
 
-        # Create user with specified permissions
+        # Create user with specified role permissions
         user = User.objects.create_user(username="user", password="pass3")
         user.is_staff = True
         user.is_superuser = False
         user.save()
-        PrincipalRoleRelation.objects.get_or_create(user=user,
-            role=Role.objects.get(title="Editor in chief"))
+        PrincipalRoleRelation.objects.get_or_create(user=user, role=test_role)
+
         return (admin_user, banned_user, user)
 
-    def test_registered_object_level_permissions(self):
+
+    def test_role_user_state1_perms(self):
         """
-        Proper user authorization based on new
-        object level permissions.
-        """
-        # need to reimplement, model-level permission system changed
-        raise SkipTest()
-
-        # perms are registered in __init__.py file
-        api_key = self.__login("user", "pass3")
-        headers = self.__build_headers("user", api_key)
-
-        # grant only change permission to author object
-        changable_author = Author(name="awesome_name", slug="awesome-name",
-            email="mail@mail.com", text="like a boss", description="what can i say", id=100)
-        changable_author.save()
-        self.user.grant('change_author', changable_author)
-
-        # grant only view permission to author object
-        viewable_author = Author(name="viewable_name", slug="viewable-name",
-            email="mailik@m.com", text="this is text", description="what should i say", id=101)
-        viewable_author.save()
-        self.user.grant('view_author', viewable_author)
-
-        # User can change changable_author,
-        response = self.client.put("/admin-api/author/100/", data=self.new_author,
-            content_type='application/json', **headers)
-        tools.assert_equals(response.status_code, 202)
-
-        # but can't change viewable_author
-        response = self.client.put("/admin-api/author/101/",
-            data=json.dumps({'email':"mail@mail.com"}), content_type='application/json', **headers)
-        tools.assert_equals(response.status_code, 403)
-
-        # can't delete these objects also
-        response = self.client.delete("/admin-api/author/100/", **headers)
-        tools.assert_equals(response.status_code, 403)
-        response = self.client.delete("/admin-api/author/101/", **headers)
-        tools.assert_equals(response.status_code, 403)
-
-        # can get only viewable_author
-        response = self.client.get("/admin-api/author/", **headers)
-        tools.assert_equals(response.status_code, 200)
-
-        resources = self.__get_response_json(response)
-        tools.assert_equals(len(resources), 1)
-
-        self.__logout(headers)
-
-    def test_delete_and_patch_obj_attributes(self):
-        """
+        Testing user permission in state1.
         """
         api_key = self.__login("user", "pass3")
         headers = self.__build_headers("user", api_key)
 
-        author = Author(name="viewable_name", slug="viewable-name", email="mailik@m.com",
-            text="this is text", description="what should i say", id=101)
-        author.save()
-        self.user.grant('view_author', author)
+        test_author = Author.objects.create(id=100, name="dumb_name")
 
-        response = self.client.get("/admin-api/author/101/", **headers)
-        resource = self.__get_response_json(response)
-        tools.assert_equals(resource['_delete'], False)
-        tools.assert_equals(resource['_patch'], False)
-
-        self.user.grant('change_author', author)
-        response = self.client.get("/admin-api/author/101/", **headers)
-        resource = self.__get_response_json(response)
-        tools.assert_equals(resource['_delete'], False)
-        tools.assert_equals(resource['_patch'], True)
-
-        self.user.grant('delete_author', author)
-        response = self.client.get("/admin-api/author/101/", **headers)
-        resource = self.__get_response_json(response)
-        tools.assert_equals(resource['_delete'], True)
-        tools.assert_equals(resource['_patch'], True)
-
-        self.__logout(headers)
-
-    def test_registered_model_level_permissions(self):
-        """
-        Proper user authorization based on new
-        model level permission.
-        """
-        # need to reimplement, model-level permission system changed
-        raise SkipTest()
-
-        api_key = self.__login("user", "pass3")
-        headers = self.__build_headers("user", api_key)
-
-        # create some model-level permissions
-        author_ct = ContentType.objects.get(app_label='core', model='author')
-
-        PERM_PREFIXES = ('view_',)
-
-        author = Author.objects.create(id=200, name="author200", email="200@e.mail")
-        author.save()
-
-        # delete perms if registered
-        for PREFIX in PERM_PREFIXES:
-            matching_query = Permission.objects.filter(codename="%sauthor" % PREFIX,
-                content_type=author_ct)
-            if matching_query:
-                matching_query.delete()
-
-        response = self.client.get("/admin-api/author/", **headers)
-        tools.assert_equals(response.status_code, 403)
-
-        response = self.client.get("/admin-api/author/200/", **headers)
-        tools.assert_equals(response.status_code, 403)
-
-        for PREFIX in PERM_PREFIXES:
-            author_perm = Permission(codename="%sauthor" % PREFIX, name="%s author" % PREFIX,
-                content_type=author_ct)
-            author_perm.save()
-            # grant permission
-            self.user.user_permissions.add(author_perm)
-
-        response = self.client.get("/admin-api/author/", **headers)
-        tools.assert_equals(response.status_code, 200)
-
-        response = self.client.get("/admin-api/author/200/", **headers)
-        tools.assert_equals(response.status_code, 200)
-
-        self.__logout(headers)
-
-    def test_user_with_specified_permissions(self):
-        """
-        User has rights only to add, change, delete authors.
-        """
-        # need to reimplement, model-level permission system changed
-        raise SkipTest()
-
-        api_key = self.__login("user", "pass3")
-        headers = self.__build_headers("user", api_key)
-
-        self.article_model_ct = ContentType.objects.get(app_label='core', model='author')
-
-        PERMS = ("view", "add", "change", "delete")
-
-        for perm in PERMS:
-            perm_author = Permission.objects.get(codename="%s_author" % perm)
-            self.group1.permissions.add(perm_author)
-
-        self.user.groups.add(self.group1)
+        set_state(test_author, self.state1)
 
         response = self.client.post("/admin-api/author/", data=self.new_author,
             content_type='application/json', **headers)
@@ -368,67 +235,121 @@ class TestAuthorization(TestCase):
             content_type='application/json', **headers)
         tools.assert_equals(response.status_code, 202)
 
-        # Can't handle other resources, f.e. site.
-        response = self.client.post("/admin-api/site/", data=self.new_site,
+        response = self.client.delete("/admin-api/author/100/", **headers)
+        tools.assert_equals(response.status_code, 204)
+
+        self.__logout(headers)
+
+    def test_role_user_state2_perms(self):
+        """
+        Testing user permission in state2.
+        """
+        api_key = self.__login("user", "pass3")
+        headers = self.__build_headers("user", api_key)
+
+        test_author = Author.objects.create(id=100, name="dumb_name")
+
+        set_state(test_author, self.state2)
+
+        response = self.client.post("/admin-api/author/", data=self.new_author,
             content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 201)
+
+        response = self.client.get("/admin-api/author/100/", **headers)
+        tools.assert_equals(response.status_code, 200)
+
+        response = self.client.put("/admin-api/author/100/", data=self.new_author,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 202)
+
+        response = self.client.patch("/admin-api/author/100/", data=self.new_author,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 202)
+
+        response = self.client.delete("/admin-api/author/100/", **headers)
         tools.assert_equals(response.status_code, 403)
 
         self.__logout(headers)
 
-    def test_user_with_specified_perms_schema(self):
+    def test_role_user_state3_perms(self):
         """
-        Check if author who can only view, add, change and delete authors,
-        can view only author resource.
+        Testing user permission in state3.
         """
-        PERMS = ("view", "add", "change", "delete")
-
-        for perm in PERMS:
-            perm_article = Permission.objects.get(codename="%s_author" % perm)
-            self.group1.permissions.add(perm_article)
-        self.user.groups.add(self.group1)
-
         api_key = self.__login("user", "pass3")
         headers = self.__build_headers("user", api_key)
+
+        test_author = Author.objects.create(id=100, name="dumb_name")
+
+        set_state(test_author, self.state3)
+
+        response = self.client.post("/admin-api/author/", data=self.new_author,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 201)
+
+        response = self.client.get("/admin-api/author/100/", **headers)
+        tools.assert_equals(response.status_code, 200)
+
+        response = self.client.put("/admin-api/author/100/", data=self.new_author,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 403)
+
+        response = self.client.patch("/admin-api/author/100/", data=self.new_author,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 403)
+
+        response = self.client.delete("/admin-api/author/100/", **headers)
+        tools.assert_equals(response.status_code, 403)
+
+        self.__logout(headers)
+
+    def test_top_level_schema_auth(self):
+        api_key = self.__login("banned_user", "pass2")
+        headers = self.__build_headers("banned_user", api_key)
+
+        response = self.client.get("/admin-api/", **headers)
+        tools.assert_equals(response.status_code, 403)
+
+        self.__logout(headers)
+
+        api_key = self.__login("admin_user", "pass1")
+        headers = self.__build_headers("admin_user", api_key)
 
         response = self.client.get("/admin-api/", **headers)
         tools.assert_equals(response.status_code, 200)
 
-        resources = self.__get_response_json(response)
-        tools.assert_equals(len(resources), 1)
-
-        tools.assert_true("author" in resources)
-        tools.assert_true("list_endpoint" in resources["author"])
-        tools.assert_true("schema" in resources["author"])
-
         self.__logout(headers)
 
-    def test_user_schema_with_specified_obj_permissions(self):
-        """
-        """
         api_key = self.__login("user", "pass3")
         headers = self.__build_headers("user", api_key)
 
-        author = Author(name="dumb_name", slug="dumb-name", email="mail@mail.com",
-            text="dasdasd", description="dsadasd", id=100)
-        author.save()
+        grant_permission(Author, self.test_role, self.can_view)
+        response = self.client.get("/admin-api/", **headers)
+        resources = self.__get_response_json(response)
 
-        PERMISSIONS = ("view_author", "change_author", "delete_author")
-        for PERM in PERMISSIONS:
-            self.user.revoke_all(author)
-            response = self.client.get("/admin-api/", **headers)
-            tools.assert_equals(response.status_code, 403)
+        tools.assert_equals(response.status_code, 200)
+        tools.assert_true("author" in resources)
 
-            self.user.grant(PERM, author)
+        grant_permission(Site, self.test_role, self.can_view)
+        response = self.client.get("/admin-api/", **headers)
+        resources = self.__get_response_json(response)
 
-            response = self.client.get("/admin-api/", **headers)
-            tools.assert_equals(response.status_code, 200)
+        tools.assert_equals(response.status_code, 200)
+        tools.assert_true("author" in resources)
+        tools.assert_true("site" in resources)
 
-            resources = self.__get_response_json(response)
-            tools.assert_equals(len(resources), 1)
+        self.__logout(headers)
 
-            tools.assert_true("author" in resources)
-            tools.assert_true("list_endpoint" in resources["author"])
-            tools.assert_true("schema" in resources["author"])
+    def test_schema_auth(self):
+        api_key = self.__login("user", "pass3")
+        headers = self.__build_headers("user", api_key)
+
+        ModelPermission.objects.all().delete()
+        response = self.client.get("/admin-api/author/schema/", **headers)
+        tools.assert_equals(response.status_code, 403)
+
+        grant_permission(Author, self.test_role, self.can_view)
+        response = self.client.get("/admin-api/author/schema/", **headers)
+        tools.assert_equals(response.status_code, 200)
 
         self.__logout(headers)
 
@@ -436,7 +357,6 @@ class TestAuthorization(TestCase):
         """
         Banned user has no permissions.
         """
-
         api_key = self.__login("admin_user", "pass1")
         headers = self.__build_headers("admin_user", api_key)
 
