@@ -133,7 +133,6 @@ INSTALLED_APPS = (
     'ella.core',
     'ella.photos',
 
-    'object_permissions',
     'tastypie',
     'ella_galleries',
     'ella_wikipages',
