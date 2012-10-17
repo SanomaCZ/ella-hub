@@ -33,11 +33,11 @@ from ella.utils import timezone
 
 from ella_hub.models import PublishableLock, CommonArticle
 from ella_hub import utils
-from ella_hub.utils.perms import has_user_model_perm, is_resource_allowed
+from ella_hub.utils.perms import is_resource_allowed
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 
-from ella_hub.utils.perms import has_permission
+from ella_hub.utils.perms import has_model_permission, REST_PERMS
 from ella_hub.utils.workflow import get_states
 
 
@@ -61,8 +61,8 @@ class EllaHubApi(Api):
             api_name = self.api_name
 
         for resource_name in sorted(self._registry.keys()):
-            ct = utils.get_content_type_for_resource(resource_name)
-            if not is_resource_allowed(request.user, ct.model_class()):
+            res_model = self._registry[resource_name]._meta.object_class
+            if not has_model_permission(res_model, request.user, REST_PERMS["GET"]):
                 continue
 
             available_resources[resource_name] = {
@@ -362,16 +362,17 @@ class EllaHubApi(Api):
         schema = self._registry[res_name].build_schema()
         res_tree = {"allowed_http_methods":[], "fields":{}}
 
-        for fn, attrs in schema['fields'].items():
+        for fn, attrs in schema["fields"].items():
             field_attrs = {"readonly": False, "nullable": False}
 
-            if has_permission(res_model, user, "readonly_" + fn):
+            if (not has_model_permission(res_model, user, "can_change") or
+                has_model_permission(res_model, user, "readonly_" + fn)):
                 field_attrs["readonly"] = True
             else:
                 field_attrs["readonly"] = attrs["readonly"]
             field_attrs["nullable"] = attrs["nullable"]
 
-            if has_permission(res_model, user, "disabled_" + fn):
+            if has_model_permission(res_model, user, "disabled_" + fn):
                 field_attrs["disabled"] = True
             else:
                 field_attrs["disabled"] = False

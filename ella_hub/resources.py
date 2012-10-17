@@ -10,13 +10,14 @@ from django.utils import simplejson
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub import utils
-from ella_hub.utils.perms import has_user_model_perm, has_obj_perm
+from ella_hub.utils.perms import has_model_permission, REST_PERMS
+from ella_hub.utils.workflow import get_states, get_user_states
 
 
 class ApiModelResource(ModelResource):
 
-    _patch = fields.BooleanField(attribute="PATCH", help_text="Can change resource.", default=True)
-    _delete = fields.BooleanField(attribute="DELETE", help_text="Can delete resource.", default=True)
+    #_patch = fields.BooleanField(attribute="PATCH", help_text="Can change resource.", default=True)
+    #_delete = fields.BooleanField(attribute="DELETE", help_text="Can delete resource.", default=True)
 
     @classmethod
     def get_fields(cls, fields=None, excludes=None):
@@ -95,35 +96,27 @@ class ApiModelResource(ModelResource):
         self.log_throttled_access(request)
         schema = self.build_schema()
 
-        methods_prefixes = (
-            ("view_", "get"),
-            ("add_", "post"),
-            ("change_", "put"),
-            ("change_", "patch"),
-            ("delete_", "delete"),
-        )
-
-        user_perms = request.user.get_all_permissions()
-
-        resource_name = re.match(r"/[^/]*/([^/]*)/.*", request.path).group(1)
-        ct = utils.get_content_type_for_resource(resource_name)
-
         allowed_methods = []
+        res_model = self._meta.object_class
 
-        for (prefix, method) in methods_prefixes:
-            permission_string = ct.app_label + '.' + prefix + ct.model
-            if permission_string in user_perms:
-                allowed_methods.append(method)
+        for request_str, perm_str in REST_PERMS.items():
+            if has_model_permission(res_model, request.user,
+                REST_PERMS[request_str]):
+                allowed_methods.append(request_str.lower())
 
         if not allowed_methods:
             return HttpResponseForbidden()
 
+        for fn, attrs in schema["fields"].items():
+            if has_model_permission(res_model, request.user, "readonly_" + fn):
+                schema["fields"][fn]["readonly"] = True
+
+            schema["fields"][fn]["disabled"] = has_model_permission(res_model,
+                request.user, "disabled_" + fn)
+
         schema['allowed_detail_http_methods'] = allowed_methods
         schema['allowed_list_http_methods'] = allowed_methods
-        # applying only fields allowed for logged user,
-        #del schema['fields']['app_data']
-        # plus specifying readonly attribute
-        #schema['fields']['app_data']['readonly'] = True
+
         return self.create_response(request, schema)
 
     def alter_list_data_to_serialize(self, request, bundle):
@@ -135,23 +128,15 @@ class ApiModelResource(ModelResource):
             bundle = bundle["objects"]
 
         for object in bundle:
-            self.__filter_according_to_perms(request, object)
+            self.__set_allowed_states(request, object)
         return bundle
 
     def alter_detail_data_to_serialize(self, request, bundle):
         bundle = super(ApiModelResource, self).alter_detail_data_to_serialize(request, bundle)
-        return self.__filter_according_to_perms(request, bundle)
+        return self.__set_allowed_states(request, bundle)
 
-    def __filter_according_to_perms(self, request, bundle):
-        user = request.user
-        content_type = utils.get_content_type_for_resource(
-            self._meta.resource_name)
-
-        if not self.__has_user_perm(user, content_type, 'change', bundle.obj):
-            bundle.data['_patch'] = False
-        if not self.__has_user_perm(user, content_type, 'delete', bundle.obj):
-            bundle.data['_delete'] = False
-
+    def __set_allowed_states(self, request, bundle):
+        bundle.data["allowed_states"] = get_user_states(self._meta.object_class, request.user)
         return bundle
 
     def __has_user_perm(self, user, content_type, permission, object):

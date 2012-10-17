@@ -14,7 +14,7 @@ from ella.utils import timezone
 
 from ella_hub import utils
 from ella_hub.models import ModelPermission
-from ella_hub.utils.perms import has_obj_perm, has_permission
+from ella_hub.utils.perms import has_permission, has_model_permission, REST_PERMS
 
 
 API_KEY_EXPIRATION_IN_DAYS = 14
@@ -36,14 +36,6 @@ class ApiAuthorization(Authorization):
     """
     Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
     """
-    __perm_prefixes = {
-        "GET":"can_view",
-        "POST":"can_add",
-        "PUT":"can_change",
-        "PATCH":"can_change",
-        "DELETE":"can_delete"
-    }
-
     # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
 
@@ -54,7 +46,7 @@ class ApiAuthorization(Authorization):
 
         if self.request_method == "POST":
             resource_model = utils.get_resource_model(self.resource_name)
-            if not has_permission(resource_model, request.user, self.__perm_prefixes[self.request_method]):
+            if not has_model_permission(resource_model, request.user, REST_PERMS[self.request_method]):
                 raise ImmediateHttpResponse(response=HttpForbidden())
         return True
 
@@ -71,7 +63,17 @@ class ApiAuthorization(Authorization):
 
         resource_model = utils.get_resource_model(self.resource_name)
 
-        if not has_permission(resource_model, request.user, self.__perm_prefixes[self.request_method]):
+        allowed_ids = []
+        for obj in object_list:
+            if has_permission(obj, request.user, REST_PERMS[self.request_method]):
+                allowed_ids.append(obj.id)
+
+        if self.request_method == "GET":
+            if not has_model_permission(resource_model, request.user, REST_PERMS[self.request_method]):
+                raise ImmediateHttpResponse(response=HttpForbidden())
+            return object_list.filter(id__in=allowed_ids).all()
+
+        if not allowed_ids:
             raise ImmediateHttpResponse(response=HttpForbidden())
 
-        return object_list
+        return object_list.filter(id__in=allowed_ids).all()
