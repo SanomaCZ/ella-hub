@@ -1,5 +1,3 @@
-from object_permissions import get_users_any
-
 from django.core.exceptions import FieldError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import AnonymousUser
@@ -8,20 +6,24 @@ from ella.articles.models import Article
 from ella.core.models import Author
 
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
+from ella_hub.models import StateObjectRelation, StatePermissionRelation
 
 
-##############################################
-# Utils fot ella_hub.models.permissions module
-def has_permission(model, user, codename, roles=None):
+REST_PERMS = {
+    "GET":"can_view",
+    "POST":"can_add",
+    "PUT":"can_change",
+    "PATCH":"can_change",
+    "DELETE":"can_delete"
+}
+
+
+def has_model_permission(model, user, codename, roles=[]):
     """
-    Returns True if <user> has at least one of <roles> which
-    has permission specified by <codename> for specified <model>,
-    otherwise returns False.
-
-    If roles is None, all user roles are considered.
+    Comment it!
     """
     ct = ContentType.objects.get_for_model(model)
-    # Checking if specified <codenane> Permission exists.
+    # Checking if specified <codename> Permission exists.
     try:
         perm = Permission.objects.get(codename=codename)
     except Permission.DoesNotExist:
@@ -36,7 +38,49 @@ def has_permission(model, user, codename, roles=None):
 
     o_perms = ModelPermission.objects.filter(role__in=roles,
         content_type=ct, permission=perm)
+
     return o_perms.exists()
+
+
+def has_permission(model_obj, user, codename, roles=None):
+    """
+    Returns True if <user> has at least one of <roles> which
+    has permission specified by <codename> for specified <model_obj>,
+    otherwise returns False.
+
+    If roles is None, all user roles are considered.
+    """
+    import ella_hub.utils.workflow
+
+    ct = ContentType.objects.get_for_model(model_obj)
+    # Checking if specified <codename> Permission exists.
+    try:
+        perm = Permission.objects.get(codename=codename)
+    except Permission.DoesNotExist:
+        return False
+
+    if user.is_superuser and not perm.restriction:
+        return True
+
+    if not roles:
+        relations = PrincipalRoleRelation.objects.filter(user=user)
+        roles = [relation.role for relation in relations]
+
+    o_perms = ModelPermission.objects.filter(role__in=roles,
+        content_type=ct, permission=perm)
+
+    if not o_perms.exists():
+        return False
+
+    # ziskanie stavu
+    state = ella_hub.utils.workflow.get_state(model_obj)
+
+    try:
+        StatePermissionRelation.objects.get(state=state,
+            permission=perm, role__in=roles)
+        return True
+    except StatePermissionRelation.DoesNotExist:
+        return False
 
 
 def grant_permission(model, role, permission):
@@ -46,7 +90,7 @@ def grant_permission(model, role, permission):
     """
     if not isinstance(permission, Permission):
         try:
-            permission = Permission.objects.get(codename = permission)
+            permission = Permission.objects.get(codename=permission)
         except Permission.DoesNotExist:
             return False
 
@@ -55,62 +99,12 @@ def grant_permission(model, role, permission):
         permission=permission)
 
     return True
-##############################################
 
 
-def has_obj_perm(user, obj, perm=None):
-    """
-    Return True if user has `perm` to `obj`,
-    if `perm` is not specified, return True
-    if user has any perm to `obj`.
-    """
-    ct = ContentType.objects.get_for_model(obj.__class__)
-
-    if perm:
-        if ((ct.app_label + '.' + perm) in user.get_all_permissions() or
-            user.has_perm(perm, obj)):
-            return True
-    else:
-        if user.has_any_perms(obj):
-            return True
-    return False
-
-
-def has_user_model_perm(user, model_class, perm=None):
-    """
-    Return True if user has `perm` to `model_class` model.
-    If `perm` is not specified, return True if user
-    has any perm to `model_class` mode.
-    """
-    ct = ContentType.objects.get_for_model(model_class)
-    found_perm = False
-
-    permission = ct.app_label + "."
-    if perm:
-        found_perm = (ct.app_label + "." + perm + "_" + ct.model) in user.get_all_permissions()
-    else:
-        found_perm = filter(lambda perm: perm.startswith(ct.app_label+".") and perm.endswith(ct.model),
-            user.get_all_permissions())
-
-    return found_perm
-
-
-def has_user_model_object_with_any_perm(user, model_class, perm_list=[]):
-    """
-    Return True if user has any permission from `perm_list`
-    to any object of `model_class` model,
-    if `perm_list` is not specified, return True if user
-    has any permission to any object of `model_class` model.
-    """
-    if isinstance(user, AnonymousUser):
-        return False
-
-    try:
-        objects = user.get_objects_any_perms(model_class, perms=perm_list)
-    except FieldError:
-        return False
-
-    return bool(objects)
+def get_roles(user):
+    relations = PrincipalRoleRelation.objects.filter(user=user)
+    roles = [relation.role for relation in relations]
+    return roles
 
 
 def is_resource_allowed(user, model_class):
@@ -118,5 +112,10 @@ def is_resource_allowed(user, model_class):
     Return True if user has rights to get schema
     specified by `model_class`.
     """
-    return (has_user_model_perm(user, model_class) or
-        has_user_model_object_with_any_perm(user, model_class))
+    content_type = ContentType.objects.get_for_model(model_class)
+    try:
+        ModelPermission.objects.get(content_type=content_type,
+            role__in=get_roles(user), permission=REST_PERMS["GET"])
+    except ModelPermission.DoesNotExist:
+        return False
+    return True

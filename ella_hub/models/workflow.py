@@ -8,15 +8,13 @@ from ella_hub.models.permissions import Permission, Role
 
 
 """
-TODO: support for model instances?
-
 Workflow models:
 
 'Workflow'
 'State'
 'Transition'
 'StatePermissionRelation'
-'StateModelRelation'
+'StateObjectRelation'
 'WorkflowModelRelation'
 'WorkflowPermissionRelation'
 
@@ -27,7 +25,7 @@ and edges are modelled by 'Transition' instances
 'Workflow' instance is defined by permissions (WorkflowPermissionRelation),
 and states.
 
-State permissions for a role are specified in 'StateModelRelation'.
+State permissions for a role are specified in 'StateObjectRelation'.
 """
 
 
@@ -41,9 +39,6 @@ class Workflow(models.Model):
     permissions = models.ManyToManyField(Permission, verbose_name=_("Permissions"),
         through="WorkflowPermissionRelation")
 
-    content_types = models.ManyToManyField(ContentType, verbose_name=_("Content Types"),
-        blank=True, null=True, related_name="c_types")
-
     def set_to_model(self, model):
         content_type = ContentType.objects.get_for_model(model)
         try:
@@ -53,6 +48,20 @@ class Workflow(models.Model):
         else:
             relation.workflow = self
             relation.save()
+
+    def set_to_object(self, model_obj):
+        content_type = ContentType.objects.get_for_model(model_obj)
+        try:
+            relation = WorkflowObjectRelation.objects.get(content_type=content_type,
+                content_id=model_obj.id)
+        except WorkflowObjectRelation.DoesNotExist:
+            WorkflowObjectRelation.objects.create(content=model_obj, workflow=self)
+            set_state(model_obj, self.initial_state)
+        else:
+            if relation.workflow != self:
+                relation.workflow = self
+                relation.save()
+                set_state(self.initial_state)
 
     def __unicode__(self):
         if self.initial_state:
@@ -69,7 +78,7 @@ class Workflow(models.Model):
 class State(models.Model):
 
     title = models.CharField(_("Title"), max_length=128, blank=False)
-    codename = models.CharField(_("Codename"), max_length=128, unique=True, blank=False)
+    codename = models.CharField(_("Codename"), max_length=128, blank=False)
     description = models.TextField(_("Description"), blank=True)
     workflow = models.ForeignKey("Workflow", verbose_name=_("Workflow"),
         blank=True, null=True, related_name="state_workflow")
@@ -101,6 +110,24 @@ class Transition(models.Model):
         verbose_name_plural = _("Transition")
 
 
+class StateObjectRelation(models.Model):
+
+    content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"),
+        related_name="state_object", blank=True, null=True)
+    content_id = models.PositiveIntegerField(_("Content id"), blank=True, null=True)
+    content = generic.GenericForeignKey(ct_field="content_type", fk_field="content_id")
+    state = models.ForeignKey(State, verbose_name = _("State"))
+
+    def __unicode__(self):
+        return "%s %s - %s" % (self.content_type.name, self.content_id, self.state.title)
+
+    class Meta:
+        unique_together = ("content_type", "content_id", "state")
+        app_label = "ella_hub"
+        verbose_name = _("State-Object Relation")
+        verbose_name_plural = _("State-Object Relations")
+
+
 class StatePermissionRelation(models.Model):
 
     state = models.ForeignKey("State", verbose_name=_("State"))
@@ -114,21 +141,6 @@ class StatePermissionRelation(models.Model):
         app_label = "ella_hub"
         verbose_name = _("State-Permission Relation")
         verbose_name_plural = _("State-Permission Relations")
-
-
-class StateModelRelation(models.Model):
-
-    content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"),
-        related_name="state_model", blank=True, null=True)
-    state = models.ForeignKey(State, verbose_name = _("State"))
-
-    def __unicode__(self):
-        return "%s / %s" % (self.content_type.name, self.state.title)
-
-    class Meta:
-        app_label = "ella_hub"
-        verbose_name = _("State-Model Relation")
-        verbose_name_plural = _("State-Model Relations")
 
 
 class WorkflowModelRelation(models.Model):

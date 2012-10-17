@@ -7,8 +7,9 @@ from ella.core.models import Publishable
 from ella_hub.models import CommonArticle
 from ella_hub.models import Role, Permission, ModelPermission, PrincipalRoleRelation
 from ella_hub.models import State, Transition, Workflow
-from ella_hub.models import (StateModelRelation, WorkflowModelRelation,
+from ella_hub.models import (StateObjectRelation, WorkflowModelRelation,
     WorkflowPermissionRelation, StatePermissionRelation)
+from ella_hub.utils.perms import grant_permission
 
 
 def init_ella_workflow(resources):
@@ -18,15 +19,7 @@ def init_ella_workflow(resources):
     workflow = Workflow.objects.get_or_create(title="Ella workflow",
         description="Workflow for Ella publishable-based models.")[0]
 
-    publishable_models = []
-    all_models = []
-
-    # resources filtering, set workflow to only Publishable-subclassed models
-    for resource in resources:
-        res_model = resource._meta.object_class
-        if issubclass(res_model, Publishable) and res_model != Publishable:
-            publishable_models.append(res_model)
-        all_models.append(res_model)
+    editor_in_chief = Role.objects.get_or_create(title=unicode(_("Editor in chief")))[0]
 
     STATES = (
         (_("Added"), "added"),
@@ -37,44 +30,27 @@ def init_ella_workflow(resources):
         (_("Deleted"), "deleted")
     )
 
-    state_obj_list = []
-    perm_obj_list = []
-
-    # create states
-    for state_name, state_codename in STATES:
-        s = State.objects.get_or_create(title=unicode(state_name),
-            codename=state_codename, workflow=workflow)[0]
-        state_obj_list.append(s)
-
-    # make all possible transitions
-    for state_obj_dest in state_obj_list:
-        t = Transition.objects.get_or_create(title="to %s" % state_obj_dest.title,
-            workflow=workflow, destination=state_obj_dest)[0]
-
-        for state_obj_src in state_obj_list:
-            state_obj_src.transitions.add(t)
-            state_obj_src.save()
-
-    # set workflow to all registered models
-    for model in publishable_models:
-        workflow.set_to_model(model)
-
-    ROLES = (
-        _("Photographer"),
-        _("Editor"),
-        _("Editor in chief")
-    )
-
     PERMISSIONS = (
         (_("Can view"), "can_view"),
         (_("Can add"), "can_add"),
-        (_("Can edit"), "can_edit"),
+        (_("Can edit"), "can_change"),
         (_("Can delete"), "can_delete"),
     )
 
-    # create basic roles
-    for role_name in ROLES:
-        r = Role.objects.get_or_create(title=unicode(role_name))[0]
+    all_models = [resource._meta.object_class for resource in resources]
+    publishable_models = [model for model in all_models
+        if issubclass(model, Publishable) and model != Publishable]
+
+    state_obj_list = []
+    perm_obj_list = []
+
+    state_obj_list = _create_states(STATES, workflow)
+
+    _make_all_possible_transitions(state_obj_list, workflow)
+
+    # set workflow to all publishable models
+    for model in publishable_models:
+        workflow.set_to_model(model)
 
     # create basic permissions
     for (perm_name, perm_codename) in PERMISSIONS:
@@ -82,18 +58,11 @@ def init_ella_workflow(resources):
         perm_obj_list.append(p)
 
     # map permissions to models for roles (only for editor in chief)
-    editor_in_chief = Role.objects.get(title="Editor in chief")
     for model in all_models:
         content_type = ContentType.objects.get_for_model(model)
         for perm_obj in perm_obj_list:
             ModelPermission.objects.get_or_create(role=editor_in_chief,
                 permission=perm_obj, content_type=content_type)
-
-    for model in publishable_models:
-        # editor in chief can do anything in every state
-        for state_obj in state_obj_list:
-            StateModelRelation.objects.get_or_create(state=state_obj,
-                content_type=content_type)
 
     for perm_obj in perm_obj_list:
         WorkflowPermissionRelation.objects.get_or_create(workflow=workflow,
@@ -103,7 +72,64 @@ def init_ella_workflow(resources):
             StatePermissionRelation.objects.get_or_create(state=state_obj,
                 permission=perm_obj, role=editor_in_chief)
 
-    # create permission to test readonly & disabled model attributes
+    ##### Editor
+    editor = Role.objects.get_or_create(title=unicode(_("Editor")))[0]
+
+    STATES = (
+        (_("Added"), "added"),
+        (_("Ready"), "ready"),
+        (_("Deleted"), "deleted")
+    )
+
+    # create states
+    added_state = State.objects.get_or_create(title=unicode(_("Added")),
+        codename="added", workflow=workflow)[0]
+    ready_state = State.objects.get_or_create(title=unicode(_("Ready")),
+        codename="ready", workflow=workflow)[0]
+    deleted_state = State.objects.get_or_create(title=unicode(_("Deleted")),
+        codename="deleted", workflow=workflow)[0]
+
+
+    PERMISSIONS = (
+        (_("Can view"), "can_view"),
+    )
+
+    all_models = [resource._meta.object_class for resource in resources]
+    publishable_models = [model for model in all_models
+        if issubclass(model, Publishable) and model != Publishable]
+
+    state_obj_list = _create_states(STATES, workflow)
+
+    to_added = Transition.objects.get_or_create(title="to %s" % added_state.title,
+            workflow=workflow, destination=added_state)[0]
+    to_ready = Transition.objects.get_or_create(title="to %s" % ready_state.title,
+            workflow=workflow, destination=ready_state)[0]
+    to_deleted = Transition.objects.get_or_create(title="to %s" % deleted_state.title,
+            workflow=workflow, destination=deleted_state)[0]
+
+    added_state.transitions.add(to_added)
+    added_state.transitions.add(to_ready)
+    added_state.transitions.add(to_deleted)
+    ready_state.transitions.add(to_added)
+    ready_state.transitions.add(to_ready)
+    deleted_state.transitions.add(to_added)
+    deleted_state.transitions.add(to_deleted)
+
+    # only view permissions
+    for model in all_models:
+        content_type = ContentType.objects.get_for_model(model)
+        for perm_obj in perm_obj_list[:1]:
+            ModelPermission.objects.get_or_create(role=editor,
+                permission=perm_obj, content_type=content_type)
+
+    for perm_obj in perm_obj_list[:1]:
+        WorkflowPermissionRelation.objects.get_or_create(workflow=workflow,
+            permission=perm_obj)
+
+        for state_obj in state_obj_list:
+            StatePermissionRelation.objects.get_or_create(state=state_obj,
+                permission=perm_obj, role=editor)
+
     r = Permission.objects.get_or_create(title="Readonly content",
         restriction=True, codename="readonly_content")[0]
     d = Permission.objects.get_or_create(title="Disabled authors",
@@ -111,22 +137,40 @@ def init_ella_workflow(resources):
 
     content_type = ContentType.objects.get_for_model(CommonArticle)
 
-    ModelPermission.objects.get_or_create(role=editor_in_chief,
+    ModelPermission.objects.get_or_create(role=editor,
         permission=r, content_type=content_type)
-    ModelPermission.objects.get_or_create(role=editor_in_chief,
+    ModelPermission.objects.get_or_create(role=editor,
         permission=d, content_type=content_type)
-
 
     WorkflowPermissionRelation.objects.get_or_create(workflow=workflow,
         permission=r)
 
     for state_obj in state_obj_list:
         StatePermissionRelation.objects.get_or_create(state=state_obj,
-            permission=r, role=editor_in_chief)
+            permission=r, role=editor)
         StatePermissionRelation.objects.get_or_create(state=state_obj,
-            permission=d, role=editor_in_chief)
+            permission=d, role=editor)
 
     return workflow
+
+
+def _create_states(states, workflow):
+    state_obj_list = []
+    for state_name, state_codename in states:
+        s = State.objects.get_or_create(title=unicode(state_name),
+            codename=state_codename, workflow=workflow)[0]
+        state_obj_list.append(s)
+    return state_obj_list
+
+
+def _make_all_possible_transitions(state_obj_list, workflow):
+    for state_obj_dest in state_obj_list:
+        t = Transition.objects.get_or_create(title="to %s" % state_obj_dest.title,
+            workflow=workflow, destination=state_obj_dest)[0]
+
+        for state_obj_src in state_obj_list:
+            state_obj_src.transitions.add(t)
+            state_obj_src.save()
 
 
 def get_workflow(model):
@@ -137,6 +181,10 @@ def get_workflow(model):
         return None
     else:
         return relation.workflow
+
+
+def set_workflow(model, workflow):
+    return workflow.set_to_model(model)
 
 
 def update_permissions(model):
@@ -155,37 +203,56 @@ def update_permissions(model):
         permission__in=perms).delete()
 
     for relation in StatePermissionRelation.objects.filter(state=state):
-        permissions.utils.grant_permission(model, relation.role, relation.permission)
+        grant_permission(model, relation.role, relation.permission)
 
 
-def set_state(model, state):
-    content_type = ContentType.objects.get_for_model(model)
+def set_state(obj, state):
+    content_type = ContentType.objects.get_for_model(obj)
     try:
-        relation = StateModelRelation.objects.get(content_type=content_type)
-    except StateModelRelation.DoesNotExist:
-        relation = StateModelRelation.objects.create(content_type=content_type,
+        relation = StateObjectRelation.objects.get(content_type=content_type,
+            content_id=obj.id)
+    except StateObjectRelation.DoesNotExist:
+        relation = StateObjectRelation.objects.create(content=obj,
             state=state)
     else:
         relation.state = state
         relation.save()
-    update_permissions(model)
+    update_permissions(obj)
 
 
-def get_state(model):
-    content_type = ContentType.objects.get_for_model(model)
+def get_state(obj):
+    content_type = ContentType.objects.get_for_model(obj)
     try:
-        relation = StateModelRelation.objects.get(content_type=content_type)
-    except StateModelRelation.DoesNotExist:
+        relation = StateObjectRelation.objects.get(content_type=content_type)
+    except StateObjectRelation.DoesNotExist:
         return None
     else:
         return relation.state
 
 
-def get_states(model, workflow = None):
-    content_type = ContentType.objects.get_for_model(model)
-    relations = StateModelRelation.objects.filter(content_type=content_type)
+def get_states(obj, workflow=None):
+    content_type = ContentType.objects.get_for_model(obj)
+    relations = StateObjectRelation.objects.filter(content_type=content_type)
     states = [relation.state for relation in relations]
 
     if workflow:
         states = states.filter(workflow=workflow)
+
+    return states
+
+
+def get_user_states(model, user, workflow=None):
+    content_type = ContentType.objects.get_for_model(model)
+    relations = StateObjectRelation.objects.filter(content_type=content_type)
+    states = [relation.state for relation in relations]
+
+    if workflow:
+        states = states.filter(workflow=workflow)
+
+    relations = PrincipalRoleRelation.objects.filter(user=user)
+    roles = [relation.role for relation in relations]
+
+    states = filter(lambda state: StatePermissionRelation.objects.filter(
+        state=state, role__in=roles), states)
+
     return states
