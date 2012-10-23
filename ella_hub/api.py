@@ -93,18 +93,6 @@ class EllaHubApi(Api):
         serialized = serializer.serialize(available_resources, desired_format, options)
         return HttpResponse(content=serialized, content_type=build_content_type(desired_format))
 
-    def register_view_model_permission(self):
-        """
-        Register view model permission for all resource classes.
-        - view_<className>
-        """
-        for ct in utils.get_all_resource_content_types():
-            perm = Permission.objects.get_or_create(codename='view_' + ct.model,
-                name='Can view %s.' % ct.model, content_type=ct)
-
-            if not isinstance(perm, tuple):
-                perm.save()
-
     def collect_resources(self):
         resource_modules = []
 

@@ -596,14 +596,6 @@ class TestAuthorization(TestCase):
         image.save(settings.MEDIA_ROOT + "/" + filename, format="jpeg")
         return settings.MEDIA_ROOT + "/" + filename
 
-    def __register_view_model_permission(self):
-        for ct in utils.get_all_resource_content_types():
-            perm = Permission.objects.get_or_create(codename='view_' + ct.model,
-                name='Can view %s.' % ct.model, content_type=ct)
-
-            if not isinstance(perm, tuple):
-                perm.save()
-
     def __login(self, username, password):
         response = self.client.post('/admin-api/login/',
             data={"username": username, "password": password})
