@@ -1,8 +1,8 @@
 #!/bin/bash
 # Script testing functionality of ella-hope dev-server API.
 
-name=seocity
-pass=seocity
+name=sanoma
+pass=sanoma
 
 # run via ./test_ella_dev_server.sh <port_number>
 server=http://crawler.bfhost.cz:$1
