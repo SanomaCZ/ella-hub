@@ -190,6 +190,9 @@ class MultipartFormDataModelResource(ApiModelResource):
                 raise ValueError("Invalid format in field '%s' with attachment: %s" % (key, value))
 
             attached_object_id = parts[1]
+            if attached_object_id not in attached_objects:
+                raise ValueError("Attached object with ID '%s' not found." % attached_object_id)
+
             object[key] = attached_objects[attached_object_id]
 
     def put_detail(self, request, **kwargs):
