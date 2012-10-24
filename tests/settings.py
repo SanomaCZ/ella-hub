@@ -130,10 +130,12 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 
+    'object_permissions',
+    'tastypie',
+
     'ella.core',
     'ella.photos',
 
-    'tastypie',
     'ella_galleries',
     'ella_wikipages',
     'ella_taggit',
