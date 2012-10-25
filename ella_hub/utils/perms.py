@@ -1,12 +1,7 @@
-from django.core.exceptions import FieldError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import AnonymousUser
-
-from ella.articles.models import Article
-from ella.core.models import Author
-
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
-from ella_hub.models import StateObjectRelation, StatePermissionRelation
+from ella_hub.models import StatePermissionRelation
 
 
 REST_PERMS = {

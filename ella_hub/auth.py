@@ -1,19 +1,14 @@
 import re
 import datetime
 
-from django.template import RequestContext
-from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
-
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.exceptions import ImmediateHttpResponse
-from tastypie.http import HttpUnauthorized, HttpForbidden
+from tastypie.http import HttpForbidden
 from tastypie.models import ApiKey
 from ella.utils import timezone
 
 from ella_hub import utils
-from ella_hub.models import ModelPermission
 from ella_hub.utils.perms import has_permission, has_model_permission, REST_PERMS
 
 
