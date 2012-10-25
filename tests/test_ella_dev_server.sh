@@ -255,7 +255,8 @@ then
 	curl --dump-header - -X PATCH -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
 		"title": "Modified photo by PATCH method",
-		"description": "Modified description by PATCH method."
+		"description": "Modified description by PATCH method.",
+		"app_data": null
 	}' "$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# all formated photos will be deleted by image change, so delete them now
@@ -274,7 +275,8 @@ then
 		"objects": [{
 			"resource_uri": "/admin-api/photo/100/",
 			"image": "attached_object_id:'$IMAGE_PATH_CHANGED_BASENAME'",
-			"description":"Modified photo by PATCH method (image data included)."
+			"description":"Modified photo by PATCH method (image data included).",
+			"app_data": null
 		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
