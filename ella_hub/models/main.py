@@ -280,25 +280,3 @@ class RecipeIngredient(models.Model):
         app_label = "ella_hub"
         verbose_name = _("Recipe ingredient")
         verbose_name_plural = _("Recipe ingredients")
-
-
-def register_object_permissions():
-    CLASSES = (
-        ('author', Author, 'core'),
-        ('user', User, 'auth'),
-        ('category', Category, 'core'),
-        ('source', Source, 'core'),
-        ('listing', Listing, 'core'),
-        ('site', Site, 'sites'),
-        ('photo', Photo, 'photos'),
-        ('format', Format, 'photos'),
-        ('formatedphoto', FormatedPhoto, 'photos'),
-        ('article', CommonArticle, 'ella_hub'),
-        ('recipe', Recipe, 'ella_hub'),
-        ('encyclopedia', Encyclopedia, 'ella_hub'),
-    )
-    for class_str, class_, app_label in CLASSES:
-        register(['view_%s' % class_str, 'change_%s' %class_str,
-            'delete_%s' %class_str], class_ , app_label)
-
-register_object_permissions()

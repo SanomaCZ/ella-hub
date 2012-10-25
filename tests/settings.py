@@ -130,7 +130,6 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 
-    'object_permissions',
     'tastypie',
 
     'ella.core',
@@ -151,7 +150,6 @@ RESOURCE_MODULES = (
 # Needed by object_permissions app (django-object-permissions)
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'object_permissions.backend.ObjectPermBackend',
 )
 
 # A sample logging configuration. The only tangible logging
