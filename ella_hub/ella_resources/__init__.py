@@ -5,7 +5,6 @@ from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
 from ella.core.models import Publishable, Listing, Category, Author, Source
@@ -13,6 +12,7 @@ from ella.photos.models import Photo, FormatedPhoto, Format
 
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
 from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe
+from ella_hub.utils import get_content_type_for_resource
 
 
 class SiteResource(ApiModelResource):
@@ -238,8 +238,8 @@ class DraftResource(ApiModelResource):
         Name of content type is case insensitive and correspond to the name
         of resource.
         """
-        bundle.obj.content_type = ContentType.objects.get(
-            name__iexact=bundle.data['content_type'])
+        bundle.obj.content_type = get_content_type_for_resource(
+            bundle.data['content_type'])
 
         return super(DraftResource, self).hydrate(bundle)
 
