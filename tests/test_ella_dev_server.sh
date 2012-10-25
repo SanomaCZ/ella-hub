@@ -12,7 +12,7 @@ test_schemas=1
 test_resource_lists=1
 test_core=1
 test_photos=1
-test_tags=1
+test_tags=0
 
 resources=( "article" "author" "category" "draft" "encyclopedia" "format" "formatedphoto" "gallery" "galleryitem" "listing" "photo" "publishable" "recipe" "site" "source" "user" "wikipage" )
 
