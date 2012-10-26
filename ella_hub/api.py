@@ -1,5 +1,3 @@
-import os
-import re
 import datetime
 import mimetypes
 import ella_hub.signals
@@ -11,10 +9,10 @@ from django.conf import settings
 from django.conf.urls.defaults import url
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.http import (HttpResponse, HttpResponseBadRequest,
-    HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed)
+from django.http import (HttpResponse, HttpResponseRedirect,
+    HttpResponseForbidden, HttpResponseNotAllowed)
 from django.utils.importlib import import_module
 from django.views.decorators.csrf import csrf_exempt
 
@@ -32,11 +30,9 @@ from ella.photos.models import Photo, FormatedPhoto
 from ella.utils import timezone
 
 from ella_hub.models import PublishableLock, CommonArticle
-from ella_hub import utils
-from ella_hub.utils.perms import is_resource_allowed
+from ella_hub import utils, views
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
-
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
 from ella_hub.utils.workflow import get_states
 
@@ -175,7 +171,9 @@ class EllaHubApi(Api):
 
             url(r"^%s/login/$" % self.api_name, self.wrap_view('login_view')),
             url(r"^%s/logout/$" % self.api_name, self.wrap_view('logout_view')),
-            url(r"^%s/validate-api-key/$" % self.api_name, self.wrap_view('validate_api_key_view'))
+            url(r"^%s/validate-api-key/$" % self.api_name, self.wrap_view('validate_api_key_view')),
+
+            url(r"^preview/(?P<id>\d+)/$", views.preview_publishable),
         ]
 
     def wrap_view(self, view):
