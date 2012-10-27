@@ -39,6 +39,15 @@ class Workflow(models.Model):
     permissions = models.ManyToManyField(Permission, verbose_name=_("Permissions"),
         through="WorkflowPermissionRelation")
 
+    def get_initial_state(self):
+        if self.initial_state:
+            return self.initial_state
+        else:
+            try:
+                return self.states.all()[0]
+            except IndexError:
+                return None
+
     def set_to_model(self, model):
         content_type = ContentType.objects.get_for_model(model)
         try:
@@ -48,20 +57,6 @@ class Workflow(models.Model):
         else:
             relation.workflow = self
             relation.save()
-
-    def set_to_object(self, model_obj):
-        content_type = ContentType.objects.get_for_model(model_obj)
-        try:
-            relation = WorkflowObjectRelation.objects.get(content_type=content_type,
-                content_id=model_obj.id)
-        except WorkflowObjectRelation.DoesNotExist:
-            WorkflowObjectRelation.objects.create(content=model_obj, workflow=self)
-            set_state(model_obj, self.initial_state)
-        else:
-            if relation.workflow != self:
-                relation.workflow = self
-                relation.save()
-                set_state(self.initial_state)
 
     def __unicode__(self):
         if self.initial_state:
@@ -81,7 +76,7 @@ class State(models.Model):
     codename = models.CharField(_("Codename"), max_length=128, blank=False)
     description = models.TextField(_("Description"), blank=True)
     workflow = models.ForeignKey("Workflow", verbose_name=_("Workflow"),
-        blank=True, null=True, related_name="state_workflow")
+        blank=True, null=True, related_name="states")
     transitions = models.ManyToManyField("Transition", verbose_name=_("Transitions"),
         blank=True, null=True)
 

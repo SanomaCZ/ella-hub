@@ -47,24 +47,28 @@ class ModelPermission(models.Model):
     permission = models.ForeignKey(Permission, verbose_name=_("Permission"))
     content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"))
 
-    def get_principal(self):
+#    def get_principal(self):
         # User has higher priority.
-        return self.user or self.group
+#        return self.user or self.group
 
-    def set_principal(self, principal):
-        if isinstance(principal, User):
-            self.user = principal
-        else:
-            self.group = principal
+#    def set_principal(self, principal):
+#        if isinstance(principal, User):
+#            self.user = principal
+#        else:
+#            self.group = principal
 
-    principal = property(get_principal, set_principal)
+#    principal = property(get_principal, set_principal)
+
+#    def __unicode__(self):
+#        if self.role:
+#           principal = self.role
+#        else:
+#            principal = self.user
+#        return "%s / %s / %s" % (self.permission.title, principal, self.content_type.name)
 
     def __unicode__(self):
-        if self.role:
-            principal = self.role
-        else:
-            principal = self.user
-        return "%s / %s / %s" % (self.permission.title, principal, self.content_type.name)
+        return "%s / %s / %s" % (self.permission.title, self.role.title, self.content_type.name)
+
 
     class Meta:
         app_label = "ella_hub"
@@ -93,6 +97,10 @@ class PrincipalRoleRelation(models.Model):
             self.user = principal
         else:
             self.group = principal
+
+    def unset_principals(self):
+        self.user = None
+        self.group = None
 
     principal = property(get_principal, set_principal)
 
