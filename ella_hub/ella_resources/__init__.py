@@ -1,14 +1,19 @@
 import os
 
+from PIL import Image
 from tastypie import fields
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.core.files.images import ImageFile
+from django.utils.encoding import force_unicode, smart_str
 
 from ella.core.models import Publishable, Listing, Category, Author, Source
 from ella.photos.models import Photo, FormatedPhoto, Format
+from ella.photos.conf import photos_settings
+from ella.utils.timezone import now
 
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
 from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe
@@ -94,11 +99,39 @@ class PhotoResource(MultipartFormDataModelResource):
 
     def dehydrate(self, bundle):
         """Adds absolute URL of image."""
+        bundle = super(PhotoResource, self).dehydrate(bundle)
+
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
         bundle.data['public_url'] = bundle.request.build_absolute_uri(
             bundle.obj.image.url)
 
         return bundle
+
+    def hydrate(self, bundle):
+        """Rotates image if possible"""
+        bundle = super(PhotoResource, self).hydrate(bundle)
+
+        if 'rotate' in bundle.data:
+            uploaded_image = bundle.data['image']
+            image = Image.open(uploaded_image)
+            angle = int(bundle.data['rotate']) % 360
+            image.rotate(-angle) # clockwise rotating
+            image.save(self._upload_to(uploaded_image.name))
+            bundle.obj.image = ImageFile(image)
+
+        return bundle
+
+    def _upload_to(self, filename):
+        name, ext = os.path.splitext(filename)
+        ext = ext.lower()
+        ext = photos_settings.TYPE_EXTENSION.get(ext, ext)
+
+        return os.path.join(
+            settings.MEDIA_ROOT,
+            force_unicode(now().strftime(smart_str(photos_settings.UPLOAD_TO))),
+            name + ext
+        )
+
 
     class Meta(MultipartFormDataModelResource.Meta):
         queryset = Photo.objects.all()

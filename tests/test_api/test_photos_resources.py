@@ -21,7 +21,7 @@ class TestPhotosResources(TestCase):
         self.client = Client()
 
         self.author = Author.objects.create(name="Author", slug="author")
-        self.photo_filename = self.__create_tmp_image(".test_image.jpg")
+        self.photo_filename = self.__create_tmp_image("test_image.jpg")
         self.photo = Photo.objects.create(id=999, title="Title of photo #999",
             image=self.photo_filename)
 
@@ -127,6 +127,43 @@ class TestPhotosResources(TestCase):
         os.remove(red_image_path)
         os.remove(green_image_path)
         os.remove(blue_image_path)
+
+    def test_rotate_image_photo(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        file = open(self.photo_filename)
+        payload = {
+            "attached_object": file,
+            "resource_data": json.dumps({
+                "objects": [
+                    {
+                        "id": 100,
+                        "title": "Rotated photo",
+                        "image": "attached_object_id:" + os.path.basename(self.photo_filename),
+                        "authors": ["/admin-api/author/%d/" % self.author.id],
+                        "created": "2012-10-27T12:48:29",
+                        "description": "Rotated by 90 degrees clockwise.",
+                        "rotate": 90,
+                    }
+                ]
+            }),
+        }
+        response = self.patch("/admin-api/photo/", payload, **headers)
+        tools.assert_equals(response.status_code, 202, response.content)
+        file.close()
+
+        response = self.client.get('/admin-api/photo/100/', **headers)
+        tools.assert_equals(response.status_code, 200)
+        resource = self.__get_response_json(response)
+
+        image_path = os.path.join(settings.MEDIA_ROOT, resource['image'])
+        uploaded_image = Image.open(image_path)
+        image = Image.open(self.photo_filename)
+        image.rotate(-90)
+        tools.assert_equals(image.tostring(), uploaded_image.tostring())
+
+        self.__logout(headers)
 
     @tools.raises(FormatedPhoto.DoesNotExist)
     def test_update_photo_of_formated_photo(self):
