@@ -1,12 +1,7 @@
-from django.core.exceptions import FieldError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import AnonymousUser
-
-from ella.articles.models import Article
-from ella.core.models import Author
-
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
-from ella_hub.models import StateObjectRelation, StatePermissionRelation
+from ella_hub.models import StatePermissionRelation
 
 
 REST_PERMS = {
@@ -22,6 +17,9 @@ def has_model_permission(model, user, codename, roles=[]):
     """
     Comment it!
     """
+    if isinstance(user, AnonymousUser):
+        return False
+
     ct = ContentType.objects.get_for_model(model)
     # Checking if specified <codename> Permission exists.
     try:
@@ -50,6 +48,9 @@ def has_permission(model_obj, user, codename, roles=None):
 
     If roles is None, all user roles are considered.
     """
+    if isinstance(user, AnonymousUser):
+        return False
+
     import ella_hub.utils.workflow
 
     ct = ContentType.objects.get_for_model(model_obj)
@@ -102,6 +103,9 @@ def grant_permission(model, role, permission):
 
 
 def get_roles(user):
+    if isinstance(user, AnonymousUser):
+        return []
+
     relations = PrincipalRoleRelation.objects.filter(user=user)
     roles = [relation.role for relation in relations]
     return roles
@@ -112,6 +116,9 @@ def is_resource_allowed(user, model_class):
     Return True if user has rights to get schema
     specified by `model_class`.
     """
+    if isinstance(user, AnonymousUser):
+        return False
+
     content_type = ContentType.objects.get_for_model(model_class)
     try:
         ModelPermission.objects.get(content_type=content_type,

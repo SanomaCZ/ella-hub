@@ -41,7 +41,7 @@ class Permission(models.Model):
 
 class ModelPermission(models.Model):
     """
-    Mapping a <role> to a <permission> for specific Mcontent_type>.
+    Mapping a <role> to a <permission> for specific <content_type>.
     """
     role = models.ForeignKey("Role", verbose_name=_("Role"), blank=True, null=True)
     permission = models.ForeignKey(Permission, verbose_name=_("Permission"))

@@ -61,8 +61,8 @@ class TestAuthorization(TestCase):
             "name": "dumb_name",
             "resource_uri": "/admin-api/author/100/",
             "slug": "dumb-name",
-            "text": "this is text"
-            })
+            "text": "this is text",
+        })
 
         self.new_user = json.dumps({
             "email": "user@mail.com",
@@ -73,11 +73,10 @@ class TestAuthorization(TestCase):
             "last_name": "user",
             "password": "heslo",
             "resource_uri": "/admin-api/user/100/",
-            "username": "test_user"
-            })
+            "username": "test_user",
+        })
 
         self.new_category = json.dumps({
-            "app_data": "{}",
             "content": "this is content",
             "description": "this is a category description",
             "id": 100,
@@ -86,20 +85,20 @@ class TestAuthorization(TestCase):
             "slug": "category1",
             "template": "category.html",
             "title": "category100",
-            "tree_path": "category100"
-            })
+            "tree_path": "category100",
+            "app_data": None,
+        })
 
         self.new_article = json.dumps({
-            "authors": [
-                {
-                    "description": "this is descr.",
-                    "email": "mail@mail.com",
-                    "id": 100,
-                    "name": "dumb_name",
-                    "resource_uri": "/admin-api/author/100/",
-                    "slug": "dumb-name",
-                    "text": "this is text"
-                }],
+            "authors": [{
+                "description": "this is descr.",
+                "email": "mail@mail.com",
+                "id": 100,
+                "name": "dumb_name",
+                "resource_uri": "/admin-api/author/100/",
+                "slug": "dumb-name",
+                "text": "this is text",
+            }],
             "category": "/admin-api/category/100/",
             "content": "this is awesome new-article content",
             "description": "this is awesome description",
@@ -108,8 +107,9 @@ class TestAuthorization(TestCase):
             "publish_to": "2012-08-15T14:51:35",
             "resource_uri": "/admin-api/article/100/",
             "slug": "test-article",
-            "title": "test_article"
-            })
+            "title": "test_article",
+            "app_data": None,
+        })
 
         self.new_photo = {
             "title": "photo1",
@@ -117,15 +117,16 @@ class TestAuthorization(TestCase):
             "image": "attached_object_id:" + os.path.basename(self.photo_filename),
             "id": 100,
             "resource_uri": "/admin-api/photo/100/",
-            "description": "this is description"
-            }
+            "description": "this is description",
+            "app_data": None,
+        }
 
         self.new_site = json.dumps({
             "domain": "test_domain.com",
             "id": 100,
             "name": "test_domain.com",
-            "resource_uri": "/admin-api/site/100/"
-            })
+            "resource_uri": "/admin-api/site/100/",
+        })
 
         self.new_format = json.dumps({
             "id": 100,
@@ -138,8 +139,8 @@ class TestAuthorization(TestCase):
             "nocrop": True,
             "resample_quality": 95,
             "sites": ["/admin-api/site/100/"],
-            "stretch": True
-            })
+            "stretch": True,
+        })
 
         self.new_formatedphoto = json.dumps({
             "id": 100,
@@ -151,8 +152,8 @@ class TestAuthorization(TestCase):
             "format": "/admin-api/format/100/",
             "height": 200,
             "photo": "/admin-api/photo/100/",
-            "width": 200
-            })
+            "width": 200,
+        })
 
         self.new_listing = json.dumps({
             "category": "/admin-api/category/100/",
@@ -161,8 +162,8 @@ class TestAuthorization(TestCase):
             "publish_from": "2012-08-07T14:51:29",
             "publish_to": "2012-08-15T14:51:35",
             "resource_uri": "/admin-api/listing/100/",
-            "publishable": "/admin-api/article/100/"
-            })
+            "publishable": "/admin-api/article/100/",
+        })
 
     def tearDown(self):
 

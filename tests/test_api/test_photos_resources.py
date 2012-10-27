@@ -149,6 +149,7 @@ class TestPhotosResources(TestCase):
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "description": "PATCHed (image data included).",
                         "image": "attached_object_id:" + os.path.basename(self.photo_filename),
+                        "app_data": None,
                     }
                 ]
             }),
