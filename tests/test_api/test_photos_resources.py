@@ -160,7 +160,7 @@ class TestPhotosResources(TestCase):
         image_path = os.path.join(settings.MEDIA_ROOT, resource['image'])
         uploaded_image = Image.open(image_path)
         image = Image.open(self.photo_filename)
-        image.rotate(-90)
+        image = image.rotate(-90)
         tools.assert_equals(image.tostring(), uploaded_image.tostring())
 
         self.__logout(headers)
