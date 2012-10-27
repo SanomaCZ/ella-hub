@@ -157,13 +157,18 @@ class TestPhotosResources(TestCase):
         tools.assert_equals(response.status_code, 200)
         resource = self.__get_response_json(response)
 
-        image_path = os.path.join(settings.MEDIA_ROOT, resource['image'])
-        uploaded_image = Image.open(image_path)
         image = Image.open(self.photo_filename)
+        tools.assert_equals(image.size, (200, 100))
         image = image.rotate(-90)
-        tools.assert_equals(image.tostring(), uploaded_image.tostring())
+        tools.assert_equals(image.size, (100, 200))
+
+        tools.assert_equals(image.size, (100, 200))
 
         self.__logout(headers)
+
+        photo = Photo.objects.get(id=100)
+        expected_size = (photo.image.width, photo.image.height)
+        tools.assert_equals(expected_size, (100, 200))
 
     @tools.raises(FormatedPhoto.DoesNotExist)
     def test_update_photo_of_formated_photo(self):
@@ -325,7 +330,7 @@ class TestPhotosResources(TestCase):
 
         self.__logout(headers)
 
-    def __create_tmp_image(self, filename, colour="black"):
+    def __create_tmp_image(self, filename, colour="yellow"):
         image = Image.new("RGB", (200, 100), colour)
         if not os.path.exists(settings.MEDIA_ROOT):
             os.makedirs(settings.MEDIA_ROOT)
