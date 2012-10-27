@@ -38,7 +38,7 @@ from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
-from ella_hub.utils.workflow import get_states
+from ella_hub.utils.workflow import get_user_states#get_states
 
 
 class HttpJsonResponse(HttpResponse):
@@ -281,18 +281,7 @@ class EllaHubApi(Api):
             mimetype=mimetypes.guess_type(formated_photo.image.url)[0])
 
     def __get_system_info(self, request):
-        """
-        Roles definition, publishable states, system resources.
-        """
         system_info = {}
-        system_info.update({"roles_definition":{}})
-
-        pub_states = {}
-        states = get_states(CommonArticle)
-
-        for state in states:
-            pub_states.update({state.codename: unicode(state.title)})
-        system_info.update({"publishable_states": pub_states})
 
         system_res_tree = {}
         allowed_system_resources = self.__get_allowed_system_resources(request.user)
@@ -348,7 +337,14 @@ class EllaHubApi(Api):
         res_model = res_obj._meta.object_class
 
         schema = self._registry[res_name].build_schema()
-        res_tree = {"allowed_http_methods":[], "fields":{}}
+        res_tree = {"allowed_http_methods": [], "fields": {}, "states": {}}
+
+        pub_states = {}
+        states = get_user_states(res_model, user)
+
+        for state in states:
+            pub_states.update({state.codename: unicode(state.title)})
+        res_tree.update({"states": pub_states})
 
         for fn, attrs in schema["fields"].items():
             field_attrs = {"readonly": False, "nullable": False}
