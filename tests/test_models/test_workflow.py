@@ -5,11 +5,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.utils.translation import ugettext_lazy as _
 
+from ella.core.models import Author
 from ella.utils import timezone
 
 from ella_hub.models import State, Transition, Workflow, Permission, Role, CommonArticle
 from ella_hub.models import (StatePermissionRelation, StateObjectRelation,
     WorkflowModelRelation, WorkflowPermissionRelation)
+from ella_hub.utils.workflow import get_workflow
 
 
 class TestWorkflowModels(TestCase):
@@ -39,6 +41,13 @@ class TestWorkflowModels(TestCase):
         Workflow.objects.all().delete()
 
     def test_to_string(self):
+        # workflow
+        tools.assert_equals(unicode(self.workflow), u"%s" % self.workflow.title)
+        self.workflow.initial_state = self.state
+        self.workflow.save()
+        tools.assert_equals(unicode(self.workflow),
+            u"%s : %s" % (self.workflow.title, self.workflow.initial_state.title))
+
         # state
         tools.assert_equals(unicode(self.state), u"%s (%d transitions)" % (
             self.state.title, self.state.transitions.count()))
@@ -76,3 +85,21 @@ class TestWorkflowModels(TestCase):
         # workflow_permission_relation
         tools.assert_equals(unicode(self.wpr), u"%s / %s" % (
             self.wpr.workflow.title, self.wpr.permission.title))
+
+    def test_workflow_initial_state(self):
+        tools.assert_equals(self.workflow.get_initial_state(), None)
+
+        self.state.workflow = self.workflow
+        self.state.save()
+        tools.assert_equals(self.workflow.get_initial_state(), self.state)
+
+        self.workflow.initial_state = self.state
+        self.workflow.save()
+        tools.assert_equals(self.workflow.get_initial_state(), self.state)
+
+    def test_set_workflow_existing_model_relation(self):
+        self.workflow.set_to_model(CommonArticle)
+        self.new_workflow = Workflow.objects.create(title="New Workflow", description="Test desc.")
+        self.new_workflow.set_to_model(CommonArticle)
+
+        tools.assert_equals(get_workflow(CommonArticle), self.new_workflow)
