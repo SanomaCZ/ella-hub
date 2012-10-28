@@ -185,10 +185,6 @@ def get_workflow(model):
         return relation.workflow
 
 
-def set_workflow(model, workflow):
-    return workflow.set_to_model(model)
-
-
 def update_permissions(model):
     """
     1. Remove all permissions for the workflow (from ModelPermission relation)
@@ -230,31 +226,6 @@ def get_state(obj):
         return None
     else:
         return relation.state
-
-
-def old_get_states(obj, workflow=None):
-    content_type = ContentType.objects.get_for_model(obj)
-    relations = StateObjectRelation.objects.filter(content_type=content_type)
-    states = [relation.state for relation in relations]
-
-    if workflow:
-        states = states.filter(workflow=workflow)
-
-    return states
-
-
-def get_states(model, workflow=None):
-    content_type = ContentType.objects.get_for_model(model)
-
-    if workflow:
-        workflows = [workflow]
-    else:
-        relations = WorkflowModelRelation.objects.filter(content_type=content_type)
-        workflows = [relation.workflow for relation in relations]
-
-    states = State.objects.filter(workflow__in=workflows)
-
-    return states
 
 
 def get_user_states(model, user, workflow=None):
