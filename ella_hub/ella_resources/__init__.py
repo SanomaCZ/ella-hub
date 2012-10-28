@@ -208,6 +208,12 @@ class PublishableResource(ApiModelResource):
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
 
+    def dehydrate(self, bundle):
+        bundle = super(PublishableResource, self).dehydrate(bundle)
+
+        bundle.data['url'] = bundle.obj.get_domain_url()
+        return bundle
+
     class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()
         filtering = {
@@ -224,12 +230,15 @@ class PublishableResource(ApiModelResource):
             'category': ALL_WITH_RELATIONS,
             'photo': ALL_WITH_RELATIONS,
         }
-
-    def dehydrate(self, bundle):
-        bundle = super(PublishableResource, self).dehydrate(bundle)
-
-        bundle.data['url'] = bundle.obj.get_domain_url()
-        return bundle
+        ordering = (
+            'id',
+            'slug',
+            'published',
+            'static',
+            'publish_from',
+            'publish_to',
+            'category',
+        )
 
 
 class ListingResource(ApiModelResource):

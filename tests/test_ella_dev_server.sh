@@ -38,13 +38,20 @@ if [ $test_schemas -eq 1 ];
 then
 	# Get top-level schema.
 	echo -n "Top level schema: "
-	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" $server/admin-api/article/ 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+	"$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "Ordered publishable: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+	"$server/admin-api/article/?order_by=-publish_from" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 	echo "-"
+
 	# Get schemas of resources defined in `resources` array.
 	for resource in "${resources[@]}"
 	do
 		echo -n "$resource schema: "
-		curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" $server/admin-api/$resource/schema/ 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+		curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+		$server/admin-api/$resource/schema/ 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 	done
 	echo "-"
 fi
