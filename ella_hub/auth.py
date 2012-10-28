@@ -9,7 +9,7 @@ from tastypie.models import ApiKey
 from ella.utils import timezone
 
 from ella_hub import utils
-from ella_hub.utils.perms import has_permission, has_model_permission, REST_PERMS
+from ella_hub.utils.perms import has_object_permission, has_model_permission, REST_PERMS
 
 
 API_KEY_EXPIRATION_IN_DAYS = 14
@@ -60,7 +60,7 @@ class ApiAuthorization(Authorization):
 
         allowed_ids = []
         for obj in object_list:
-            if has_permission(obj, request.user, REST_PERMS[self.request_method]):
+            if has_object_permission(obj, request.user, REST_PERMS[self.request_method]):
                 allowed_ids.append(obj.id)
 
         if self.request_method == "GET":
