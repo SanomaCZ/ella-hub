@@ -218,11 +218,11 @@ class PublishableResource(ApiModelResource):
         queryset = Publishable.objects.all()
         filtering = {
             'id': ALL,
-            'title': ('exact', 'iexact', 'contains', 'startswith', 'endswith',),
-            'slug': ('exact', 'iexact', 'contains', 'startswith', 'endswith',),
+            'title': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'slug': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
             'published': ALL,
             'static': ('exact',),
-            'description': ('contains', 'startswith', 'endswith',),
+            'description': ('contains', 'icontains', 'startswith', 'endswith',),
             'publish_from': ALL,
             'publish_to': ALL,
             'announced': ALL,
