@@ -11,13 +11,10 @@ from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub import utils
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
-from ella_hub.utils.workflow import get_states, get_user_states
+from ella_hub.utils.workflow import get_user_states
 
 
 class ApiModelResource(ModelResource):
-
-    #_patch = fields.BooleanField(attribute="PATCH", help_text="Can change resource.", default=True)
-    #_delete = fields.BooleanField(attribute="DELETE", help_text="Can delete resource.", default=True)
 
     @classmethod
     def get_fields(cls, fields=None, excludes=None):
@@ -138,13 +135,6 @@ class ApiModelResource(ModelResource):
     def __set_allowed_states(self, request, bundle):
         bundle.data["allowed_states"] = get_user_states(self._meta.object_class, request.user)
         return bundle
-
-    def __has_user_perm(self, user, content_type, permission, object):
-        if has_user_model_perm(user, content_type.model_class(), permission):
-            return True
-
-        permission_string = '%s_%s' % (permission, content_type.model)
-        return has_obj_perm(user, object, permission_string)
 
     def hydrate(self, bundle):
         """Fills user fields by current logged user."""
