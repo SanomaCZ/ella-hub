@@ -1,5 +1,6 @@
+from django.contrib.auth.models import User, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import AnonymousUser
+
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
 from ella_hub.models import StatePermissionRelation
 
@@ -11,6 +12,7 @@ REST_PERMS = {
     "PATCH":"can_change",
     "DELETE":"can_delete"
 }
+
 
 
 def has_model_permission(model, user, codename, roles=[]):
@@ -40,7 +42,7 @@ def has_model_permission(model, user, codename, roles=[]):
     return o_perms.exists()
 
 
-def has_permission(model_obj, user, codename, roles=None):
+def has_object_permission(model_obj, user, codename, roles=None):
     """
     Returns True if <user> has at least one of <roles> which
     has permission specified by <codename> for specified <model_obj>,
@@ -73,7 +75,6 @@ def has_permission(model_obj, user, codename, roles=None):
     if not o_perms.exists():
         return False
 
-    # ziskanie stavu
     state = ella_hub.utils.workflow.get_state(model_obj)
 
     try:
@@ -102,27 +103,56 @@ def grant_permission(model, role, permission):
     return True
 
 
-def get_roles(user):
-    if isinstance(user, AnonymousUser):
-        return []
+def add_role(principal, role):
+    if isinstance(principal, User):
+        try:
+            relation = PrincipalRoleRelation.objects.get(user=principal,
+                role=role, content_id=None, content_type=None)
+        except PrincipalRoleRelation.DoesNotExist:
+            PrincipalRoleRelation.objects.create(user=principal, role=role)
+            return True
+    else:
+        try:
+            relation = PrincipalRoleRelation.objects.get(group=principal,
+                role=role, content_id=None, content_type=None)
+        except PrincipalRoleRelation.DoesNotExist:
+            PrincipalRoleRelation.objects.create(group=principal, role=role)
+            return True
 
-    relations = PrincipalRoleRelation.objects.filter(user=user)
+
+def remove_role(principal, role):
+    try:
+        if isinstance(principal, User):
+            relation = PrincipalRoleRelation.objects.get(user=principal,
+                role=role, content_id=None, content_type=None)
+        else:
+            relation = PrincipalRoleRelation.objects.get(
+                group=principal, role=role, content_id=None, content_type=None)
+    except PrincipalRoleRelation.DoesNotExist:
+        return False
+    else:
+        relation.delete()
+    return True
+
+
+def remove_roles(principal):
+    if isinstance(principal, User):
+        relations = PrincipalRoleRelation.objects.filter(user=principal,
+            content_id=None, content_type=None)
+    else:
+        relations = PrincipalRoleRelation.objects.filter(group=principal,
+            content_id=None, content_type=None)
+    if relations:
+        relations.delete()
+        return True
+    else:
+        return False
+
+
+def get_roles(principal):
+    if isinstance(principal, User):
+        relations = PrincipalRoleRelation.objects.filter(user=principal)
+    else:
+        relations = PrincipalRoleRelation.objects.filter(group=principal)
     roles = [relation.role for relation in relations]
     return roles
-
-
-def is_resource_allowed(user, model_class):
-    """
-    Return True if user has rights to get schema
-    specified by `model_class`.
-    """
-    if isinstance(user, AnonymousUser):
-        return False
-
-    content_type = ContentType.objects.get_for_model(model_class)
-    try:
-        ModelPermission.objects.get(content_type=content_type,
-            role__in=get_roles(user), permission=REST_PERMS["GET"])
-    except ModelPermission.DoesNotExist:
-        return False
-    return True
