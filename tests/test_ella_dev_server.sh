@@ -12,7 +12,7 @@ test_schemas=1
 test_resource_lists=1
 test_core=1
 test_photos=1
-test_tags=0
+test_tags=1
 
 resources=( "article" "author" "category" "draft" "encyclopedia" "format" "formatedphoto" "gallery" "galleryitem" "listing" "photo" "publishable" "recipe" "site" "source" "user" "wikipage" )
 
@@ -299,16 +299,16 @@ fi
 if [ $test_tags -eq 1 ];
 then
 	# `Tag` resource creation.
-	echo -n "POST tag without description: "
+	echo -n "POST tag #100: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	-X POST --data '{
 		"id": 100,
 		"slug": "custom-100",
-		"name": "POST tag without description"
+		"name": "POST tag-100"
 	}' "$server/admin-api/tag/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# `Tag` resource creation.
-	echo -n "POST tag: "
+	echo -n "POST tag #101: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	-X POST --data '{
 		"id": 101,
@@ -351,13 +351,12 @@ then
 			{
 				"id": 102,
 				"slug": "art-102",
-				"name": "InArticle tag"
+				"name": "InArticle tag-102"
 			},
 			{
 				"id": 103,
 				"slug": "art-103",
-				"name": "InArticle tag",
-				"description": "This tag is my favourite :)"
+				"name": "My favourite tag-103"
 			}
 		]
 	}' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
@@ -376,8 +375,7 @@ then
 			{
 				"id": 105,
 				"slug": "art-105",
-				"name": "InArticle tag",
-				"description": "This tag is my 2nd favourite :)"
+				"name": "2nd favourite :)"
 			}
 		]
 	}' "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
@@ -385,6 +383,7 @@ then
 	echo -n "PATCH article with tags: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	-X PATCH --data '{
+		"app_data": null,
 		"tags": [{
 			"id": 106,
 			"slug": "art-106",

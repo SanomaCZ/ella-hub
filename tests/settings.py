@@ -144,10 +144,12 @@ INSTALLED_APPS = (
 # API resources
 RESOURCE_MODULES = (
     'ella_hub.ella_resources',
-    'ella_hub.extern_resources',
+    'ella_hub.extern_resources.ella_galleries_resources',
+    'ella_hub.extern_resources.ella_wikipages_resources',
+    'ella_hub.extern_resources.ella_taggit_resources',
 )
 
-# Needed by object_permissions app (django-object-permissions)
+# Needed by object_permissions app
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
