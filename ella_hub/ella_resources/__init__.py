@@ -40,16 +40,15 @@ class CategoryResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Category.objects.all()
         filtering = {
-            'app_data': ('exact',),
-            'content': ('exact',),
-            'description': ('exact',),
             'id': ALL,
             'resource_uri': ('exact',),
+            'slug': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'title': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'description': ('contains', 'icontains', 'startswith', 'endswith',),
+            'content': ('contains', 'icontains', 'startswith', 'endswith',),
+            'tree_path': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'tree_parent': ALL_WITH_RELATIONS,
             'site': ALL_WITH_RELATIONS,
-            'slug': ('exact',),
-            'template': ('exact',),
-            'title': ('exact',),
-            'tree_path': ('exact',),
         }
         public = False
 
@@ -59,7 +58,11 @@ class UserResource(ApiModelResource):
         queryset = User.objects.all()
         fields = ('id', 'first_name', 'last_name', 'username')
         filtering = {
-            'username': ('exact',),
+            'id': ALL,
+            'resource_uri': ('exact',),
+            'first_name': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'last_name': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'username': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
         }
         public = False
 
@@ -71,13 +74,15 @@ class AuthorResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
         filtering = {
-            'description': ('exact',),
-            'email': ('exact',),
             'id': ALL,
-            'name': ('exact',),
             'resource_uri': ('exact',),
-            'slug': ('exact',),
-            'text': ('exact',),
+            'user': ALL_WITH_RELATIONS,
+            'name': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'slug': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'description': ('contains', 'icontains', 'startswith', 'endswith',),
+            'text': ('contains', 'icontains', 'startswith', 'endswith',),
+            'email': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'photo': ALL_WITH_RELATIONS,
         }
         public = False
 
