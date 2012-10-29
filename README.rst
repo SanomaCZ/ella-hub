@@ -68,6 +68,7 @@ Setting up
 3. route resource URLs in *urls.py*
 
 ::
+
     # admin API setup
     from ella_hub.api import EllaHubApi
     from ella_hub.utils.workflow import init_ella_workflow
