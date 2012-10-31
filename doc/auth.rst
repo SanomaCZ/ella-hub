@@ -10,7 +10,7 @@ Authentication
 --------------
 
 Ella-hub authentication uses ``tastypie.ApiKeyAuthentication`` class, so ``api_key`` is generated (if username and password are correct) after login request and sent to client in login response. After user is logged in,
-resource requests need ``"Authorization: ApiKey username:api_key"`` header specified. 
+resource requests need ``"Authorization: ApiKey username:api_key"`` header specified.
 
 -------------
 Authorization
@@ -21,27 +21,31 @@ Ella-hub authorization uses subclassed ``tastypie.Authorization``, it overrides 
 
 Login response content
 ----------------------
-After login request is sent and requesting user is authenticated, login response is sent with specified content format. All necessary resources definitions are sent to user with all attributes. If user don't have rights to see resource attribute, ``disabled`` flag is set to ``true``.
-Object-level permissions are implemented too. Every resource has ``_patch`` and ``_delete`` boolean attributes.
+After login request is sent and requesting user is authenticated, login response is acquired with specified content format. All necessary resources definitions are sent to user with all attributes. If user doesn't have rights to see resource attribute, ``disabled`` flag is set to ``true``.
+
+.. Object-level permissions are implemented too. Every resource has ``_patch`` and ``_delete`` boolean attributes.
 
 Login response content format:
 ::
 
   {
-    "api_key": "...", 
-    "auth_tree": 
+    "api_key": "...",
+    "auth_tree":
       {
-        "resource_name": 
+        "resource_name":
           {
             "allowed_http_methods":["get", "post", "put", "delete", "patch"],
+            "states":
+              {
+                "added": "Added",
+                ...
+              }
             "fields":
                {
                 "attr1":
                   {
                     "nullable":boolean, "readonly":boolean, "disabled":boolean
                   },
-                "_patch": {...},
-                "_delete":{...}
               }
           }
         "articles":
@@ -50,25 +54,22 @@ Login response content format:
               {...}
           }
       },
-    "system": 
+    "system":
       {
         "resources":
           {
             "resource_name":
               {...}
           }
-        "roles_definition":{},
-        "publishable_states":
+        "states":
           {
             "added": "Added",
-            "ready": "Ready",
-            "approved": "Approved",
-            "published": "Published",
-            "postponed": "Postponed",
-            "deleted": "Deleted"
+            ...
           }
       }
   }
+
+*Note: "states" field is specified only if at least one state exists.*
 
 Current superuser login response content:
 
@@ -86,35 +87,32 @@ Current superuser login response content:
             "delete",
             "patch"
           ],
-          "fields": {...}
+          "fields": {...},
+          "states": {...}
         },
         "encyclopedia": {
           "allowed_http_methods": [...],
-          "fields": {...}
+          "fields": {...},
+          "states": {...}
         },
         "pagedarticle": {
           "allowed_http_methods": [...],
-          "fields": {...}
+          "fields": {...},
+          "states": {...}
         },
         "recipe": {
           "allowed_http_methods": [...],
-          "fields": {...}
+          "fields": {...},
+          "states": {...}
         }
       },
       "photo": {
         "allowed_http_methods": [...],
-        "fields": {...}
+        "fields": {...},
+        "states": {...}
       }
     },
     "system": {
-      "publishable_states": {
-        "added": "Added",
-        "approved": "Approved",
-        "deleted": "Deleted",
-        "postponed": "Postponed",
-        "published": "Published",
-        "ready": "Ready"
-      },
       "resources": {
         "author": {
           "allowed_http_methods": [...],
@@ -137,7 +135,5 @@ Current superuser login response content:
           "fields": {...}
         }
       },
-      "roles_definition": {}
     }
   }
-
