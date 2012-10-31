@@ -76,6 +76,29 @@ class TestLoginResponse(TestCase):
 
         self.__logout(headers)
 
+    def test_state_included(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        self.workflow.set_to_model(Author)
+        set_state(self.author, self.state1)
+
+        author_patch = json.dumps({
+            "state": self.state2.codename
+        })
+        response = self.client.patch("/admin-api/author/100/", data=author_patch,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 202)
+
+        response = self.client.get("/admin-api/author/100/", **headers)
+        tools.assert_equals(response.status_code, 200)
+        resource = self.__get_response_json(response)
+        tools.assert_in("state", resource)
+        tools.assert_equals(resource["state"], self.state2.codename)
+
+
+        self.__logout(headers)
+
     def test_set_state_via_api(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
