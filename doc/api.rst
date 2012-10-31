@@ -130,6 +130,16 @@ Logout
 
 
 
+Object State Switching
+======================
+All possible states object (article, photo etc.) can be switched to (with respect
+to used workflow), are accessible via "states" resource field.
+When creating new object in admin, "states" sent in login response content for particular
+resource should be used. These "states" are states object can switch to from initial state.
+Object state can be switched simply setting "state" resource field to state codename in POST/PUT/PATCH request.
+
+
+
 Generic API for all resources
 =============================
 

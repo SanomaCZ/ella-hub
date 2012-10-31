@@ -30,6 +30,9 @@ Class diagram
 
 Workflow models
 ===============
+``Workflow`` is made of directed graph, nodes are modelled by ``State`` instances
+and edges are modelled by ``Transition`` instances.
+
 
 **Workflow** model - Workflow instance can be added to any model:
 
@@ -41,14 +44,14 @@ Workflow models
     wf.set_to_model(CommonArticle)
 
 
-**State** model - State instance can be added to more workflow instances:
+**State** model
 
  ::
 
     state = State("Epic out-of-space state")
     state.workflow = workflow
 
-**Transition** model - transitions are connections between nodes(states), you can add more transitions to one state ofc.:
+**Transition** model - transitions are connections between nodes (states), you can add more transitions to one state ofc.:
 
  ::
 
@@ -84,20 +87,21 @@ can in state "Corrected" publish an article (has "can_publish" permission):
     can_publish = Permission(titile="Can publish", codename="can_publish")
     editor_in_chief = Role(title="Editor in chief")
 
-    spr = StatePermissionRelation(state=corr_state, permission=can_publish, role=editor_in_chief)
+    relation = StatePermissionRelation(state=corr_state, permission=can_publish, role=editor_in_chief)
 
 
 
-*StateModelRelation* - is mapping a given state to a given model content_type:
+*StateObjectRelation* - is mapping a given state to a given model object:
 
  ::
 
-    from ella_hub.models import State, StateModelRelation, CommonArticle
+    from ella_hub.models import State, StateObjectRelation, CommonArticle
     from django.contrib.contenttypes.models import ContentType
 
     state = State(title="Some state")
     ct = ContentType.objects.get_for_model(CommonArticle)
-    smr = StateModelRelation(state=state, content_type=ct)
+    article = CommonArticle(title="Awesome article", ...)
+    relation = StateObjectRelation(state=state, content_type=ct, content_id=article.id)
 
 
 *WorkflowPermissionRelation* - is mapping a given permission to a given workflow, permissions
@@ -110,7 +114,7 @@ system independency.
 
     wf = Workflow(title="Epic workflow")
     can_publish = Permission(title="Can publish", codename="can_publish")
-    wpr = WorkflowPermissionRelation(permission=can_publish, workflow=wf)
+    relation = WorkflowPermissionRelation(permission=can_publish, workflow=wf)
 
 
 
@@ -158,9 +162,9 @@ Permission models
     from django.contrib.auth.models import User, Group
 
     editor = Role(title="Editor")
-    nixxon = User(username="richy_nixxon")
-    prr = PrincipalRoleRelation(role=editor)
-    prr.set_principal(nixxon)
+    userko = User(username="Userko")
+    relation = PrincipalRoleRelation(role=editor)
+    relation.set_principal(userko)
 
 
 -------------
@@ -168,7 +172,7 @@ Ella workflow
 -------------
 
 
-Publishable States
+States
 ==================
 
 * added - Added/Vložen
@@ -179,9 +183,6 @@ Publishable States
 * deleted - Deleted/Smazán
 
 
-Roles definition
-================
-* editor in chief
-* editor
-* photographer
-* ...
+Testing Ella-workflow implementation
+====================================
+*TODO*
