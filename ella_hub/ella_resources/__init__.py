@@ -244,6 +244,7 @@ class PublishableResource(ApiModelResource):
             'publish_to',
             'category',
         )
+        public = False
 
 
 class ListingResource(ApiModelResource):
@@ -261,6 +262,7 @@ class ListingResource(ApiModelResource):
             'publishable': ALL_WITH_RELATIONS,
             'resource_uri': ('exact',),
         }
+        public = False
 
 
 class DraftResource(ApiModelResource):

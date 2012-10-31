@@ -282,8 +282,8 @@ class EllaHubApi(Api):
         system_info = {}
 
         system_res_tree = {}
-        allowed_system_resources = self.__get_allowed_system_resources(request.user)
-        for res_obj in allowed_system_resources:
+        allowed_private_resources = self.__get_allowed_private_resources(request.user)
+        for res_obj in allowed_private_resources:
             system_res_tree.update({
                 res_obj._meta.resource_name: self.__create_resource_tree(res_obj, request.user)
             })
@@ -325,24 +325,25 @@ class EllaHubApi(Api):
             if getattr(res_obj._meta, "public", False)]
         return allowed_public_resources
 
-    def __get_allowed_system_resources(self, user):
-        allowed_system_resources = [res_obj for res_name, res_obj in self._registry.items()
-            if getattr(res_obj._meta, "public", True)]
-        return allowed_system_resources
+    def __get_allowed_private_resources(self, user):
+        allowed_private_resources = [res_obj for res_name, res_obj in self._registry.items()
+            if not getattr(res_obj._meta, "public", False)]
+        return allowed_private_resources
 
     def __create_resource_tree(self, res_obj, user):
         res_name = res_obj._meta.resource_name
         res_model = res_obj._meta.object_class
 
         schema = self._registry[res_name].build_schema()
-        res_tree = {"allowed_http_methods": [], "fields": {}, "states": {}}
+        res_tree = {"allowed_http_methods": [], "fields": {}}
 
         pub_states = {}
         states = get_user_states(res_model, user)
 
-        for state in states:
-            pub_states.update({state.codename: unicode(state.title)})
-        res_tree.update({"states": pub_states})
+        if states:
+            for state in states:
+                pub_states.update({state.codename: unicode(state.title)})
+            res_tree.update({"states": pub_states})
 
         for fn, attrs in schema["fields"].items():
             field_attrs = {"readonly": False, "nullable": False}
