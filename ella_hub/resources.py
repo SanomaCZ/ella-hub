@@ -11,7 +11,7 @@ from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub import utils
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
-from ella_hub.utils.workflow import get_user_states, set_state
+from ella_hub.utils.workflow import set_state, get_state
 
 
 class ApiModelResource(ModelResource):
@@ -133,7 +133,15 @@ class ApiModelResource(ModelResource):
         return self.__set_allowed_states(request, bundle)
 
     def __set_allowed_states(self, request, bundle):
-        bundle.data["allowed_states"] = get_user_states(self._meta.object_class, request.user)
+        state = get_state(bundle.obj)
+        next_states = []
+
+        if state:
+            next_states = [trans.destination for trans in state.transitions.all()]
+
+        bundle.data["allowed_states"] = dict(
+            [(state.codename, state.title) for state in next_states]
+        )
         return bundle
 
     def hydrate(self, bundle):

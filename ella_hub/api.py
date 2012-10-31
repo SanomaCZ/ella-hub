@@ -34,7 +34,7 @@ from ella_hub import utils, views
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
-from ella_hub.utils.workflow import get_user_states
+from ella_hub.utils.workflow import get_init_states
 
 
 class HttpJsonResponse(HttpResponse):
@@ -338,7 +338,7 @@ class EllaHubApi(Api):
         res_tree = {"allowed_http_methods": [], "fields": {}}
 
         pub_states = {}
-        states = get_user_states(res_model, user)
+        states = get_init_states(res_model, user)
 
         if states:
             for state in states:

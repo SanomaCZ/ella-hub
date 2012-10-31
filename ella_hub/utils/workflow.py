@@ -235,7 +235,7 @@ def get_state(obj):
         return relation.state
 
 
-def get_user_states(model, user, workflow=None):
+def get_init_states(model, user, workflow=None):
     content_type = ContentType.objects.get_for_model(model)
     init_state = []
 
@@ -247,8 +247,11 @@ def get_user_states(model, user, workflow=None):
         except WorkflowModelRelation.DoesNotExist:
             return []
 
-    relations = PrincipalRoleRelation.objects.filter(user=user)
-    roles = [relation.role for relation in relations]
+    if user.is_superuser:
+        roles = [relation.role for relation in PrincipalRoleRelation.objects.all()]
+    else:
+        relations = PrincipalRoleRelation.objects.filter(user=user)
+        roles = [relation.role for relation in relations]
 
     relations = ModelPermission.objects.filter(content_type=content_type,
         role__in=roles)
