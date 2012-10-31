@@ -81,7 +81,7 @@ class State(models.Model):
         blank=True, null=True)
 
     def __unicode__(self):
-        return u"%s (%d transitions)" % (self.title, self.transitions.count())
+        return u"%s" % self.title
 
     class Meta:
         app_label = "ella_hub"

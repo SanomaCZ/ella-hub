@@ -34,7 +34,7 @@ from ella_hub import utils, views
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
-from ella_hub.utils.workflow import get_user_states#get_states
+from ella_hub.utils.workflow import get_user_states
 
 
 class HttpJsonResponse(HttpResponse):

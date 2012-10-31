@@ -20,6 +20,8 @@ def create_basic_workflow(case):
     case.state3 = State.objects.create(title="State 3", codename="state_3",
         workflow=case.workflow)
 
+    case.workflow.initial_state = case.state1
+
     case.to_state2 = Transition.objects.create(title="to state 2",
         workflow=case.workflow, destination=case.state2)
     case.to_state3 = Transition.objects.create(title="to state 3",
@@ -79,11 +81,13 @@ def create_basic_workflow(case):
     StatePermissionRelation.objects.create(state=case.state3,
         permission=case.can_add, role=case.test_role)
 
-    #case.addCleanup(Workflow.objects.clear_cache)
-    #case.addCleanup(State.objects.clear_cache)
-    #case.addCleanup(Transition.objects.clear_cache)
-    #case.addCleanup(Permission.objects.clear_cache)
-    #case.addCleanup(Role.objects.clear_cache)
-    #case.addCleanup(ModelPermission.objects.clear_cache)
-    #case.addCleanup(WorkflowPermissionRelation.objects.clear_cache)
-    #case.addCleanup(StatePermissionRelation.objects.clear_cache)
+
+def delete_basic_workflow(case):
+    Workflow.objects.all().delete()
+    State.objects.all().delete()
+    Transition.objects.all().delete()
+    Permission.objects.all().delete()
+    Role.objects.all().delete()
+    ModelPermission.objects.all().delete()
+    WorkflowPermissionRelation.objects.all().delete()
+    StatePermissionRelation.objects.all().delete()

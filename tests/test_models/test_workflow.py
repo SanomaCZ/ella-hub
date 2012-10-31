@@ -49,16 +49,14 @@ class TestWorkflowModels(TestCase):
             u"%s : %s" % (self.workflow.title, self.workflow.initial_state.title))
 
         # state
-        tools.assert_equals(unicode(self.state), u"%s (%d transitions)" % (
-            self.state.title, self.state.transitions.count()))
+        tools.assert_equals(unicode(self.state), u"%s" % self.state.title)
 
         self.state.title = u"Someľčť titleščľ"
         self.state.transitions.add(Transition.objects.create(title="Transition to hell",
             workflow=self.workflow, destination=self.state))
         self.state.save()
 
-        tools.assert_equals(unicode(self.state), u"%s (%d transitions)" % (
-            self.state.title, self.state.transitions.count()))
+        tools.assert_equals(unicode(self.state), u"%s" % self.state.title)
 
         # transition
         tools.assert_equals(unicode(self.transition), u"%s (-> %s)" % (
