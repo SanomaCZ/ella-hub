@@ -37,11 +37,44 @@ class TestLoginResponse(TestCase):
         self.user = self.__create_test_user("user", "pass", True)
         self.client = PatchClient()
         create_basic_workflow(self)
-        self.author = Author.objects.create(id=100, name="Test author")
+        self.author = Author.objects.create(id=100, name="Test author",
+            slug="1st")
+        self.author_two = Author.objects.create(id=101, name="2nd author",
+            slug="2nd")
 
     def tearDown(self):
         self.user.delete()
         self.author.delete()
+
+    def test_set_state_of_two_models(self):
+        """
+        This shoudn't failed with `MultipleObjectsReturned`.
+        """
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        self.workflow.set_to_model(Author)
+        set_state(self.author, self.state1)
+        set_state(self.author_two, self.state1)
+
+        author_patch = json.dumps({
+            "state": self.state2.codename
+        })
+
+        response = self.client.patch("/admin-api/author/100/", data=author_patch,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 202)
+        tools.assert_equals(get_state(self.author), self.state2)
+
+        response = self.client.patch("/admin-api/author/101/", data=author_patch,
+            content_type='application/json', **headers)
+        tools.assert_equals(response.status_code, 202)
+        tools.assert_equals(get_state(self.author_two), self.state2)
+
+        response = self.client.get("/admin-api/author/", **headers)
+        tools.assert_equals(response.status_code, 200)
+
+        self.__logout(headers)
 
     def test_set_state_via_api(self):
         api_key = self.__login("user", "pass")

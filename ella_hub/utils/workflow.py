@@ -216,7 +216,7 @@ def set_state(obj, state):
         relation = StateObjectRelation.objects.get(content_type=content_type,
             content_id=obj.id)
     except StateObjectRelation.DoesNotExist:
-        relation = StateObjectRelation.objects.create(content=obj,
+        relation = StateObjectRelation.objects.create(content_object=obj,
             state=state)
     else:
         relation.state = state
@@ -228,7 +228,8 @@ def set_state(obj, state):
 def get_state(obj):
     content_type = ContentType.objects.get_for_model(obj)
     try:
-        relation = StateObjectRelation.objects.get(content_type=content_type)
+        relation = StateObjectRelation.objects.get(content_id=obj.pk,
+            content_type=content_type)
     except StateObjectRelation.DoesNotExist:
         return None
     else:

@@ -88,7 +88,7 @@ class StateObjectRelation(models.Model):
     content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"),
         related_name="state_object", blank=True, null=True)
     content_id = models.PositiveIntegerField(_("Content id"), blank=True, null=True)
-    content = generic.GenericForeignKey(ct_field="content_type", fk_field="content_id")
+    content_object = generic.GenericForeignKey("content_type", "content_id")
     state = models.ForeignKey(State, verbose_name = _("State"))
 
     def __unicode__(self):
