@@ -205,6 +205,12 @@ def update_permissions(model):
 
 
 def set_state(obj, state):
+    if not isinstance(state, State):
+        try:
+            state = State.objects.get(codename=state)
+        except State.DoesNotExist:
+            return False
+
     content_type = ContentType.objects.get_for_model(obj)
     try:
         relation = StateObjectRelation.objects.get(content_type=content_type,
@@ -216,6 +222,7 @@ def set_state(obj, state):
         relation.state = state
         relation.save()
     update_permissions(obj)
+    return True
 
 
 def get_state(obj):

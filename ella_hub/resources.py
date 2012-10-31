@@ -11,7 +11,7 @@ from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub import utils
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
-from ella_hub.utils.workflow import get_user_states
+from ella_hub.utils.workflow import get_user_states, set_state
 
 
 class ApiModelResource(ModelResource):
@@ -140,6 +140,9 @@ class ApiModelResource(ModelResource):
         """Fills user fields by current logged user."""
         for field_name in getattr(self._meta, "user_fields", ()):
             setattr(bundle.obj, field_name, bundle.request.user)
+
+        if "state" in bundle.data:
+            set_state(bundle.obj, bundle.data["state"])
 
         return bundle
 
