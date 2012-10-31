@@ -7,28 +7,6 @@ from django.contrib.auth.models import User
 from ella_hub.models.permissions import Permission, Role
 
 
-"""
-Workflow models:
-
-'Workflow'
-'State'
-'Transition'
-'StatePermissionRelation'
-'StateObjectRelation'
-'WorkflowModelRelation'
-'WorkflowPermissionRelation'
-
-Idea:
-'Workflow' instance can be set to any model.
-'Workflow' is made of directed graph, nodes are modelled by 'State' instances
-and edges are modelled by 'Transition' instances
-'Workflow' instance is defined by permissions (WorkflowPermissionRelation),
-and states.
-
-State permissions for a role are specified in 'StateObjectRelation'.
-"""
-
-
 class Workflow(models.Model):
 
     title = models.CharField(_("Title"), max_length=128, blank=False, unique=True)

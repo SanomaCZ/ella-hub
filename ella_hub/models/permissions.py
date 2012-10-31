@@ -5,20 +5,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
 
-"""
-Simple permission system.
-
-Status: only model-level permissions, proper tests needed.
-TODO: object level permissions
-
-Defined models:
-'Permission'
-'ModelPermission'
-'PrincipalRoleRelation'
-'Role'
-"""
-
-
 class Permission(models.Model):
     """
     <content_types> - models that have actual permission
