@@ -33,8 +33,8 @@ from ella_hub.models import PublishableLock, CommonArticle
 from ella_hub import utils, views
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
-from ella_hub.utils.perms import has_model_permission, REST_PERMS
-from ella_hub.utils.workflow import get_init_states
+from ella_hub.utils.perms import has_model_state_permission, has_model_permission, REST_PERMS
+from ella_hub.utils.workflow import get_init_states, get_workflow
 
 
 class HttpJsonResponse(HttpResponse):
@@ -345,17 +345,23 @@ class EllaHubApi(Api):
                 pub_states.update({state.codename: unicode(state.title)})
             res_tree.update({"states": pub_states})
 
+        init_state = None
+        workflow = get_workflow(res_model)
+
+        if workflow:
+            init_state = workflow.get_initial_state()
+
         for fn, attrs in schema["fields"].items():
             field_attrs = {"readonly": False, "nullable": False}
 
             if (not has_model_permission(res_model, user, "can_change") or
-                has_model_permission(res_model, user, "readonly_" + fn)):
+                has_model_state_permission(res_model, user, "readonly_" + fn, init_state)):
                 field_attrs["readonly"] = True
             else:
                 field_attrs["readonly"] = attrs["readonly"]
             field_attrs["nullable"] = attrs["nullable"]
 
-            if has_model_permission(res_model, user, "disabled_" + fn):
+            if has_model_state_permission(res_model, user, "disabled_" + fn, init_state):
                 field_attrs["disabled"] = True
             else:
                 field_attrs["disabled"] = False
