@@ -10,7 +10,7 @@ from django.utils import simplejson
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub import utils
-from ella_hub.utils.perms import has_model_permission, REST_PERMS
+from ella_hub.utils.perms import has_model_permission, has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
 
 
@@ -145,6 +145,38 @@ class ApiModelResource(ModelResource):
         bundle.data["allowed_states"] = dict(
             [(state.codename, state.title) for state in next_states]
         )
+        return bundle
+
+    def dehydrate(self, bundle):
+        res_model = bundle.obj.__class__
+        user = bundle.request.user
+        obj_state = get_state(bundle.obj)
+
+        read_only_fields = []
+        allowed_methods = []
+
+        # filter fields according to actual permissions/restrictions
+        all_fields_names = bundle.obj._meta.get_all_field_names()
+        for field_name in all_fields_names:
+            if has_model_state_permission(res_model, user,
+                "disabled_" + field_name, obj_state):
+                del bundle.data[field_name]
+
+            if (not has_model_permission(res_model, user, "can_change") or
+                has_model_state_permission(res_model, user,
+                    "readonly_" + field_name, obj_state)):
+                    read_only_fields.append(field_name)
+
+        bundle.data["read_only_fields"] = read_only_fields
+
+        # set allowed_http_methods also
+        for request_str, perm_str in REST_PERMS.items():
+            if has_model_state_permission(res_model, user,
+                REST_PERMS[request_str], obj_state):
+                allowed_methods.append(request_str.lower())
+
+        bundle.data['allowed_http_methods'] = allowed_methods
+
         return bundle
 
     def hydrate(self, bundle):
