@@ -96,6 +96,8 @@ class TestLoginResponse(TestCase):
         tools.assert_in("state", resource)
         tools.assert_equals(resource["state"], self.state2.codename)
 
+        tools.assert_in("allowed_states", resource)
+        tools.assert_in(self.state3.codename, resource["allowed_states"])
 
         self.__logout(headers)
 
