@@ -2,7 +2,7 @@ from django.contrib.auth.models import User, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
-from ella_hub.models import StatePermissionRelation
+from ella_hub.models import StatePermissionRelation, State
 
 
 REST_PERMS = {
@@ -13,6 +13,52 @@ REST_PERMS = {
     "DELETE":"can_delete"
 }
 
+
+def has_model_state_permission(model, user, perm_codename, state_codename=None, roles=[]):
+    """
+    """
+    if isinstance(user, AnonymousUser):
+        return False
+
+    import ella_hub.utils.workflow
+
+    workflow = ella_hub.utils.workflow.get_workflow(model)
+    if not workflow:
+        return False
+
+    try:
+        state = State.objects.get(codename=state_codename)
+    except State.DoesNotExist:
+        return False
+
+    # state belongs to workflow?
+    if state.workflow != workflow:
+        return False
+
+    ct = ContentType.objects.get_for_model(model)
+
+    # Checking if specified <perm_codename> Permission exists.
+    try:
+        perm = Permission.objects.get(codename=perm_codename)
+    except Permission.DoesNotExist:
+        return False
+
+    if user.is_superuser and not perm.restriction:
+        return True
+
+
+    if not roles:
+        relations = PrincipalRoleRelation.objects.filter(user=user)
+        roles = [relation.role for relation in relations]
+
+    perms = ModelPermission.objects.filter(role__in=roles,
+        content_type=ct, permission=perm)
+
+    if state:
+        perms = StatePermissionRelation.objects.filter(state=state,
+            permission__in=perms, role__in=roles)
+
+    return perms.exists()
 
 
 def has_model_permission(model, user, codename, roles=[]):
@@ -53,8 +99,6 @@ def has_object_permission(model_obj, user, codename, roles=None):
     if isinstance(user, AnonymousUser):
         return False
 
-    import ella_hub.utils.workflow
-
     ct = ContentType.objects.get_for_model(model_obj)
     # Checking if specified <codename> Permission exists.
     try:
@@ -74,6 +118,8 @@ def has_object_permission(model_obj, user, codename, roles=None):
 
     if not o_perms.exists():
         return False
+
+    import ella_hub.utils.workflow
 
     state = ella_hub.utils.workflow.get_state(model_obj)
 
