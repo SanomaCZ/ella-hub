@@ -1,5 +1,4 @@
 import datetime
-import mimetypes
 import ella_hub.signals
 import ella_hub.resources
 
@@ -11,8 +10,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.http import (HttpResponse, HttpResponseRedirect,
-    HttpResponseForbidden, HttpResponseNotAllowed)
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.utils.importlib import import_module
 from django.views.decorators.csrf import csrf_exempt
 
@@ -26,7 +24,6 @@ from tastypie.utils import is_valid_jsonp_callback_value
 from tastypie.utils.mime import determine_format, build_content_type
 
 from ella.core.models import Publishable
-from ella.photos.models import Photo, FormatedPhoto
 from ella.utils import timezone
 
 from ella_hub.models import PublishableLock, CommonArticle
@@ -155,9 +152,6 @@ class EllaHubApi(Api):
             url(r"^%s/unlock-publishable/(?P<id>\d+)/$" % self.api_name, self.wrap_view('unlock_publishable')),
             url(r"^%s/is-publishable-locked/(?P<id>\d+)/$" % self.api_name, self.wrap_view('is_publishable_locked')),
 
-            url(r"^%s/photo/download/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_photo')),
-            url(r"^%s/formatedphoto/download/(?P<id>\d+)/$" % self.api_name, self.wrap_view('download_formatedphoto')),
-
             url(r"^%s/login/$" % self.api_name, self.wrap_view('login_view')),
             url(r"^%s/logout/$" % self.api_name, self.wrap_view('logout_view')),
             url(r"^%s/validate-api-key/$" % self.api_name, self.wrap_view('validate_api_key_view')),
@@ -280,32 +274,6 @@ class EllaHubApi(Api):
             })
 
         return HttpJsonResponse(payload, status=202)
-
-    def download_photo(self, request, id):
-        if request.user.is_anonymous():
-            return HttpUnauthorized()
-
-        if request.method != 'GET':
-            return HttpResponseNotAllowed(['GET'])
-
-        photo = Photo.objects.get(id=id)
-        image_data = photo.image.read()
-
-        return HttpResponse(image_data,
-            mimetype=mimetypes.guess_type(photo.image.url)[0])
-
-    def download_formatedphoto(self, request, id):
-        if request.user.is_anonymous():
-            return HttpUnauthorized()
-
-        if request.method != 'GET':
-            return HttpResponseNotAllowed(['GET'])
-
-        formated_photo = FormatedPhoto.objects.get(id=id)
-        image_data = formated_photo.image.read()
-
-        return HttpResponse(image_data,
-            mimetype=mimetypes.guess_type(formated_photo.image.url)[0])
 
     def __get_system_info(self, request):
         system_info = {}
