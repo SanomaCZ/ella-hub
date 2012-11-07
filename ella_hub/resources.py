@@ -3,6 +3,7 @@ import re
 from tastypie import fields
 from tastypie.resources import ModelResource
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse, HttpResponseForbidden
 from django.utils import simplejson
@@ -115,6 +116,33 @@ class ApiModelResource(ModelResource):
         schema['allowed_list_http_methods'] = allowed_methods
 
         return self.create_response(request, schema)
+
+    def get_multiple(self, request, **kwargs):
+        """
+        Returns only serialized list of resources based on the identifiers
+        from the URL. Tastypie's version returns some useless metadata.
+        """
+        self.method_check(request, allowed=['get'])
+        self.is_authenticated(request)
+        self.throttle_check(request)
+
+        # Rip apart the list then iterate.
+        kwarg_name = '%s_list' % self._meta.detail_uri_name
+        obj_identifiers = kwargs.get(kwarg_name, '').split(';')
+        objects = []
+
+
+        for identifier in obj_identifiers:
+            try:
+                obj = self.obj_get(request, **{self._meta.detail_uri_name: identifier})
+                bundle = self.build_bundle(obj=obj, request=request)
+                bundle = self.full_dehydrate(bundle)
+                objects.append(bundle)
+            except ObjectDoesNotExist:
+                pass
+
+        self.log_throttled_access(request)
+        return self.create_response(request, objects)
 
     def alter_list_data_to_serialize(self, request, bundle):
         """
