@@ -13,6 +13,10 @@ def save_registered_resource(resource):
     __REGISTERED_RESOURCES[resource._meta.resource_name] = resource
 
 
+def get_resource_by_name(resource_name):
+    return __REGISTERED_RESOURCES[resource_name]
+
+
 def get_content_type_for_resource(resource_name):
     resource = __REGISTERED_RESOURCES[resource_name]
     return ContentType.objects.get_for_model(resource._meta.object_class)
