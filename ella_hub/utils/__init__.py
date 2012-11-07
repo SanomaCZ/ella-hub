@@ -21,10 +21,12 @@ def get_content_type_for_resource(resource_name):
     resource = __REGISTERED_RESOURCES[resource_name]
     return ContentType.objects.get_for_model(resource._meta.object_class)
 
+
 def get_resource_model(resource_name):
     """Returns DB model for give resource name."""
     resource = __REGISTERED_RESOURCES[resource_name]
     return resource._meta.object_class
+
 
 def get_all_resource_content_types():
     return tuple(ContentType.objects.get_for_model(r._meta.object_class)
