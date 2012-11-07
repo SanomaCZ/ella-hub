@@ -151,6 +151,21 @@ class TestGetResources(TestCase):
 
         self.__logout(headers)
 
+    def test_category_full_title(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        url = "/admin-api/category/%d/" % self.category_nested.id
+        response = self.client.get(url, **headers)
+        tools.assert_equals(response.status_code, 200)
+        resource = self.__get_response_json(response)
+
+        tools.assert_in("full_title", resource)
+        expected_title = u"%s > %s" % (self.category.title, self.category_nested.title)
+        tools.assert_equals(resource["full_title"], expected_title)
+
+        self.__logout(headers)
+
     def __login(self, username, password):
         response = self.client.post('/admin-api/login/', data={"username": username, "password": password})
         tools.assert_equals(response.status_code, 200)

@@ -37,6 +37,24 @@ class CategoryResource(ApiModelResource):
         blank=True, null=True)
     site = fields.ForeignKey(SiteResource, 'site', full=True)
 
+    def dehydrate(self, bundle):
+        """Adds full name of category to the root category."""
+        bundle = super(CategoryResource, self).dehydrate(bundle)
+
+        bundle.data['full_title'] = self._get_full_title(bundle.obj)
+
+        return bundle
+
+    def _get_full_title(self, category):
+        titles = [category.title]
+
+        while category.tree_parent is not None:
+            category = category.tree_parent
+            titles.append(category.title)
+
+        titles.reverse()
+        return " > ".join(titles)
+
     class Meta(ApiModelResource.Meta):
         queryset = Category.objects.all()
         filtering = {
