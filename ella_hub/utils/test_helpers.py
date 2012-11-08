@@ -10,6 +10,7 @@ from ella_hub.models import WorkflowPermissionRelation, StatePermissionRelation
 
 def create_basic_workflow(case):
     case.workflow = Workflow.objects.create(title="Test workflow")
+    case.workflow.set_to_model(Author)
 
     case.test_role = Role.objects.create(title="Test role")
 
@@ -49,7 +50,6 @@ def create_basic_workflow(case):
         permission=case.can_change, content_type=content_type)
     ModelPermission.objects.create(role=case.test_role,
         permission=case.can_delete, content_type=content_type)
-
 
     WorkflowPermissionRelation.objects.create(workflow=case.workflow,
         permission=case.can_view)

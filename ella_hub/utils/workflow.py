@@ -50,8 +50,8 @@ def init_ella_workflow(resources):
 
     _make_all_possible_transitions(state_obj_list, workflow)
 
-    # set workflow to all publishable models
-    for model in publishable_models:
+    # set workflow to all models
+    for model in all_models:
         workflow.set_to_model(model)
 
     # create basic permissions

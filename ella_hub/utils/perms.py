@@ -14,8 +14,15 @@ REST_PERMS = {
 }
 
 
-def has_model_state_permission(model, user, perm_codename, state_codename=None, roles=[]):
+def has_model_state_permission(model, user, permission, state=None, roles=[]):
     """
+    Returns True if objects of class <model> in <state>
+    defined for <user> role/roles has <permission>,
+    otherwise returns False. If <roles> is None, all <user> roles are considered.
+
+    Example:
+    User Peter has editor role, so he can edit articles in "editing" state,
+    but can't publish articles in "editing" state.
     """
     if isinstance(user, AnonymousUser):
         return False
@@ -23,36 +30,39 @@ def has_model_state_permission(model, user, perm_codename, state_codename=None, 
     import ella_hub.utils.workflow
 
     workflow = ella_hub.utils.workflow.get_workflow(model)
-    if not workflow:
+    if not workflow and state:
         return False
 
-    try:
-        state = State.objects.get(codename=state_codename)
-    except State.DoesNotExist:
-        return False
+    if state and not isinstance(state, State):
+        try:
+            state = State.objects.get(codename=state)
+        except State.DoesNotExist:
+            return False
 
-    # state belongs to workflow?
-    if state.workflow != workflow:
+     # state need to belong to the workflow
+    if state and state.workflow != workflow:
         return False
 
     ct = ContentType.objects.get_for_model(model)
 
-    # Checking if specified <perm_codename> Permission exists.
-    try:
-        perm = Permission.objects.get(codename=perm_codename)
-    except Permission.DoesNotExist:
-        return False
+    if not isinstance(permission, Permission):
+        try:
+            permission = Permission.objects.get(codename=permission)
+        except Permission.DoesNotExist:
+            return False
 
-    if user.is_superuser and not perm.restriction:
+    # if Permission is specified as restriction (perm.restriction==True),
+    # superuser is not restricted
+    if user.is_superuser and not permission.restriction:
         return True
 
-
+    # if no roles are specified, lookup all user roles
     if not roles:
         relations = PrincipalRoleRelation.objects.filter(user=user)
         roles = [relation.role for relation in relations]
 
     perms = ModelPermission.objects.filter(role__in=roles,
-        content_type=ct, permission=perm)
+        content_type=ct, permission=permission)
 
     if state:
         perms = StatePermissionRelation.objects.filter(state=state,
@@ -61,46 +71,19 @@ def has_model_state_permission(model, user, perm_codename, state_codename=None, 
     return perms.exists()
 
 
-def has_model_permission(model, user, codename, roles=[]):
-    """
-    Comment it!
-    """
-    if isinstance(user, AnonymousUser):
-        return False
-
-    ct = ContentType.objects.get_for_model(model)
-    # Checking if specified <codename> Permission exists.
-    try:
-        perm = Permission.objects.get(codename=codename)
-    except Permission.DoesNotExist:
-        return False
-
-    if user.is_superuser and not perm.restriction:
-        return True
-
-    if not roles:
-        relations = PrincipalRoleRelation.objects.filter(user=user)
-        roles = [relation.role for relation in relations]
-
-    o_perms = ModelPermission.objects.filter(role__in=roles,
-        content_type=ct, permission=perm)
-
-    return o_perms.exists()
-
-
 def has_object_permission(model_obj, user, codename, roles=None):
     """
     Returns True if <user> has at least one of <roles> which
     has permission specified by <codename> for specified <model_obj>,
     otherwise returns False.
 
-    If roles is None, all user roles are considered.
+    If roles is None, all <user> roles are considered.
     """
     if isinstance(user, AnonymousUser):
         return False
 
     ct = ContentType.objects.get_for_model(model_obj)
-    # Checking if specified <codename> Permission exists.
+
     try:
         perm = Permission.objects.get(codename=codename)
     except Permission.DoesNotExist:
@@ -150,6 +133,7 @@ def grant_permission(model, role, permission):
 
 
 def add_role(principal, role):
+    "Adds <role> to user or group (<principal>)."
     if isinstance(principal, User):
         try:
             relation = PrincipalRoleRelation.objects.get(user=principal,
@@ -167,13 +151,14 @@ def add_role(principal, role):
 
 
 def remove_role(principal, role):
+    "Removes specific <role> from user or group (<principal>)."
     try:
         if isinstance(principal, User):
             relation = PrincipalRoleRelation.objects.get(user=principal,
                 role=role, content_id=None, content_type=None)
         else:
-            relation = PrincipalRoleRelation.objects.get(
-                group=principal, role=role, content_id=None, content_type=None)
+            relation = PrincipalRoleRelation.objects.get(group=principal,
+                role=role, content_id=None, content_type=None)
     except PrincipalRoleRelation.DoesNotExist:
         return False
     else:
@@ -182,6 +167,7 @@ def remove_role(principal, role):
 
 
 def remove_roles(principal):
+    "Removes all roles from user or group (<principal>)."
     if isinstance(principal, User):
         relations = PrincipalRoleRelation.objects.filter(user=principal,
             content_id=None, content_type=None)
@@ -196,6 +182,7 @@ def remove_roles(principal):
 
 
 def get_roles(principal):
+    "Returns all roles of user or group (<principal>)."
     if isinstance(principal, User):
         relations = PrincipalRoleRelation.objects.filter(user=principal)
     else:
