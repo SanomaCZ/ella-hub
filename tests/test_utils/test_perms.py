@@ -7,7 +7,7 @@ from ella.core.models import Author
 
 from ella_hub.models import CommonArticle
 from ella_hub.models import Permission, Role
-from ella_hub.utils.perms import (has_model_permission,
+from ella_hub.utils.perms import (has_model_state_permission,
     has_object_permission, grant_permission)
 from ella_hub.utils.perms import (add_role, get_roles,
     remove_role, remove_roles)
@@ -30,14 +30,14 @@ class TestPermUtils(TestCase):
 
     def test__perm_anonym_user(self):
         anonym_user = AnonymousUser()
-        tools.assert_equals(has_model_permission(CommonArticle,
+        tools.assert_equals(has_model_state_permission(CommonArticle,
             anonym_user, "can_whatever"), False)
         author = Author(name="Test author")
         tools.assert_equals(has_object_permission(author,
             anonym_user, "can_whatever"), False)
 
     def test_perm_does_not_exist(self):
-        tools.assert_equals(has_model_permission(CommonArticle,
+        tools.assert_equals(has_model_state_permission(CommonArticle,
             self.user, "can_whatever"), False)
         author = Author(name="Test author")
         tools.assert_equals(has_object_permission(author,
@@ -46,7 +46,7 @@ class TestPermUtils(TestCase):
     def test_perm_restriction(self):
         self.perm.restriction = True
         self.perm.save()
-        tools.assert_equals(has_model_permission(CommonArticle,
+        tools.assert_equals(has_model_state_permission(CommonArticle,
             self.user, "test_perm"), False)
         author = Author(name="Test author")
         tools.assert_equals(has_object_permission(author,
@@ -58,7 +58,7 @@ class TestPermUtils(TestCase):
         self.perm.restriction = False
         self.perm.save()
 
-        tools.assert_equals(has_model_permission(CommonArticle,
+        tools.assert_equals(has_model_state_permission(CommonArticle,
             self.user, "test_perm"), True)
         tools.assert_equals(has_object_permission(author,
             self.user, "test_perm"), True)
@@ -70,7 +70,7 @@ class TestPermUtils(TestCase):
             self.role, "can_whatever"), False)
 
         grant_permission(CommonArticle, self.role, "test_perm")
-        tools.assert_equals(has_model_permission(CommonArticle,
+        tools.assert_equals(has_model_state_permission(CommonArticle,
             self.user, "test_perm"), True)
 
     def test_add_role(self):

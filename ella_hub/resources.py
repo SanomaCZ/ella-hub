@@ -10,7 +10,7 @@ from django.utils import simplejson
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub import utils
-from ella_hub.utils.perms import has_model_permission, has_model_state_permission, REST_PERMS
+from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
 
 
@@ -97,7 +97,7 @@ class ApiModelResource(ModelResource):
         res_model = self._meta.object_class
 
         for request_str, perm_str in REST_PERMS.items():
-            if has_model_permission(res_model, request.user,
+            if has_model_state_permission(res_model, request.user,
                 REST_PERMS[request_str]):
                 allowed_methods.append(request_str.lower())
 
@@ -105,10 +105,10 @@ class ApiModelResource(ModelResource):
             return HttpResponseForbidden()
 
         for fn, attrs in schema["fields"].items():
-            if has_model_permission(res_model, request.user, "readonly_" + fn):
+            if has_model_state_permission(res_model, request.user, "readonly_" + fn):
                 schema["fields"][fn]["readonly"] = True
 
-            schema["fields"][fn]["disabled"] = has_model_permission(res_model,
+            schema["fields"][fn]["disabled"] = has_model_state_permission(res_model,
                 request.user, "disabled_" + fn)
 
         schema['allowed_detail_http_methods'] = allowed_methods
@@ -162,7 +162,7 @@ class ApiModelResource(ModelResource):
                 "disabled_" + field_name, obj_state):
                 del bundle.data[field_name]
 
-            if (not has_model_permission(res_model, user, "can_change") or
+            if (not has_model_state_permission(res_model, user, "can_change") or
                 has_model_state_permission(res_model, user,
                     "readonly_" + field_name, obj_state)):
                     read_only_fields.append(field_name)

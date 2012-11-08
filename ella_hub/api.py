@@ -33,7 +33,7 @@ from ella_hub.models import PublishableLock, CommonArticle
 from ella_hub import utils, views
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
-from ella_hub.utils.perms import has_model_state_permission, has_model_permission, REST_PERMS
+from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import get_init_states, get_workflow
 
 
@@ -58,7 +58,7 @@ class EllaHubApi(Api):
 
         for resource_name in sorted(self._registry.keys()):
             res_model = self._registry[resource_name]._meta.object_class
-            if not has_model_permission(res_model, request.user, REST_PERMS["GET"]):
+            if not has_model_state_permission(res_model, request.user, REST_PERMS["GET"]):
                 continue
 
             available_resources[resource_name] = {
@@ -354,7 +354,7 @@ class EllaHubApi(Api):
         for fn, attrs in schema["fields"].items():
             field_attrs = {"readonly": False, "nullable": False}
 
-            if (not has_model_permission(res_model, user, "can_change") or
+            if (not has_model_state_permission(res_model, user, "can_change") or
                 has_model_state_permission(res_model, user, "readonly_" + fn, init_state)):
                 field_attrs["readonly"] = True
             else:
