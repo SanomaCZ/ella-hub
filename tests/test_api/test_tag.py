@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from ella.core.models import Author
 from ella.utils import timezone
 from ella.utils.test_helpers import create_basic_categories
-from ella_taggit.models import PublishableTag
+from ella_taggit.models import PublishableTag, PublishableTaggedItem
 
 from ella_hub.models import CommonArticle
 from ella_hub.utils import get_all_resource_classes
@@ -26,6 +26,7 @@ class TestTag(TestCase):
         Author.objects.all().delete()
         CommonArticle.objects.all().delete()
         PublishableTag.objects.all().delete()
+        PublishableTaggedItem.objects.all().delete()
 
     def test_create_tags(self):
         api_key = self.__login("user", "pass")
@@ -216,6 +217,49 @@ class TestTag(TestCase):
             tools.assert_equals(expected["name"], returned["name"])
             tools.assert_equals(expected["slug"], returned["slug"])
             tools.assert_equals(expected["description"], returned["description"])
+
+        self.__logout(headers)
+
+    def test_filter_by_tags(self):
+        t1 = PublishableTag.objects.create(name="Tag1")
+        t2 = PublishableTag.objects.create(name="Tag2", description="Tag")
+        self.article.tags.add(t1, t2)
+
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        url = "/admin-api/tag/related/article/%d;%d/" % (t1.id, t2.id)
+        response = self.client.get(url, **headers)
+        tools.assert_equals(response.status_code, 200)
+        resources = self.__get_response_json(response)
+
+        tools.assert_equals(len(resources), 1, resources)
+        tools.assert_equals(resources[0]["id"], self.article.id, resources)
+
+        self.__logout(headers)
+
+    def test_filter_by_tags_with_priority(self):
+        """
+        Article with more tags should have higher priority.
+        """
+        article = CommonArticle.objects.create(title="Title non-title",
+            category=self.category, publish_from=timezone.now(), slug="non-titled")
+        t1 = PublishableTag.objects.create(name="Tag1")
+        t2 = PublishableTag.objects.create(name="Tag2", description="Tag")
+        article.tags.add(t1, t2)
+        self.article.tags.add(t2)
+
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        url = "/admin-api/tag/related/article/%d;%d/" % (t1.id, t2.id)
+        response = self.client.get(url, **headers)
+        tools.assert_equals(response.status_code, 200)
+        resources = self.__get_response_json(response)
+
+        tools.assert_equals(len(resources), 2, resources)
+        tools.assert_equals(resources[0]["id"], article.id, resources)
+        tools.assert_equals(resources[1]["id"], self.article.id, resources)
 
         self.__logout(headers)
 

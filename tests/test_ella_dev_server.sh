@@ -398,6 +398,11 @@ then
 		}]
 	}' "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
+	# filter articles by tag
+	echo -n "Article filtering by tags: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+	"$server/admin-api/tag/related/article/100;101;106/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
 	# Deletion of all tag-related objects.
 	echo -n "DELETE articles with tags: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
