@@ -16,6 +16,7 @@ from ella_hub.utils.workflow import set_state, get_state
 
 
 class ApiModelResource(ModelResource):
+    __GENERATED_FIELDS_CACHE = {}
 
     @classmethod
     def get_fields(cls, fields=None, excludes=None):
@@ -175,37 +176,51 @@ class ApiModelResource(ModelResource):
         )
         return bundle
 
-    def dehydrate(self, bundle):
-        res_model = bundle.obj.__class__
+    def full_dehydrate(self, bundle):
+        """
+        Generates fields that are common for all objects of this resource.
+        """
+        bundle = super(ApiModelResource, self).full_dehydrate(bundle)
+        # cache model permissions because of performance issues
+        if not self._is_field_cached("allowed_http_methods"):
+            self._fill_fields_pemissions(bundle)
+
+        bundle.data['allowed_http_methods'] = self._get_cached_field("allowed_http_methods")
+        bundle.data["read_only_fields"] = self._get_cached_field("read_only_fields")
+        for field_name in self._get_cached_field("disabled_fields"):
+            del bundle.data[field_name]
+
+        return bundle
+
+    def _fill_fields_pemissions(self, bundle):
+        resource_model = self._meta.object_class
         user = bundle.request.user
         obj_state = get_state(bundle.obj)
 
+        disabled_fields = []
         read_only_fields = []
-        allowed_methods = []
+        allowed_http_methods = []
 
         # filter fields according to actual permissions/restrictions
-        all_fields_names = bundle.obj._meta.get_all_field_names()
-        for field_name in all_fields_names:
-            if has_model_state_permission(res_model, user,
+        for field_name in bundle.obj._meta.get_all_field_names():
+            if has_model_state_permission(resource_model, user,
                 "disabled_" + field_name, obj_state):
-                del bundle.data[field_name]
+                disabled_fields.append(field_name)
 
-            if (not has_model_state_permission(res_model, user, "can_change") or
-                has_model_state_permission(res_model, user,
+            if (not has_model_state_permission(resource_model, user, "can_change") or
+                has_model_state_permission(resource_model, user,
                     "readonly_" + field_name, obj_state)):
                     read_only_fields.append(field_name)
 
-        bundle.data["read_only_fields"] = read_only_fields
-
         # set allowed_http_methods also
         for request_str, perm_str in REST_PERMS.items():
-            if has_model_state_permission(res_model, user,
+            if has_model_state_permission(resource_model, user,
                 REST_PERMS[request_str], obj_state):
-                allowed_methods.append(request_str.lower())
+                allowed_http_methods.append(request_str.lower())
 
-        bundle.data['allowed_http_methods'] = allowed_methods
-
-        return bundle
+        self._set_cached_field("allowed_http_methods", allowed_http_methods)
+        self._set_cached_field("read_only_fields", read_only_fields)
+        self._set_cached_field("disabled_fields", tuple(disabled_fields))
 
     def hydrate(self, bundle):
         """Fills user fields by current logged user."""
@@ -216,6 +231,24 @@ class ApiModelResource(ModelResource):
             set_state(bundle.obj, bundle.data["state"])
 
         return bundle
+
+    def _is_field_cached(self, name):
+        """Resource class cache for generated fields."""
+        cached_fields = ApiModelResource.__GENERATED_FIELDS_CACHE
+        return name in cached_fields.get(self._meta.resource_name, {})
+
+    def _set_cached_field(self, name, value):
+        """Resource class cache for generated fields."""
+        cached_fields = ApiModelResource.__GENERATED_FIELDS_CACHE
+        fields = cached_fields.setdefault(self._meta.resource_name, {})
+        fields[name] = value
+
+    def _get_cached_field(self, name):
+        """Resource class cache for generated fields."""
+        assert self._is_field_cached(name)
+
+        cached_fields = ApiModelResource.__GENERATED_FIELDS_CACHE
+        return cached_fields[self._meta.resource_name][name]
 
     class Meta:
         authentication = Authentication()
