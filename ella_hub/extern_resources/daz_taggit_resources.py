@@ -7,7 +7,7 @@ from django.db.models import Count
 from django.conf.urls.defaults import url
 from tastypie import fields
 from tastypie.resources import ALL
-from daz.daz_taggit.models import Tag, TaggedItem
+from daz.daz_taggit.models import Tag, TaggedItem, TaggableManager
 from ella_hub.resources import ApiModelResource
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
@@ -18,13 +18,20 @@ class TagResource(ApiModelResource):
     @staticmethod
     def initialize(resources):
         for resource in resources:
-            if issubclass(resource, PublishableResource):
-                field = fields.ToManyField(TagResource, "tags", blank=True,
-                    null=True, full=True)
-                # call `contribute_to_class` manually because
-                # `DeclarativeMetaclass` already created `Resource` classes
-                field.contribute_to_class(resource, "tags")
-                resource.base_fields["tags"] = field
+            # tag only public objects (articles, photos, ...)
+            if not getattr(resource._meta, "public", False):
+                continue
+
+            if not hasattr(resource.Meta.object_class, "tags"):
+                resource.Meta.object_class.add_to_class("tags",
+                    TaggableManager(through=TaggedItem))
+
+            field = fields.ToManyField(TagResource, "tags", blank=True,
+                null=True, full=True)
+            # call `contribute_to_class` manually because
+            # `DeclarativeMetaclass` already created `Resource` classes
+            field.contribute_to_class(resource, "tags")
+            resource.base_fields["tags"] = field
 
     def prepend_urls(self):
         urls = super(TagResource, self).prepend_urls()

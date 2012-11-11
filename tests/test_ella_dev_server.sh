@@ -398,12 +398,47 @@ then
 		}]
 	}' "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
+	IMAGE_PATH=./media/photos/example_image.png
+	IMAGE_PATH_BASENAME=$(basename $IMAGE_PATH)
+
+	echo -n "PATCH new photo with tags: "
+	curl --dump-header - -H "$AUTH_HEADER" \
+	-X PATCH --form "attached_object=@${IMAGE_PATH}" --form 'resource_data={
+		"objects": [{
+			"id": 100,
+			"title": "Photo with tags",
+			"slug": "tagged-photo",
+			"width": 256, "height": 256,
+			"created": "2012-09-05T10:16:32.131517",
+			"authors": ["/admin-api/author/100/"],
+			"app_data": null,
+			"image": "attached_object_id:'$IMAGE_PATH_BASENAME'",
+			"tags": [
+				"/admin-api/tag/100/",
+				{
+					"id": 107,
+					"slug": "tag-107",
+					"name": "Photo tag-107"
+				}
+			]
+		}]
+	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "Photo has tags: "
+	curl --dump-header - -H "$AUTH_HEADER" -X GET \
+	"$server/admin-api/photo/100/" 2> /dev/null | \
+	grep '"resource_uri": "/admin-api/tag/100/".*"resource_uri": "/admin-api/tag/107/"' > /dev/null && echo "OK" || echo "FAILED"
+
 	# filter articles by tag
 	echo -n "Article filtering by tags: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	"$server/admin-api/tag/related/article/100;101;106/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Deletion of all tag-related objects.
+	echo -n "DELETE photo with tags: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE \
+	"$server/admin-api/photo/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
 	echo -n "DELETE articles with tags: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	-X DELETE "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
@@ -416,7 +451,7 @@ then
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	-X DELETE "$server/admin-api/site/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-	for tag_id in {100..106}; do
+	for tag_id in {100..107}; do
 		echo -n "DELETE tag#$tag_id: "
 		curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 		-X DELETE "$server/admin-api/tag/$tag_id/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
