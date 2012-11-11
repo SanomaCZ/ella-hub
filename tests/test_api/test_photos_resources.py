@@ -8,8 +8,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseNotAllowed
 import django.utils.simplejson as json
 from django.test import TestCase
-from django.test.client import Client
-from django.test.client import MULTIPART_CONTENT
+from django.test.client import Client, MULTIPART_CONTENT
 
 from ella.core.models import Author
 from ella.photos.models import Photo, Format, FormatedPhoto
