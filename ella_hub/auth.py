@@ -37,6 +37,10 @@ class ApiAuthorization(Authorization):
     def is_authorized(self, request, object=None):
         self.request_method = request.META['REQUEST_METHOD']
         self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
+
+        if request.user.is_superuser:
+            return True
+
         content_type = utils.get_content_type_for_resource(self.resource_name)
 
         if self.request_method == "POST":
