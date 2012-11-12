@@ -35,7 +35,6 @@ class ApiAuthorization(Authorization):
     __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
 
     def is_authorized(self, request, object=None):
-        self.request_method = request.META['REQUEST_METHOD']
         self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
 
         if request.user.is_superuser:
@@ -43,10 +42,11 @@ class ApiAuthorization(Authorization):
 
         content_type = utils.get_content_type_for_resource(self.resource_name)
 
-        if self.request_method == "POST":
+        if request.method == "POST":
             resource_model = utils.get_resource_model(self.resource_name)
-            if not has_model_state_permission(resource_model, request.user, REST_PERMS[self.request_method]):
+            if not has_model_state_permission(resource_model, request.user, REST_PERMS[request.method]):
                 raise ImmediateHttpResponse(response=HttpForbidden())
+
         return True
 
     def apply_limits(self, request, object_list):
@@ -64,11 +64,11 @@ class ApiAuthorization(Authorization):
 
         allowed_ids = []
         for obj in object_list:
-            if has_object_permission(obj, request.user, REST_PERMS[self.request_method]):
+            if has_object_permission(obj, user, REST_PERMS[request.method]):
                 allowed_ids.append(obj.id)
 
-        if self.request_method == "GET":
-            if not has_model_state_permission(resource_model, request.user, REST_PERMS[self.request_method]):
+        if request.method == "GET":
+            if not has_model_state_permission(resource_model, user, REST_PERMS[request.method]):
                 raise ImmediateHttpResponse(response=HttpForbidden())
             return object_list.filter(id__in=allowed_ids).all()
 
