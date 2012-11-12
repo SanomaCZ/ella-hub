@@ -10,7 +10,7 @@ from django.contrib.sites.models import Site
 from django.core.files.images import ImageFile
 from django.utils.encoding import force_unicode, smart_str
 
-from ella.core.models import Publishable, Listing, Category, Author, Source
+from ella.core.models import Publishable, Listing, Category, Author, Source, Related
 from ella.photos.models import Photo, FormatedPhoto, Format
 from ella.photos.conf import photos_settings
 from ella.utils.timezone import now
@@ -279,6 +279,31 @@ class ListingResource(ApiModelResource):
             'publish_to': ALL,
             'publishable': ALL_WITH_RELATIONS,
             'resource_uri': ('exact',),
+        }
+        public = False
+
+
+class RelatedResource(ApiModelResource):
+    publishable = fields.ForeignKey(PublishableResource, 'publishable', full=True)
+    related = fields.ForeignKey(PublishableResource, 'related', full=True)
+
+    def hydrate(self, bundle):
+        bundle = super(RelatedResource, self).hydrate(bundle)
+
+        parts = bundle.data['related'].split('/')
+        bundle.obj.related_ct = get_content_type_for_resource(parts[-3])
+        bundle.obj.related_id = int(parts[-2])
+        del bundle.data['related']
+
+        return bundle
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Related.objects.all()
+        # excludes = ('related_id',)
+        filtering = {
+            'id': ALL,
+            'publishable': ALL_WITH_RELATIONS,
+            'related': ALL_WITH_RELATIONS,
         }
         public = False
 
