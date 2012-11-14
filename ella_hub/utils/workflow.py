@@ -91,11 +91,6 @@ def init_ella_workflow(resources):
     deleted_state = State.objects.get_or_create(title=unicode(_("Deleted")),
         codename="deleted", workflow=workflow)[0]
 
-
-    PERMISSIONS = (
-        (_("Can view"), "can_view"),
-    )
-
     all_models = [resource._meta.object_class for resource in resources]
     publishable_models = [model for model in all_models
         if issubclass(model, Publishable) and model != Publishable]
@@ -146,6 +141,8 @@ def init_ella_workflow(resources):
 
     WorkflowPermissionRelation.objects.get_or_create(workflow=workflow,
         permission=r)
+    WorkflowPermissionRelation.objects.get_or_create(workflow=workflow,
+        permission=d)
 
     for state_obj in state_obj_list:
         StatePermissionRelation.objects.get_or_create(state=state_obj,
@@ -176,6 +173,9 @@ def _make_all_possible_transitions(state_obj_list, workflow):
 
 
 def get_workflow(model):
+    """
+    Returns workflow set to <model>.
+    """
     content_type = ContentType.objects.get_for_model(model)
     try:
         relation = WorkflowModelRelation.objects.get(content_type=content_type)
@@ -205,6 +205,9 @@ def update_permissions(model):
 
 
 def set_state(obj, state):
+    """
+    Sets <state> of <obj>.
+    """
     if not isinstance(state, State):
         try:
             state = State.objects.get(codename=state)
@@ -226,6 +229,9 @@ def set_state(obj, state):
 
 
 def get_state(obj):
+    """
+    Returns state of <obj>.
+    """
     content_type = ContentType.objects.get_for_model(obj)
     try:
         relation = StateObjectRelation.objects.get(content_id=obj.pk,
@@ -237,6 +243,10 @@ def get_state(obj):
 
 
 def get_init_states(model, user, workflow=None):
+    """
+    Returns initial state of <workflow> set to <model>
+    - vsetky stavy, do ktorych sa je mozne z init stavu dostat
+    """
     content_type = ContentType.objects.get_for_model(model)
     init_state = []
 
