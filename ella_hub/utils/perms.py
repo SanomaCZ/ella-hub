@@ -61,14 +61,16 @@ def has_model_state_permission(model, user, permission, state=None, roles=[]):
         relations = PrincipalRoleRelation.objects.filter(user=user)
         roles = [relation.role for relation in relations]
 
-    perms = ModelPermission.objects.filter(role__in=roles,
+    model_perms = ModelPermission.objects.filter(role__in=roles,
         content_type=ct, permission=permission)
+
+    perms = [model_perm.permission for model_perm in model_perms]
 
     if state:
         perms = StatePermissionRelation.objects.filter(state=state,
             permission__in=perms, role__in=roles)
 
-    return perms.exists()
+    return len(perms)
 
 
 def has_object_permission(model_obj, user, codename, roles=None):
