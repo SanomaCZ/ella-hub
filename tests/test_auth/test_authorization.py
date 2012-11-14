@@ -19,7 +19,7 @@ from ella_hub import utils
 from ella_hub.utils import get_all_resource_classes
 from ella_hub.utils.workflow import init_ella_workflow, set_state
 from ella_hub.utils.perms import grant_permission
-from ella_hub.utils.test_helpers import create_basic_workflow, delete_basic_workflow
+from ella_hub.utils.test_helpers import create_basic_workflow, delete_test_workflow
 from ella_hub.models import Permission, Role, PrincipalRoleRelation, ModelPermission
 from ella_hub.models import Workflow, State, Transition, StateObjectRelation, StatePermissionRelation
 from ella_hub.models import WorkflowPermissionRelation
@@ -174,7 +174,7 @@ class TestAuthorization(TestCase):
         PrincipalRoleRelation.objects.all().delete()
         StateObjectRelation.objects.all().delete()
 
-        delete_basic_workflow(self)
+        delete_test_workflow()
 
         os.remove(self.photo_filename)
         connection.close()
