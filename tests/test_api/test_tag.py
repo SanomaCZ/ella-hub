@@ -221,6 +221,8 @@ class TestTag(TestCase):
         self.__logout(headers)
 
     def test_filter_by_tags(self):
+        CommonArticle.objects.create(title="Title non-title", slug="non-titled",
+            category=self.category, publish_from=timezone.now())
         t1 = PublishableTag.objects.create(name="Tag1")
         t2 = PublishableTag.objects.create(name="Tag2", description="Tag")
         self.article.tags.add(t1, t2)
