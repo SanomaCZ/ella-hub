@@ -163,19 +163,19 @@ class PhotoResource(MultipartFormDataModelResource):
     class Meta(MultipartFormDataModelResource.Meta):
         queryset = Photo.objects.all()
         filtering = {
-            'app_data': ('exact',),
-            'created': ALL,
-            'description': ('exact',),
-            'height': ALL,
             'id': ALL,
-            'image': ALL_WITH_RELATIONS,
-            'important_bottom': ALL,
-            'important_left': ALL,
-            'important_right': ALL,
-            'important_top': ALL,
-            'resource_uri': ('exact',),
-            'title': ('exact',),
+            'title': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'description': ('contains', 'icontains', 'startswith', 'endswith',),
+            'slug': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
             'width': ALL,
+            'height': ALL,
+            'important_top': ALL,
+            'important_left': ALL,
+            'important_bottom': ALL,
+            'important_right': ALL,
+            'authors': ALL_WITH_RELATIONS,
+            'source': ALL_WITH_RELATIONS,
+            'created': ALL,
         }
         public = True
 
