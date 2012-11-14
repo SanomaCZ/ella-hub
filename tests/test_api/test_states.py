@@ -8,7 +8,7 @@ import django.utils.simplejson as json
 
 from ella.core.models import Author
 
-from ella_hub.utils.test_helpers import create_basic_workflow, delete_basic_workflow
+from ella_hub.utils.test_helpers import create_basic_workflow, delete_test_workflow
 from ella_hub.utils.workflow import set_state, get_state
 
 
@@ -45,6 +45,7 @@ class TestLoginResponse(TestCase):
     def tearDown(self):
         self.user.delete()
         self.author.delete()
+        delete_test_workflow()
 
     def test_set_state_of_two_models(self):
         """
