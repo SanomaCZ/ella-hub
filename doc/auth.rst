@@ -39,19 +39,26 @@ Login response content format:
               {
                 "added": "Added",
                 ...
-              }
+              },
             "fields":
                {
                 "attr1":
                   {
                     "nullable":boolean, "readonly":boolean, "disabled":boolean
                   },
+                "attr2": {...},
+                ...
+                "attrn": {...}
               }
           }
         "articles":
           {
             "article_resource_name":
-              {...}
+              {
+                "allowed_http_methods":[...],
+                "states": {...},
+                "fields": {...}
+              }
           }
       },
     "system":
@@ -59,12 +66,11 @@ Login response content format:
         "resources":
           {
             "resource_name":
-              {...}
-          }
-        "states":
-          {
-            "added": "Added",
-            ...
+              {
+                "allowed_http_methods":[...],
+                "states": {...},
+                "fields": {...}
+              }
           }
       }
   }
@@ -137,3 +143,10 @@ Current superuser login response content:
       },
     }
   }
+
+
+GET requests
+------------
+Responses of GET requests contain (among other things) ``allowed_http_methods`` and ``read_only_fields`` fields.
+``read_only_fields`` field specifies fields that can be only read. Disabled fields are not specified,
+they are simply not included in GET responses.
