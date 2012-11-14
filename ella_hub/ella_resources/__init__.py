@@ -141,6 +141,12 @@ class PhotoResource(MultipartFormDataModelResource):
             angle = int(bundle.data['rotate']) % 360
             image = image.rotate(-angle) # clockwise rotation
             path = self._upload_to(uploaded_image.name)
+
+            # create directory path if neccesary
+            directory_path = os.path.dirname(path)
+            if not os.path.exists(directory_path):
+                os.makedirs(directory_path)
+
             image.save(path)
 
             bundle.data['image'] = ImageFile(open(path, "rb"))

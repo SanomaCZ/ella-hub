@@ -1,15 +1,17 @@
 import os
+import django.utils.simplejson as json
 
+from shutil import rmtree
 from PIL import Image
 from nose import tools, SkipTest
-
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotAllowed
-import django.utils.simplejson as json
 from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
-
+from django.utils.encoding import force_unicode, smart_str
+from ella.photos.conf import photos_settings
+from ella.utils.timezone import now
 from ella.core.models import Author
 from ella.photos.models import Photo, Format, FormatedPhoto
 
@@ -168,6 +170,36 @@ class TestPhotosResources(TestCase):
         photo = Photo.objects.get(id=100)
         expected_size = (photo.image.width, photo.image.height)
         tools.assert_equals(expected_size, (100, 200))
+
+    def test_rotate_image_photo_with_missing_photos_directory(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        rmtree(os.path.join(
+            settings.MEDIA_ROOT,
+            force_unicode(now().strftime(smart_str(photos_settings.UPLOAD_TO))),
+        ))
+
+        file = open(self.photo_filename)
+        payload = {
+            "attached_object": file,
+            "resource_data": json.dumps({
+                "objects": [
+                    {
+                        "title": "Rotated photo",
+                        "image": "attached_object_id:" + os.path.basename(self.photo_filename),
+                        "authors": ["/admin-api/author/%d/" % self.author.id],
+                        "created": "2012-10-27T12:48:29",
+                        "rotate": 90,
+                    }
+                ]
+            }),
+        }
+        response = self.patch("/admin-api/photo/", payload, **headers)
+        tools.assert_equals(response.status_code, 202, response.content)
+        file.close()
+
+        self.__logout(headers)
 
     @tools.raises(FormatedPhoto.DoesNotExist)
     def test_update_photo_of_formated_photo(self):
