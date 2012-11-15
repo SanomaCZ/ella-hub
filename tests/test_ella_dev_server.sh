@@ -144,7 +144,7 @@ then
 	}' "$server/admin-api/category/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Testing `article` resource - POST/DELETE.
-	echo -n "POST article: "
+	echo -n "POST article #100: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
 		"id": 100, "resource_uri":"/admin-api/article/100/",
@@ -160,9 +160,32 @@ then
 		"publish_from": "2012-08-07T14:51:29", "publish_to": "2012-08-15T14:51:35"
 	}' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
+	echo -n "POST article #101: "
+	curl --dump-header - -X POST -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"id": 101, "resource_uri":"/admin-api/article/101/",
+		"title":"Related article", "state":"added", "slug": "related-article",
+		"content": "Funky text",
+		"description": "Description best ever",
+		"authors": ["/admin-api/author/100/"],
+		"category": "/admin-api/category/100/",
+		"publish_from": "2012-08-07T14:51:29",
+		"publish_to": "2012-08-15T14:51:35"
+	}' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "POST related article: "
+	curl --dump-header - -X POST -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"publishable": "/admin-api/article/100/",
+		"related": "/admin-api/article/101/"
+	}' "$server/admin-api/related/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
 	# Deletion of all created `core` objects.
 	echo -n "DELETE article: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "DELETE article: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/article/101/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "DELETE category: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/category/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
