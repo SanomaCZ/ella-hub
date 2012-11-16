@@ -183,6 +183,20 @@ class PhotoResource(MultipartFormDataModelResource):
             'source': ALL_WITH_RELATIONS,
             'created': ALL,
         }
+        ordering = (
+            'id',
+            'title',
+            'slug',
+            'width',
+            'height',
+            'important_top',
+            'important_left',
+            'important_bottom',
+            'important_right',
+            'authors',
+            'source',
+            'created',
+        )
         public = True
 
 
@@ -261,12 +275,17 @@ class PublishableResource(ApiModelResource):
         }
         ordering = (
             'id',
+            'title',
             'slug',
+            'category',
+            'authors',
+            'source',
             'published',
-            'static',
             'publish_from',
             'publish_to',
-            'category',
+            'static',
+            'last_updated',
+            'announced',
         )
         public = False
 
@@ -383,6 +402,9 @@ class ArticleResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = CommonArticle.objects.all()
         public = True
+        ordering = PublishableResource.Meta.ordering + (
+            'updated',
+        )
 
 
 class EncyclopediaResource(PublishableResource):
