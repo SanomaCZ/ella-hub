@@ -1,12 +1,12 @@
 import datetime
+import django.utils.simplejson as json
 
 from nose import tools
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
-import django.utils.simplejson as json
-
 from tastypie.models import ApiKey
+from ella_hub.auth import API_KEY_EXPIRATION_IN_DAYS
 
 
 class TestAuthentication(TestCase):
@@ -137,7 +137,8 @@ class TestAuthentication(TestCase):
         tools.assert_equals(response.status_code, 200)
 
         api_key = ApiKey.objects.get(user=self.user)
-        api_key.created = api_key.created - datetime.timedelta(weeks=2)
+        api_key.created = api_key.created - datetime.timedelta(
+            days=API_KEY_EXPIRATION_IN_DAYS)
         api_key.save()
 
         response = self.client.get("/admin-api/article/", **headers)

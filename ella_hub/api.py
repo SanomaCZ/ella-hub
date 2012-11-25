@@ -35,6 +35,7 @@ from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import get_init_states, get_workflow
+from ella_hub.auth import API_KEY_EXPIRATION_IN_DAYS
 
 
 class HttpJsonResponse(HttpResponse):
@@ -214,7 +215,8 @@ class EllaHubApi(Api):
         except ApiKey.DoesNotExist:
             return self.__build_response(False)
         else:
-            expiration_time = api_key.created + datetime.timedelta(weeks=2)
+            expiration_time = api_key.created + datetime.timedelta(
+                days=API_KEY_EXPIRATION_IN_DAYS)
             return self.__build_response(timezone.now() < expiration_time)
 
     def __build_response(self, api_key_validity):
