@@ -226,6 +226,7 @@ class EllaHubApi(Api):
 
     def __regenerate_key(self, api_key):
         api_key.key = api_key.generate_key()
+        api_key.created = timezone.now()
         api_key.save()
         return api_key.key
 

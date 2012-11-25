@@ -146,6 +146,26 @@ class TestAuthentication(TestCase):
 
         self.__logout(headers, 401)
 
+    def test_api_key_refresh_expiration(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        response = self.client.get("/admin-api/article/", **headers)
+        tools.assert_equals(response.status_code, 200)
+
+        api_key = ApiKey.objects.get(user=self.user)
+        api_key.created = api_key.created - datetime.timedelta(
+            days=API_KEY_EXPIRATION_IN_DAYS)
+        api_key.save()
+
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        response = self.client.get("/admin-api/article/", **headers)
+        tools.assert_equals(response.status_code, 200)
+
+        self.__logout(headers)
+
     def test_unauthorized_with_wrong_credentials(self):
         """
         Return "401 Unauthorized" header to user with wrong credetials.
