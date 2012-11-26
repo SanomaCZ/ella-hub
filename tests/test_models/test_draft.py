@@ -15,8 +15,8 @@ from ella_hub.models import Draft
 
 class TestDraftModel(TestCase):
     def setUp(self):
-        article_type = ContentType.objects.get(name__iexact="article")
-        author_type = ContentType.objects.get(name__iexact="author")
+        article_type = ContentType.objects.get_for_model(Article)
+        author_type = ContentType.objects.get_for_model(Author)
 
         self.user = user = User.objects.create_user(username="user", password="pass")
 
@@ -45,7 +45,7 @@ class TestDraftModel(TestCase):
             {"name": "Olivia Wilde", "nick": "thirteen"})
 
     def test_draft_to_string(self):
-        content_type = ContentType.objects.get(name__iexact="article")
+        content_type = ContentType.objects.get_for_model(Article)
         draft = Draft.objects.create(content_type=content_type,
             user=self.user, data="payload")
 

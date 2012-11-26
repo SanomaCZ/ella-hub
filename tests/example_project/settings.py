@@ -132,6 +132,7 @@ INSTALLED_APPS = (
     'tastypie',
 
     'ella.core',
+    'ella.articles',
     'ella.photos',
 
     'ella_galleries',

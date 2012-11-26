@@ -1,8 +1,9 @@
+import django.utils.simplejson as json
+
 from nose import tools
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
-import django.utils.simplejson as json
 
 from ella_hub.models import ModelPermission
 from ella_hub.utils import get_all_resource_classes

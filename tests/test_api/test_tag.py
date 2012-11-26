@@ -4,11 +4,11 @@ from django.utils import simplejson
 from django.contrib.auth.models import User
 
 from ella.core.models import Author
+from ella.articles.models import Article
 from ella.utils import timezone
 from ella.utils.test_helpers import create_basic_categories
 from ella_taggit.models import PublishableTag, PublishableTaggedItem
 
-from ella_hub.models import CommonArticle
 from ella_hub.utils import get_all_resource_classes
 from ella_hub.utils.workflow import init_ella_workflow
 
@@ -18,13 +18,13 @@ class TestTag(TestCase):
         init_ella_workflow(get_all_resource_classes())
         self.user = self.__create_test_user("user", "pass", is_admin=True)
         create_basic_categories(self)
-        self.article = CommonArticle.objects.create(title="Art title",
+        self.article = Article.objects.create(title="Art title",
             category=self.category, publish_from=timezone.now(), slug="article")
 
     def tearDown(self):
         self.user.delete()
         Author.objects.all().delete()
-        CommonArticle.objects.all().delete()
+        Article.objects.all().delete()
         PublishableTag.objects.all().delete()
         PublishableTaggedItem.objects.all().delete()
 
@@ -221,7 +221,7 @@ class TestTag(TestCase):
         self.__logout(headers)
 
     def test_filter_by_tags(self):
-        CommonArticle.objects.create(title="Title non-title", slug="non-titled",
+        Article.objects.create(title="Title non-title", slug="non-titled",
             category=self.category, publish_from=timezone.now())
         t1 = PublishableTag.objects.create(name="Tag1")
         t2 = PublishableTag.objects.create(name="Tag2", description="Tag")
@@ -244,7 +244,7 @@ class TestTag(TestCase):
         """
         Article with more tags should have higher priority.
         """
-        article = CommonArticle.objects.create(title="Title non-title",
+        article = Article.objects.create(title="Title non-title",
             category=self.category, publish_from=timezone.now(), slug="non-titled")
         t1 = PublishableTag.objects.create(name="Tag1")
         t2 = PublishableTag.objects.create(name="Tag2", description="Tag")

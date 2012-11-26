@@ -2,11 +2,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from ella.core.models import Author, Publishable
+from ella.articles.models import Article
 
 from ella_hub.models import Workflow, State, Transition
 from ella_hub.models import Permission, Role, ModelPermission
 from ella_hub.models import WorkflowPermissionRelation, StatePermissionRelation
-from ella_hub.models import CommonArticle
 
 
 def create_advanced_workflow(case, resources):
@@ -121,7 +121,7 @@ def create_advanced_workflow(case, resources):
     d = Permission.objects.get_or_create(title="Disabled authors",
         restriction=True, codename="disabled_authors")[0]
 
-    content_type = ContentType.objects.get_for_model(CommonArticle)
+    content_type = ContentType.objects.get_for_model(Article)
 
     ModelPermission.objects.get_or_create(role=case.base_role,
         permission=r, content_type=content_type)
