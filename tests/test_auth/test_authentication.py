@@ -125,7 +125,7 @@ class TestAuthentication(TestCase):
 
             tools.assert_true("api_key_validity" in resources)
             tools.assert_equals(resources["api_key_validity"],
-                expected, "Header pair %s:%s>" % (username, api_key))
+                expected, "Header pair %s:%s" % (username, api_key))
 
             self.__logout(headers, 302 if expected else 401)
 
