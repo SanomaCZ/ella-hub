@@ -101,7 +101,6 @@ MIDDLEWARE_CLASSES = (
     # Uncomment the next line for simple clickjacking protection:
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
-    'ella_hub.utils.middleware.AuthenticationMiddleware',
     'ella_hub.utils.middleware.CrossDomainAccessMiddleware',
 )
 

@@ -17,7 +17,7 @@ from django.utils.importlib import import_module
 from django.views.decorators.csrf import csrf_exempt
 
 from tastypie.api import Api
-from tastypie.exceptions import BadRequest
+from tastypie.exceptions import BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpUnauthorized
 from tastypie.models import ApiKey
 from tastypie.resources import Resource, ModelResource
@@ -35,7 +35,7 @@ from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import get_init_states, get_workflow
-from ella_hub.auth import API_KEY_EXPIRATION_IN_DAYS
+from ella_hub.auth import ApiAuthentication, API_KEY_EXPIRATION_IN_DAYS
 
 
 class HttpJsonResponse(HttpResponse):
@@ -169,6 +169,16 @@ class EllaHubApi(Api):
         wrapped_view = super(EllaHubApi, self).wrap_view(view)
         return csrf_exempt(wrapped_view)
 
+    def ensure_authenticated(self, request):
+        authenticator = ApiAuthentication()
+        auth_result = authenticator.is_authenticated(request)
+
+        if isinstance(auth_result, HttpResponse):
+            raise ImmediateHttpResponse(response=auth_result)
+
+        if not auth_result is True:
+            raise ImmediateHttpResponse(response=HttpUnauthorized())
+
     @cross_domain_api_post_view
     def login_view(self, request):
         username = request.POST.get("username", "")
@@ -189,8 +199,10 @@ class EllaHubApi(Api):
 
     @cross_domain_api_post_view
     def logout_view(self, request):
-        if request.user.is_anonymous():
-            return HttpUnauthorized()
+        try:
+            self.ensure_authenticated(request)
+        except ImmediateHttpResponse, e:
+            return e.response
 
         try:
             api_key = ApiKey.objects.get(user=request.user)
@@ -204,7 +216,9 @@ class EllaHubApi(Api):
 
     @cross_domain_api_post_view
     def validate_api_key_view(self, request):
-        if request.user.is_anonymous():
+        try:
+            self.ensure_authenticated(request)
+        except:
             return self.__build_response(False)
 
         try:
@@ -229,17 +243,32 @@ class EllaHubApi(Api):
 
     @cross_domain_api_post_view
     def lock_publishable(self, request, id):
+        try:
+            self.ensure_authenticated(request)
+        except ImmediateHttpResponse, e:
+            return e.response
+
         publishable = Publishable.objects.get(id=id)
         lock = PublishableLock.objects.lock(publishable, request.user)
         return HttpJsonResponse({"locked": bool(lock)}, status=202)
 
     @cross_domain_api_post_view
     def unlock_publishable(self, request, id):
+        try:
+            self.ensure_authenticated(request)
+        except ImmediateHttpResponse, e:
+            return e.response
+
         publishable = Publishable.objects.get(id=id)
         lock = PublishableLock.objects.unlock(publishable)
         return HttpResponse(status=202)
 
     def is_publishable_locked(self, request, id):
+        try:
+            self.ensure_authenticated(request)
+        except ImmediateHttpResponse, e:
+            return e.response
+
         publishable = Publishable.objects.get(id=id)
         lock = PublishableLock.objects.is_locked(publishable)
 

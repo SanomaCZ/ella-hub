@@ -1,13 +1,13 @@
 import re
 import datetime
 
+from django.contrib.auth.models import User, AnonymousUser
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpForbidden
 from tastypie.models import ApiKey
 from ella.utils import timezone
-
 from ella_hub import utils
 from ella_hub.utils.perms import has_model_state_permission, has_object_permission, REST_PERMS
 
@@ -19,12 +19,26 @@ class ApiAuthentication(Authentication):
     def is_authenticated(self, request, **kwargs):
         if super(ApiAuthentication, self).is_authenticated(request, **kwargs) is not True:
             return False
+
         username, key = self.extract_credentials(request)
         api_key = ApiKey.objects.get(user__username=username, key=key)
 
+        if self.is_api_key_expired(api_key):
+            request.user = AnonymousUser()
+            return False
+        else:
+            self.refresh_api_key_expiration_time(api_key)
+            request.user = User.objects.get(username=username)
+            return True
+
+    def is_api_key_expired(self, api_key):
         expiration_time = api_key.created + datetime.timedelta(
             days=API_KEY_EXPIRATION_IN_DAYS)
-        return timezone.now() < expiration_time
+        return expiration_time <= timezone.now()
+
+    def refresh_api_key_expiration_time(self, api_key):
+        api_key.created = timezone.now()
+        api_key.save()
 
 
 class ApiAuthorization(Authorization):

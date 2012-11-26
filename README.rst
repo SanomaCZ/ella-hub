@@ -32,8 +32,6 @@ Setting up
         ...
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         ...
-        # this middleware has to be after Django's AuthenticationMiddleware
-        'ella_hub.utils.middleware.AuthenticationMiddleware',
         # neccessary for ella-hope with different origin
         'ella_hub.utils.middleware.CrossDomainAccessMiddleware',
     )
