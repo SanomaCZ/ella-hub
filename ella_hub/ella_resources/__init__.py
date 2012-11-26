@@ -11,12 +11,13 @@ from django.core.files.images import ImageFile
 from django.utils.encoding import force_unicode, smart_str
 
 from ella.core.models import Publishable, Listing, Category, Author, Source, Related
+from ella.articles.models import Article
 from ella.photos.models import Photo, FormatedPhoto, Format
 from ella.photos.conf import photos_settings
 from ella.utils.timezone import now
 
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
-from ella_hub.models import Draft, CommonArticle, Encyclopedia, Recipe
+from ella_hub.models import Draft, Encyclopedia, Recipe
 from ella_hub.utils import get_content_type_for_resource
 
 
@@ -268,6 +269,7 @@ class PublishableResource(ApiModelResource):
             'description': ('contains', 'icontains', 'startswith', 'endswith',),
             'publish_from': ALL,
             'publish_to': ALL,
+            'last_updated': ALL,
             'announced': ALL,
             'authors': ALL_WITH_RELATIONS,
             'category': ALL_WITH_RELATIONS,
@@ -400,11 +402,8 @@ class DraftResource(ApiModelResource):
 
 class ArticleResource(PublishableResource):
     class Meta(PublishableResource.Meta):
-        queryset = CommonArticle.objects.all()
+        queryset = Article.objects.all()
         public = True
-        ordering = PublishableResource.Meta.ordering + (
-            'updated',
-        )
 
 
 class EncyclopediaResource(PublishableResource):

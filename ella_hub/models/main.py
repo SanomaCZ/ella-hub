@@ -9,7 +9,6 @@ from ella.core.models import Publishable
 
 
 class SimpleDateTimeField(models.DateTimeField):
-
     def get_prep_value(self, value):
         value_cut_str = str(value)[:str(value).rfind('.')]
         return value.strptime(value_cut_str, "%Y-%m-%d %H:%M:%S")

@@ -66,7 +66,7 @@ class TestDraft(TestCase):
         self.__insert_article_drafts(draft_count)
 
         response = self.client.get(
-            "/admin-api/draft/?content_type=commonarticle&limit=%d" % draft_count, **headers)
+            "/admin-api/draft/?content_type=article&limit=%d" % draft_count, **headers)
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
         tools.assert_equals(len(resources), draft_count)
@@ -193,7 +193,7 @@ class TestDraft(TestCase):
             content_type="application/json", **headers)
         tools.assert_equals(response.status_code, 201)
 
-        article_ct = ContentType.objects.get(name__iexact="article")
+        article_ct = ContentType.objects.get(app_label="articles", model="article")
         draft = Draft.objects.get(content_type=article_ct, user=self.user)
         tools.assert_equals(draft.content_type, article_ct)
         tools.assert_equals(draft.user, self.user)
@@ -230,7 +230,8 @@ class TestDraft(TestCase):
         return json.loads(response.content)
 
     def __insert_article_drafts(self, count):
-        article_content_type = ContentType.objects.get(name__iexact="article")
+        article_content_type = ContentType.objects.get(app_label="articles",
+            model="article")
 
         for i in range(count):
             Draft.objects.create(content_type=article_content_type,
