@@ -176,12 +176,9 @@ class EllaHubApi(Api):
         user = authenticate(username=username, password=password)
 
         if user is not None and user.is_active:
-            try:
-                api_key = ApiKey.objects.get(user=user)
-            except ApiKey.DoesNotExist:
-                api_key = ApiKey.objects.create(user=user)
-
             login(request, user)
+
+            api_key, created = ApiKey.objects.get_or_create(user=user)
             return HttpJsonResponse({
                 "api_key": self.__regenerate_key(api_key),
                 "auth_tree": self.__create_auth_tree(request),
