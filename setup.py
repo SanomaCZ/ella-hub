@@ -47,7 +47,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=install_requires,
-
+    dependency_links = ['http://github.com/toastdriven/django-tastypie/tarball/master#egg=django-tastypie'],
     test_suite='tests.run_tests.run_all',
     test_requires=test_requires,
 )
