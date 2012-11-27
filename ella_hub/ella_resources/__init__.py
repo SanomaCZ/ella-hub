@@ -17,7 +17,7 @@ from ella.photos.conf import photos_settings
 from ella.utils.timezone import now
 
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
-from ella_hub.models import Draft, Encyclopedia, Recipe
+from ella_hub.models import Draft
 from ella_hub.utils import get_content_type_for_resource
 
 
@@ -403,16 +403,4 @@ class DraftResource(ApiModelResource):
 class ArticleResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = Article.objects.all()
-        public = True
-
-
-class EncyclopediaResource(PublishableResource):
-    class Meta(PublishableResource.Meta):
-        queryset = Encyclopedia.objects.all()
-        public = True
-
-
-class RecipeResource(PublishableResource):
-    class Meta(PublishableResource.Meta):
-        queryset = Recipe.objects.all()
         public = True
