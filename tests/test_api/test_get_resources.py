@@ -5,10 +5,10 @@ from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
 
+from ella.articles.models import Article
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils import timezone
 
-from ella_hub.models import CommonArticle, Recipe, Encyclopedia
 from ella_hub.utils import get_all_resource_classes
 from ella_hub.utils.workflow import init_ella_workflow
 
@@ -21,18 +21,16 @@ class TestGetResources(TestCase):
         init_ella_workflow(get_all_resource_classes())
         create_basic_categories(self)
 
-        CommonArticle.objects.create(title="Jop",
-            category=self.category, publish_from=timezone.now(), slug="jop")
-        Recipe.objects.create(title="Spinach", category=self.category_nested,
-            publish_from=timezone.now(), slug="spinach", cook_time=30)
-        Encyclopedia.objects.create(title="Jop3", category=self.category,
+        Article.objects.create(title="Jop", slug="jop", category=self.category,
+            publish_from=timezone.now())
+        Article.objects.create(title="Spinach", category=self.category_nested,
+            publish_from=timezone.now(), slug="spinach")
+        Article.objects.create(title="Jop3", category=self.category,
             publish_from=timezone.now(), slug="jop3")
 
     def tearDown(self):
         self.user.delete()
-        CommonArticle.objects.all().delete()
-        Recipe.objects.all().delete()
-        Encyclopedia.objects.all().delete()
+        Article.objects.all().delete()
 
     def __create_test_user(self, username, password, is_admin=False):
         user = User.objects.create_user(username=username, password=password)

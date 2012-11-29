@@ -6,10 +6,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.utils.translation import ugettext_lazy as _
 
+from ella.articles.models import Article
 from ella.utils import timezone
 
 from ella_hub.models import Permission, Role, ModelPermission, PrincipalRoleRelation
-from ella_hub.models import CommonArticle, Recipe
 
 
 class TestPermissionModels(TestCase):
@@ -17,7 +17,7 @@ class TestPermissionModels(TestCase):
         self.permission = Permission.objects.create(title="Test Permission",
             codename="test_perm", description="Good perm.")
         self.role = Role.objects.create(title="Test Role", description="Good role.")
-        self.content_type = ContentType.objects.get_for_model(CommonArticle)
+        self.content_type = ContentType.objects.get_for_model(Article)
         self.model_permission = ModelPermission.objects.create(role=self.role,
             permission=self.permission, content_type=self.content_type)
         self.prr = PrincipalRoleRelation(role=self.role)

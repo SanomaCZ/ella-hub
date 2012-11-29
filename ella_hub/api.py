@@ -26,7 +26,7 @@ from tastypie.utils.mime import determine_format, build_content_type
 from ella.core.models import Publishable
 from ella.utils import timezone
 
-from ella_hub.models import PublishableLock, CommonArticle
+from ella_hub.models import PublishableLock
 from ella_hub import utils, views
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource

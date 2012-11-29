@@ -1,16 +1,16 @@
 from nose import tools
 from django.contrib.auth.models import User
 from django.test import TestCase
+from ella.articles.models import Article
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils.timezone import now
-
-from ella_hub.models import PublishableLock, Encyclopedia
+from ella_hub.models import PublishableLock
 
 
 class TestPublishableLock(TestCase):
     def setUp(self):
         create_basic_categories(self)
-        self.publishable = Encyclopedia.objects.create(title=u"Title like a boss",
+        self.publishable = Article.objects.create(title=u"Title like a boss",
             category=self.category, slug="title-article", publish_from=now())
 
         User.objects.all().delete()
@@ -21,7 +21,7 @@ class TestPublishableLock(TestCase):
             self.locker_user)
 
     def tearDown(self):
-        Encyclopedia.objects.all().delete()
+        Article.objects.all().delete()
         self.user.delete()
         self.locker_user.delete()
         self.lock.delete()

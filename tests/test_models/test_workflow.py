@@ -4,11 +4,10 @@ from nose import tools
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.utils.translation import ugettext_lazy as _
-
 from ella.core.models import Author
+from ella.articles.models import Article
 from ella.utils import timezone
-
-from ella_hub.models import State, Transition, Workflow, Permission, Role, CommonArticle
+from ella_hub.models import State, Transition, Workflow, Permission, Role
 from ella_hub.models import (StatePermissionRelation, StateObjectRelation,
     WorkflowModelRelation, WorkflowPermissionRelation)
 from ella_hub.utils.workflow import get_workflow
@@ -16,15 +15,18 @@ from ella_hub.utils.workflow import get_workflow
 
 class TestWorkflowModels(TestCase):
     def setUp(self):
-        self.workflow = Workflow.objects.create(title="Test Workflow", description="Test desc.")
-        self.state = State.objects.create(title="Test State", description="Test desc.")
+        self.workflow = Workflow.objects.create(title="Test Workflow",
+            description="Test desc.")
+        self.state = State.objects.create(title="Test State",
+            description="Test desc.")
         self.transition = Transition.objects.create(title="Test Transition",
             workflow=self.workflow, destination=self.state)
 
         self.permission = Permission.objects.create(title="Test Permission",
             codename="test_perm", description="Good perm.")
-        self.role = Role.objects.create(title="Test Role", description="Good role.")
-        self.content_type = ContentType.objects.get_for_model(CommonArticle)
+        self.role = Role.objects.create(title="Test Role",
+            description="Good role.")
+        self.content_type = ContentType.objects.get_for_model(Article)
 
         self.spr = StatePermissionRelation.objects.create(state=self.state,
             permission=self.permission, role=self.role)
@@ -96,8 +98,9 @@ class TestWorkflowModels(TestCase):
         tools.assert_equals(self.workflow.get_initial_state(), self.state)
 
     def test_set_workflow_existing_model_relation(self):
-        self.workflow.set_to_model(CommonArticle)
-        self.new_workflow = Workflow.objects.create(title="New Workflow", description="Test desc.")
-        self.new_workflow.set_to_model(CommonArticle)
+        self.workflow.set_to_model(Article)
+        self.new_workflow = Workflow.objects.create(title="New Workflow",
+            description="Test desc.")
+        self.new_workflow.set_to_model(Article)
 
-        tools.assert_equals(get_workflow(CommonArticle), self.new_workflow)
+        tools.assert_equals(get_workflow(Article), self.new_workflow)

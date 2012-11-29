@@ -1,13 +1,13 @@
+import django.utils.simplejson as json
+
 from nose import tools
 from django.test.client import Client
 from django.contrib.auth.models import User
 from django.test import TestCase
-import django.utils.simplejson as json
-
+from ella.articles.models import Article
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils import timezone
-
-from ella_hub.models import PublishableLock, Recipe
+from ella_hub.models import PublishableLock
 
 
 class TestLockApi(TestCase):
@@ -16,9 +16,9 @@ class TestLockApi(TestCase):
         self.client = Client()
 
         create_basic_categories(self)
-        self.publishable = Recipe.objects.create(title="Spinach",
+        self.publishable = Article.objects.create(title="Spinach",
             category=self.category_nested, publish_from=timezone.now(),
-            slug="spinach-ou-jeee", cook_time=30)
+            slug="spinach-ou-jeee")
 
     def tearDown(self):
         self.user.delete()

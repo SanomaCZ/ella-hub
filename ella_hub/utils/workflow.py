@@ -3,8 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from ella.core.models import Publishable
+from ella.articles.models import Article
 
-from ella_hub.models import CommonArticle
 from ella_hub.models import Role, Permission, ModelPermission, PrincipalRoleRelation
 from ella_hub.models import State, Transition, Workflow
 from ella_hub.models import (StateObjectRelation, WorkflowModelRelation,
@@ -132,7 +132,7 @@ def init_ella_workflow(resources):
     d = Permission.objects.get_or_create(title="Disabled authors",
         restriction=True, codename="disabled_authors")[0]
 
-    content_type = ContentType.objects.get_for_model(CommonArticle)
+    content_type = ContentType.objects.get_for_model(Article)
 
     ModelPermission.objects.get_or_create(role=editor,
         permission=r, content_type=content_type)
