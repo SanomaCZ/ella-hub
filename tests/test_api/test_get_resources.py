@@ -48,53 +48,26 @@ class TestGetResources(TestCase):
         response = self.client.get("/admin-api/", **headers)
         resources = self.__get_response_json(response)
 
-        tools.assert_true("user" in resources)
-        tools.assert_true("list_endpoint" in resources["user"])
-        tools.assert_true("schema" in resources["user"])
+        resource_names = (
+            "user",
+            "site",
+            "article",
+            "author",
+            "category",
+            "photo",
+            "formatedphoto",
+            "format",
+            "listing",
+            "publishable",
+            "tag",
+            "related",
+            "position",
+        )
 
-        tools.assert_true("site" in resources)
-        tools.assert_true("list_endpoint" in resources["site"])
-        tools.assert_true("schema" in resources["site"])
-
-        tools.assert_true("article" in resources)
-        tools.assert_true("list_endpoint" in resources["article"])
-        tools.assert_true("schema" in resources["article"])
-
-        tools.assert_true("author" in resources)
-        tools.assert_true("list_endpoint" in resources["author"])
-        tools.assert_true("schema" in resources["author"])
-
-        tools.assert_true("category" in resources)
-        tools.assert_true("list_endpoint" in resources["category"])
-        tools.assert_true("schema" in resources["category"])
-
-        tools.assert_true("photo" in resources)
-        tools.assert_true("list_endpoint" in resources["photo"])
-        tools.assert_true("schema" in resources["photo"])
-
-        tools.assert_true("formatedphoto" in resources)
-        tools.assert_true("list_endpoint" in resources["formatedphoto"])
-        tools.assert_true("schema" in resources["formatedphoto"])
-
-        tools.assert_true("format" in resources)
-        tools.assert_true("list_endpoint" in resources["format"])
-        tools.assert_true("schema" in resources["format"])
-
-        tools.assert_true("listing" in resources)
-        tools.assert_true("list_endpoint" in resources["listing"])
-        tools.assert_true("schema" in resources["listing"])
-
-        tools.assert_true("publishable" in resources)
-        tools.assert_true("list_endpoint" in resources["publishable"])
-        tools.assert_true("schema" in resources["publishable"])
-
-        tools.assert_true("tag" in resources)
-        tools.assert_true("list_endpoint" in resources["tag"])
-        tools.assert_true("schema" in resources["tag"])
-
-        tools.assert_true("related" in resources)
-        tools.assert_true("list_endpoint" in resources["related"])
-        tools.assert_true("schema" in resources["related"])
+        for resource in resource_names:
+            tools.assert_true(resource in resources)
+            tools.assert_true("list_endpoint" in resources[resource])
+            tools.assert_true("schema" in resources[resource])
 
         self.__logout(headers)
 

@@ -5,10 +5,9 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 
 from ella.core.models import Related
+from ella.articles.models import Article
 from ella.utils.test_helpers import create_basic_categories
 from ella.utils import timezone
-
-from ella_hub.models import CommonArticle, Recipe, Encyclopedia
 
 
 class TestRelated(TestCase):
@@ -17,19 +16,16 @@ class TestRelated(TestCase):
 
         create_basic_categories(self)
 
-        self.article = CommonArticle.objects.create(title="Jop",
-            category=self.category, publish_from=timezone.now(), slug="jop")
-        self.recipe = Recipe.objects.create(title="Spinach",
-            category=self.category_nested, publish_from=timezone.now(),
-            slug="spinach", cook_time=30)
-        self.encyclopedia = Encyclopedia.objects.create(title="Jop3",
-            category=self.category, publish_from=timezone.now(), slug="jop3")
+        self.article = Article.objects.create(title="Jop", slug="jop",
+            category=self.category, publish_from=timezone.now())
+        self.recipe = Article.objects.create(title="Spinach", slug="spinach",
+            category=self.category_nested, publish_from=timezone.now())
+        self.encyclopedia = Article.objects.create(title="Enc", slug="enc",
+            category=self.category, publish_from=timezone.now())
 
     def tearDown(self):
         self.user.delete()
-        CommonArticle.objects.all().delete()
-        Recipe.objects.all().delete()
-        Encyclopedia.objects.all().delete()
+        Article.objects.all().delete()
 
     def __create_test_user(self, username, password, is_admin=False):
         user = User.objects.create_user(username=username, password=password)
@@ -60,9 +56,7 @@ class TestRelated(TestCase):
 
         payload = json.dumps({
             "publishable": "/admin-api/article/%d/" % self.article.id,
-            "related": "/admin-api/recipe/%d/" % self.recipe.id,
-            # "resource": "recipe",
-            # "related_id": self.recipe.id,
+            "related": "/admin-api/article/%d/" % self.recipe.id,
         })
         response = self.client.post("/admin-api/related/", payload,
             content_type="application/json", **headers)
@@ -74,7 +68,8 @@ class TestRelated(TestCase):
         self.__logout(headers)
 
     def __login(self, username, password):
-        response = self.client.post('/admin-api/login/', data={"username": username, "password": password})
+        response = self.client.post('/admin-api/login/',
+            data={"username": username, "password": password})
         tools.assert_equals(response.status_code, 200)
 
         resources = self.__get_response_json(response)

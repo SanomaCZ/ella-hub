@@ -14,7 +14,7 @@ test_core=1
 test_photos=1
 test_tags=1
 
-resources=( "article" "author" "category" "draft" "encyclopedia" "format" "formatedphoto" "gallery" "galleryitem" "listing" "photo" "publishable" "recipe" "site" "source" "user" "wikipage" )
+resources=( "article" "author" "category" "draft" "format" "formatedphoto" "gallery" "galleryitem" "listing" "photo" "publishable" "site" "source" "user" "wikipage" )
 
 
 echo "---------------------------------------------"
