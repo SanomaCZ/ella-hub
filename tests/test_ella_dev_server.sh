@@ -202,9 +202,9 @@ fi
 
 if [ $test_photos -eq 1 ];
 then
-	IMAGE_PATH=./media/photos/example_image.png
+	IMAGE_PATH=./example_image.png
 	IMAGE_PATH_BASENAME=$(basename $IMAGE_PATH)
-	IMAGE_PATH_CHANGED=./media/photos/example_changed_image.png
+	IMAGE_PATH_CHANGED=./example_changed_image.png
 	IMAGE_PATH_CHANGED_BASENAME=$(basename $IMAGE_PATH_CHANGED)
 
 
@@ -421,7 +421,7 @@ then
 		}]
 	}' "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
-	IMAGE_PATH=./media/photos/example_image.png
+	IMAGE_PATH=./example_image.png
 	IMAGE_PATH_BASENAME=$(basename $IMAGE_PATH)
 
 	echo -n "PATCH new photo with tags: "
