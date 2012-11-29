@@ -10,7 +10,7 @@ from django.utils import simplejson
 
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
-from ella_hub import utils
+from ella_hub.utils import get_resource_model
 from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
 
@@ -249,6 +249,18 @@ class ApiModelResource(ModelResource):
 
         cached_fields = ApiModelResource.__GENERATED_FIELDS_CACHE
         return cached_fields[self._meta.resource_name][name]
+
+    def resolve_resource_uri(self, uri):
+        """
+        Converts standard format resource URI into corresponding object.
+        """
+        pattern = r"/%s/(?P<resource_name>[^/]+)/(?P<pk>\d+)/$" % self._meta.api_name
+        match = re.match(pattern, uri)
+        if not match:
+            raise NotFound("The URL provided '%s' was not a link to a valid resource." % uri)
+
+        model_class = get_resource_model(match.group('resource_name'))
+        return model_class.objects.get(pk=match.group('pk'))
 
     class Meta:
         authentication = Authentication()

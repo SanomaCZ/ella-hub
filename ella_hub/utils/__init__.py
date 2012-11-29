@@ -28,6 +28,15 @@ def get_resource_model(resource_name):
     return resource._meta.object_class
 
 
+def get_resource_for_object(instance):
+    """
+    Returns resource for given model or `None` if resource is not found.
+    """
+    for resource in __REGISTERED_RESOURCES.values():
+        if isinstance(instance, resource._meta.object_class):
+            return resource
+
+
 def get_all_resource_content_types():
     return tuple(ContentType.objects.get_for_model(r._meta.object_class)
         for r in __REGISTERED_RESOURCES.values())

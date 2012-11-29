@@ -12,13 +12,14 @@ from django.utils.encoding import force_unicode, smart_str
 
 from ella.core.models import Publishable, Listing, Category, Author, Source, Related
 from ella.articles.models import Article
+from ella.positions.models import Position
 from ella.photos.models import Photo, FormatedPhoto, Format
 from ella.photos.conf import photos_settings
 from ella.utils.timezone import now
 
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
 from ella_hub.models import Draft
-from ella_hub.utils import get_content_type_for_resource
+from ella_hub.utils import get_content_type_for_resource, get_resource_for_object
 
 
 class SiteResource(ApiModelResource):
@@ -404,3 +405,54 @@ class ArticleResource(PublishableResource):
     class Meta(PublishableResource.Meta):
         queryset = Article.objects.all()
         public = True
+
+
+class PositionResource(ApiModelResource):
+    category = fields.ForeignKey(CategoryResource, 'category', full=True)
+
+    def full_hydrate(self, bundle):
+        """
+        Implements support for upload of generic field 'target'.
+        Tastypie's support for generic relations is not working now.
+        """
+        bundle = super(PositionResource, self).full_hydrate(bundle)
+
+        bundle.obj.target = self.resolve_resource_uri(bundle.data['target'])
+
+        return bundle
+
+    def full_dehydrate(self, bundle):
+        """
+        Implements support for download of generic field 'target'.
+        Tastypie's support for generic relations is not working now.
+        """
+        resource = get_resource_for_object(bundle.obj.target)
+        target_bundle = resource.build_bundle(obj=bundle.obj.target,
+            request=bundle.request)
+        bundle.data['target'] = resource.full_dehydrate(target_bundle)
+
+        return super(PositionResource, self).full_dehydrate(bundle)
+
+    class Meta(ApiModelResource.Meta):
+        queryset = Position.objects.all()
+        public = False
+        filtering = {
+            'id': ALL,
+            'name': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'category': ALL_WITH_RELATIONS,
+            'target': ALL_WITH_RELATIONS,
+            'text': ('contains', 'icontains', 'startswith', 'endswith',),
+            'box_type': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
+            'active_from': ALL,
+            'active_till': ALL,
+            'disabled': ALL,
+        }
+        ordering = (
+            'id',
+            'name',
+            'category',
+            'target',
+            'box_type',
+            'active_from',
+            'active_till',
+        )

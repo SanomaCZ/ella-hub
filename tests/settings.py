@@ -134,6 +134,7 @@ INSTALLED_APPS = (
     'ella.core',
     'ella.articles',
     'ella.photos',
+    'ella.positions',
 
     'ella_galleries',
     'ella_wikipages',
