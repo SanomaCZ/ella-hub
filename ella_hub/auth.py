@@ -1,18 +1,19 @@
 import re
 import datetime
 
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import AnonymousUser
+
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
 from tastypie.exceptions import ImmediateHttpResponse
 from tastypie.http import HttpForbidden
 from tastypie.models import ApiKey
+
 from ella.utils import timezone
+
 from ella_hub import utils
+from ella_hub import conf
 from ella_hub.utils.perms import has_model_state_permission, has_object_permission, REST_PERMS
-
-
-API_KEY_EXPIRATION_IN_DAYS = 14
 
 
 class ApiAuthentication(Authentication):
@@ -21,19 +22,22 @@ class ApiAuthentication(Authentication):
             return False
 
         username, key = self.extract_credentials(request)
-        api_key = ApiKey.objects.get(user__username=username, key=key)
+        try:
+            api_key = ApiKey.objects.get(user__username=username, key=key)
+        except ApiKey.DoesNotExist:
+            return False
 
         if self.is_api_key_expired(api_key):
             request.user = AnonymousUser()
             return False
         else:
             self.refresh_api_key_expiration_time(api_key)
-            request.user = User.objects.get(username=username)
+            request.user = api_key.user
             return True
 
     def is_api_key_expired(self, api_key):
         expiration_time = api_key.created + datetime.timedelta(
-            days=API_KEY_EXPIRATION_IN_DAYS)
+            days=conf.API_KEY_EXPIRATION_IN_DAYS)
         return expiration_time <= timezone.now()
 
     def refresh_api_key_expiration_time(self, api_key):
@@ -54,8 +58,6 @@ class ApiAuthorization(Authorization):
         if request.user.is_superuser:
             return True
 
-        content_type = utils.get_content_type_for_resource(self.resource_name)
-
         if request.method == "POST":
             resource_model = utils.get_resource_model(self.resource_name)
             if not has_model_state_permission(resource_model, request.user, REST_PERMS[request.method]):
@@ -69,7 +71,6 @@ class ApiAuthorization(Authorization):
         TODO: object-level permissions
         """
         user = request.user
-        content_type = utils.get_content_type_for_resource(self.resource_name)
 
         if user.is_superuser:
             return object_list

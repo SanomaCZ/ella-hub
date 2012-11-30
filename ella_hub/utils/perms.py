@@ -14,7 +14,7 @@ REST_PERMS = {
 }
 
 
-def has_model_state_permission(model, user, permission, state=None, roles=[]):
+def has_model_state_permission(model, user, permission, state=None, roles=None):
     """
     Returns True if objects of class <model> in <state>
     defined for <user> role/roles has <permission>,
@@ -58,17 +58,18 @@ def has_model_state_permission(model, user, permission, state=None, roles=[]):
 
     # if no roles are specified, lookup all user roles
     if not roles:
-        relations = PrincipalRoleRelation.objects.filter(user=user)
+        relations = PrincipalRoleRelation.objects.filter(user=user).\
+                        select_related('role')
         roles = [relation.role for relation in relations]
 
     model_perms = ModelPermission.objects.filter(role__in=roles,
-        content_type=ct, permission=permission)
+        content_type=ct, permission=permission).select_related('permission')
 
     perms = [model_perm.permission for model_perm in model_perms]
 
     if state:
-        perms = StatePermissionRelation.objects.filter(state=state,
-            permission__in=perms, role__in=roles)
+        return StatePermissionRelation.objects.filter(state=state,
+            permission__in=perms, role__in=roles).count()
 
     return len(perms)
 
@@ -95,7 +96,8 @@ def has_object_permission(model_obj, user, codename, roles=None):
         return True
 
     if not roles:
-        relations = PrincipalRoleRelation.objects.filter(user=user)
+        relations = PrincipalRoleRelation.objects.filter(user=user).\
+                        select_related('role')
         roles = [relation.role for relation in relations]
 
     o_perms = ModelPermission.objects.filter(role__in=roles,
@@ -111,10 +113,10 @@ def has_object_permission(model_obj, user, codename, roles=None):
     try:
         StatePermissionRelation.objects.get(state=state,
             permission=perm, role__in=roles)
-        return True
     except StatePermissionRelation.DoesNotExist:
         return False
-
+    else:
+        return True
 
 def grant_permission(model, role, permission):
     """
@@ -186,8 +188,10 @@ def remove_roles(principal):
 def get_roles(principal):
     "Returns all roles of user or group (<principal>)."
     if isinstance(principal, User):
-        relations = PrincipalRoleRelation.objects.filter(user=principal)
+        kwargs = {'user': principal}
     else:
-        relations = PrincipalRoleRelation.objects.filter(group=principal)
+        kwargs = {'group': principal}
+    relations = PrincipalRoleRelation.objects.filter(**kwargs).\
+                    select_related('role')
     roles = [relation.role for relation in relations]
     return roles

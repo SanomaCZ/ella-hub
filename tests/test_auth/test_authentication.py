@@ -6,7 +6,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 from tastypie.models import ApiKey
-from ella_hub.auth import API_KEY_EXPIRATION_IN_DAYS
+
+from ella_hub import conf
 
 
 class TestAuthentication(TestCase):
@@ -138,7 +139,7 @@ class TestAuthentication(TestCase):
 
         api_key = ApiKey.objects.get(user=self.user)
         api_key.created = api_key.created - datetime.timedelta(
-            days=API_KEY_EXPIRATION_IN_DAYS)
+            days=conf.API_KEY_EXPIRATION_IN_DAYS)
         api_key.save()
 
         response = self.client.get("/admin-api/article/", **headers)
@@ -155,7 +156,7 @@ class TestAuthentication(TestCase):
 
         api_key = ApiKey.objects.get(user=self.user)
         api_key.created = api_key.created - datetime.timedelta(
-            days=API_KEY_EXPIRATION_IN_DAYS)
+            days=conf.API_KEY_EXPIRATION_IN_DAYS)
         api_key.save()
 
         api_key = self.__login("user", "pass")

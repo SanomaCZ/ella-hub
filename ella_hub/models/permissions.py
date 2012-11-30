@@ -100,7 +100,7 @@ class Role(models.Model):
         Returns all groups role is assigned to.
         """
         relations = PrincipalRoleRelation.objects.filter(role=self,
-            content_id=None, content_type=None).exclude(group=None)
+            content_id=None, content_type=None).exclude(group=None).select_related('group')
         return [relation.group for relation in relations]
 
     def get_users(self, content=None):
@@ -108,7 +108,7 @@ class Role(models.Model):
         Returns all users role is assigned to.
         """
         relations = PrincipalRoleRelation.objects.filter(role=self,
-            content_id=None, content_type=None).exclude(user=None)
+            content_id=None, content_type=None).exclude(user=None).select_related('user')
         return [relation.user for relation in relations]
 
     def __unicode__(self):

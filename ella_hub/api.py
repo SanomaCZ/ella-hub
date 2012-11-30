@@ -8,8 +8,6 @@ from django.conf import settings
 from django.conf.urls.defaults import url
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.utils.importlib import import_module
 from django.views.decorators.csrf import csrf_exempt
@@ -32,7 +30,8 @@ from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import get_init_states, get_workflow
-from ella_hub.auth import ApiAuthentication, API_KEY_EXPIRATION_IN_DAYS
+from ella_hub.auth import ApiAuthentication
+from ella_hub import conf
 
 
 class HttpJsonResponse(HttpResponse):
@@ -221,7 +220,7 @@ class EllaHubApi(Api):
             return self.__build_response(False)
         else:
             expiration_time = api_key.created + datetime.timedelta(
-                days=API_KEY_EXPIRATION_IN_DAYS)
+                days=conf.API_KEY_EXPIRATION_IN_DAYS)
             return self.__build_response(timezone.now() < expiration_time)
 
     def __build_response(self, api_key_validity):
@@ -254,7 +253,7 @@ class EllaHubApi(Api):
             return e.response
 
         publishable = Publishable.objects.get(id=id)
-        lock = PublishableLock.objects.unlock(publishable)
+        PublishableLock.objects.unlock(publishable)
         return HttpResponse(status=202)
 
     def is_publishable_locked(self, request, id):
