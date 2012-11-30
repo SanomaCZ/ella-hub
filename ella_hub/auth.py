@@ -18,8 +18,9 @@ from ella_hub.utils.perms import has_model_state_permission, has_object_permissi
 
 class ApiAuthentication(Authentication):
     def is_authenticated(self, request, **kwargs):
-        if super(ApiAuthentication, self).is_authenticated(request, **kwargs) is not True:
-            return False
+        response = super(ApiAuthentication, self).is_authenticated(request, **kwargs)
+        if response is not True:
+            return response
 
         username, key = self.extract_credentials(request)
         try:
