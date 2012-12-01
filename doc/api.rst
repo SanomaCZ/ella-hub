@@ -595,10 +595,10 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-listing-model
 	- publishable <fk>
 	- category <fk>
 	- publish_from
-	- publish_to
 
 
 - optional attributes:
+	- publish_to
 	- commercial
 
 - auto-defined attributes:
