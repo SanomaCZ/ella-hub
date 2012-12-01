@@ -465,6 +465,37 @@ Bulk operations
 Resources
 =========
 
+publishable
+-----------
+- `ella doc`__
+
+__ http://ella.readthedocs.org/en/latest/reference/models.html#the-publishable-model
+
+
+- required attributes:
+	- category <fk>
+	- title
+	- slug
+	- authors <many-to-many>
+	- published
+	- publish_from
+	- publish_to
+	- static
+
+- optional attributes:
+	- last_updated
+	- description
+	- source <fk>
+	- photo <fk>
+	- app_data
+
+- auto-defined attributes:
+	- id
+	- content_type <fk>
+	- target
+
+
+
 article
 -------
 - `ella doc`__
@@ -486,8 +517,6 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#module-ella.artic
 	- static *(inherited)*
 
 - optional attributes:
-	- updated
-
 	- description *(inherited)*
 	- source <fk> *(inherited)*
 	- photo <fk> *(inherited)*
@@ -499,10 +528,65 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#module-ella.artic
 	- id *(inherited)*
 	- content_type <fk> *(inherited)*
 	- target *(inherited)*
+	- id
 
 
 
+gallery
+-------
+- `gallery doc`__
+- inherits from `publishable` resource
 
+__ https://github.com/ella/ella-galleries/blob/master/ella_galleries/models.py
+
+
+- required attributes:
+	- content
+
+	- category <fk> *(inherited)*
+	- title *(inherited)*
+	- slug *(inherited)*
+	- authors <many-to-many> *(inherited)*
+	- published *(inherited)*
+	- publish_from *(inherited)*
+	- publish_to *(inherited)*
+	- static *(inherited)*
+
+- optional attributes:
+	- last_updated *(inherited)*
+	- description *(inherited)*
+	- source <fk> *(inherited)*
+	- photo <fk> *(inherited)*
+	- app_data *(inherited)*
+
+- auto-defined attributes:
+	- created
+
+	- id *(inherited)*
+	- content_type <fk> *(inherited)*
+	- target *(inherited)*
+	- id
+
+
+
+galleryitem
+-----------
+- `gallery doc`__
+
+__ https://github.com/ella/ella-galleries/blob/master/ella_galleries/models.py
+
+
+- required attributes:
+	- gallery <fk>
+	- photo <fk>
+	- order
+
+- optional attributes:
+	- title (max. 255 characters)
+	- text
+
+- auto-defined attributes:
+	- id
 
 
 
@@ -525,9 +609,6 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-author-model
 
 - auto-defined attributes:
 	- id
-
-
-
 
 
 
@@ -559,9 +640,6 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-category-mode
 
 
 
-
-
-
 source
 --------
 - `ella doc`__
@@ -578,9 +656,6 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-source-model
 
 - auto-defined attributes:
 	- id
-
-
-
 
 
 
@@ -603,8 +678,6 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-listing-model
 
 - auto-defined attributes:
 	- id
-
-
 
 
 
@@ -665,7 +738,6 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-format-model
 
 
 
-
 formattedphoto
 --------------
 - `ella doc`__
@@ -692,100 +764,6 @@ https://github.com/toastdriven/django-tastypie/issues/307, so format may be spec
 	- url
 
 - auto-defined attributes:
-	- id
-
-
-
-
-gallery
--------
-- `gallery doc`__
-- inherits from `publishable` resource
-
-__ https://github.com/ella/ella-galleries/blob/master/ella_galleries/models.py
-
-
-- required attributes:
-	- content
-
-	- category <fk> *(inherited)*
-	- title *(inherited)*
-	- slug *(inherited)*
-	- authors <many-to-many> *(inherited)*
-	- published *(inherited)*
-	- publish_from *(inherited)*
-	- publish_to *(inherited)*
-	- static *(inherited)*
-
-- optional attributes:
-	- last_updated *(inherited)*
-	- description *(inherited)*
-	- source <fk> *(inherited)*
-	- photo <fk> *(inherited)*
-	- app_data *(inherited)*
-
-- auto-defined attributes:
-	- created
-
-	- id *(inherited)*
-	- content_type <fk> *(inherited)*
-	- target *(inherited)*
-	- id
-
-
-
-
-galleryitem
------------
-- `gallery doc`__
-
-__ https://github.com/ella/ella-galleries/blob/master/ella_galleries/models.py
-
-
-- required attributes:
-	- gallery <fk>
-	- photo <fk>
-	- order
-
-- optional attributes:
-	- title (max. 255 characters)
-	- text
-
-- auto-defined attributes:
-	- id
-
-
-
-
-publishable
------------
-- `ella doc`__
-
-__ http://ella.readthedocs.org/en/latest/reference/models.html#the-publishable-model
-
-
-- required attributes:
-	- category <fk>
-	- title
-	- slug
-	- authors <many-to-many>
-	- published
-	- publish_from
-	- publish_to
-	- static
-
-- optional attributes:
-	- last_updated
-	- description
-	- source <fk>
-	- photo <fk>
-	- app_data
-
-- auto-defined attributes:
-	- id
-	- content_type <fk>
-	- target
-
 
 
 
@@ -810,6 +788,7 @@ user
 	- is_superuser
 	- last_login
 	- resource_uri
+
 
 
 Contacts
