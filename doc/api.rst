@@ -697,6 +697,66 @@ https://github.com/toastdriven/django-tastypie/issues/307, so format may be spec
 
 
 
+gallery
+-------
+- `gallery doc`__
+- inherits from `publishable` resource
+
+__ https://github.com/ella/ella-galleries/blob/master/ella_galleries/models.py
+
+
+- required attributes:
+	- content
+
+	- category <fk> *(inherited)*
+	- title *(inherited)*
+	- slug *(inherited)*
+	- authors <many-to-many> *(inherited)*
+	- published *(inherited)*
+	- publish_from *(inherited)*
+	- publish_to *(inherited)*
+	- static *(inherited)*
+
+- optional attributes:
+	- last_updated *(inherited)*
+	- description *(inherited)*
+	- source <fk> *(inherited)*
+	- photo <fk> *(inherited)*
+	- app_data *(inherited)*
+
+- auto-defined attributes:
+	- created
+
+	- id *(inherited)*
+	- content_type <fk> *(inherited)*
+	- target *(inherited)*
+	- id
+
+
+
+
+galleryitem
+-----------
+- `gallery doc`__
+
+__ https://github.com/ella/ella-galleries/blob/master/ella_galleries/models.py
+
+
+- required attributes:
+	- gallery <fk>
+	- photo <fk>
+	- order
+
+- optional attributes:
+	- title (max. 255 characters)
+	- text
+
+- auto-defined attributes:
+	- id
+
+
+
+
 publishable
 -----------
 - `ella doc`__
