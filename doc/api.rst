@@ -775,6 +775,7 @@ __ http://ella.readthedocs.org/en/latest/reference/models.html#the-publishable-m
 	- static
 
 - optional attributes:
+	- last_updated
 	- description
 	- source <fk>
 	- photo <fk>
