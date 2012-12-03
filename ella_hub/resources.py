@@ -1,11 +1,10 @@
 import re
 
-from tastypie import fields
 from tastypie.resources import ModelResource
+from tastypie.exceptions import NotFound
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.contenttypes.models import ContentType
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponseForbidden
 from django.utils import simplejson
 
 from ella_hub.auth import ApiAuthentication as Authentication

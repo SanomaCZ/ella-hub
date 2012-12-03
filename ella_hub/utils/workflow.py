@@ -1,9 +1,9 @@
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _
 
-from ella.core.models import Publishable
 from ella.articles.models import Article
+from ella_hub import conf
 
 from ella_hub.models import Role, Permission, ModelPermission, PrincipalRoleRelation
 from ella_hub.models import State, Transition, Workflow
@@ -38,10 +38,7 @@ def init_ella_workflow(resources):
     )
 
     all_models = [resource._meta.object_class for resource in resources]
-    publishable_models = [model for model in all_models
-        if issubclass(model, Publishable) and model != Publishable]
 
-    state_obj_list = []
     perm_obj_list = []
 
     state_obj_list = _create_states(STATES, workflow)
@@ -92,8 +89,6 @@ def init_ella_workflow(resources):
         codename="deleted", workflow=workflow)[0]
 
     all_models = [resource._meta.object_class for resource in resources]
-    publishable_models = [model for model in all_models
-        if issubclass(model, Publishable) and model != Publishable]
 
     state_obj_list = _create_states(STATES, workflow)
 
@@ -194,8 +189,8 @@ def update_permissions(model):
     state = get_state(model)
 
     content_type = ContentType.objects.get_for_model(model)
-    perms = [wpr.permission for wpr in WorkflowPermissionRelation.objects.filter(
-        workflow=workflow)]
+    perms = [wpr.permission for wpr in WorkflowPermissionRelation.objects.
+                    filter(workflow=workflow).select_related('permission')]
 
     ModelPermission.objects.filter(content_type=content_type,
         permission__in=perms).delete()
@@ -219,8 +214,7 @@ def set_state(obj, state):
         relation = StateObjectRelation.objects.get(content_type=content_type,
             content_id=obj.id)
     except StateObjectRelation.DoesNotExist:
-        relation = StateObjectRelation.objects.create(content_object=obj,
-            state=state)
+        StateObjectRelation.objects.create(content_object=obj, state=state)
     else:
         relation.state = state
         relation.save()
@@ -254,32 +248,38 @@ def get_init_states(model, user, workflow=None):
         init_state = workflow.initial_state
     else:
         try:
-            workflow = WorkflowModelRelation.objects.get(content_type=content_type).workflow
+            WorkflowModelRelation.objects.get(content_type=content_type)
         except WorkflowModelRelation.DoesNotExist:
             return []
 
     if user.is_superuser:
-        roles = [relation.role for relation in PrincipalRoleRelation.objects.all()]
-    else:
-        relations = PrincipalRoleRelation.objects.filter(user=user)
-        roles = [relation.role for relation in relations]
+        cache_key = 'init_states_SU'
+        cached_roles = cache.get(cache_key)
+        if cached_roles is None:
+            cached_roles = [relation.role for relation in
+                    PrincipalRoleRelation.objects.all().select_related('role')]
+            cache.set(cache_key, cached_roles, timeout=conf.STATES_CACHE_TIMEOUT)
 
-    relations = ModelPermission.objects.filter(content_type=content_type,
-        role__in=roles)
+    else:
+        cache_key = 'init_states_user_%s_%s' % (user.pk, content_type.pk)
+        cached_roles = cache.get(cache_key)
+        if cached_roles is None:
+            relations = PrincipalRoleRelation.objects.filter(user=user).\
+                            select_related('role')
+            cached_roles = [relation.role for relation in relations]
+            cache.set(cache_key, cached_roles, timeout=conf.STATES_CACHE_TIMEOUT)
+
+    relations = ModelPermission.objects.\
+                    filter(content_type=content_type, role__in=cached_roles).\
+                                            select_related('permission')
 
     perms = [relation.permission for relation in relations]
 
-    relations = StatePermissionRelation.objects.filter(role__in=roles,
-        permission__in=perms)
-    states = _remove_duplicates([relation.state for relation in relations])
-
+    relations = StatePermissionRelation.objects.\
+                    filter(role__in=cached_roles, permission__in=perms).\
+                    select_related('state')
+    states = set([relation.state for relation in relations])
     if init_state:
         states = filter(lambda state: state in init_state.transitions, states)
 
     return states
-
-
-def _remove_duplicates(seq):
-    seen = set()
-    seen_add = seen.add
-    return [ x for x in seq if x not in seen and not seen_add(x)]

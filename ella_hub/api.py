@@ -351,16 +351,13 @@ class EllaHubApi(Api):
             field_attrs = {"readonly": False, "nullable": False}
 
             if (not has_model_state_permission(res_model, user, "can_change") or
-                has_model_state_permission(res_model, user, "readonly_" + fn, init_state)):
+                has_model_state_permission(res_model, user, "readonly_%s" % fn, init_state)):
                 field_attrs["readonly"] = True
             else:
                 field_attrs["readonly"] = attrs["readonly"]
             field_attrs["nullable"] = attrs["nullable"]
 
-            if has_model_state_permission(res_model, user, "disabled_" + fn, init_state):
-                field_attrs["disabled"] = True
-            else:
-                field_attrs["disabled"] = False
+            field_attrs["disabled"] = bool(has_model_state_permission(res_model, user, "disabled_%s" % fn, init_state))
             res_tree["fields"].update({fn: field_attrs})
 
         res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]

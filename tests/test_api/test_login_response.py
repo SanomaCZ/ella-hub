@@ -1,11 +1,10 @@
-import django.utils.simplejson as json
-
 from nose import tools
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
+from django.utils import simplejson as json
 
-from ella_hub.models import ModelPermission
 from ella_hub.utils import get_all_resource_classes
 from ella_hub.utils.perms import add_role
 from ella_hub.utils.test_helpers import create_advanced_workflow, delete_test_workflow
@@ -22,7 +21,7 @@ class TestLoginResponse(TestCase):
         delete_test_workflow()
 
     def test_base_structure(self):
-        (api_key, auth_tree, system) = self.__login("user", "pass")
+        api_key, auth_tree, system = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
         tools.assert_true("articles" in auth_tree)
@@ -57,7 +56,7 @@ class TestLoginResponse(TestCase):
         self.user.is_superuser = False
         self.user.save()
 
-        (api_key, auth_tree, system) = self.__login("user", "pass")
+        api_key, auth_tree, system = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
         for resource_name, resource_fields in auth_tree["articles"].items():
@@ -87,7 +86,7 @@ class TestLoginResponse(TestCase):
         tools.assert_true("auth_tree" in resources)
         tools.assert_true("system" in resources)
 
-        return (resources["api_key"], resources["auth_tree"], resources["system"])
+        return resources["api_key"], resources["auth_tree"], resources["system"]
 
     def __logout(self, headers):
         response = self.client.post('/admin-api/logout/', **headers)
