@@ -33,6 +33,13 @@ class TagResource(ApiModelResource):
             field.contribute_to_class(resource, "tags")
             resource.base_fields["tags"] = field
 
+            # patch methods in resources with attribute `tags`
+            # probably better solution is to inherit `ToManyField`
+            # but inherited field didn't work for me
+            resource.hydrate_m2m = patch_hydrate_m2m(resource.hydrate_m2m)
+            resource.save_m2m = patch_save_m2m(resource.save_m2m)
+            resource.dehydrate = patch_dehydrate(resource.dehydrate)
+
     def prepend_urls(self):
         urls = super(TagResource, self).prepend_urls()
         resource_name = self._meta.resource_name
@@ -68,3 +75,53 @@ class TagResource(ApiModelResource):
             "slug": ALL,
         }
         public = False
+
+
+def patch_hydrate_m2m(hydrate_m2m):
+    def patched_hydrate_m2m(self, bundle):
+        main_tag_indexes = []
+        for index, tag in enumerate(bundle.data.get("tags", ())):
+            if isinstance(tag, dict) and "main_tag" in tag:
+                # remove and store indexes of main tags
+                main_tag_indexes.append(index)
+                del tag["main_tag"]
+
+                # translate dictionary to resource URI
+                if "resource_uri" in tag:
+                    bundle.data["tags"][index] = tag["resource_uri"]
+
+        bundle = hydrate_m2m(self, bundle)
+
+        for index in main_tag_indexes:
+            bundle.data["tags"][index].data["main_tag"] = True
+
+        return bundle
+
+    return patched_hydrate_m2m
+
+
+def patch_save_m2m(save_m2m):
+    def patched_save_m2m(self, bundle):
+        save_m2m(self, bundle)
+
+        for bundle_m2m in bundle.data.get("tags", ()):
+            if bundle_m2m.data.get("main_tag", False):
+                bundle.obj.tags.set_main(bundle_m2m.obj)
+
+    return patched_save_m2m
+
+
+def patch_dehydrate(dehydrate):
+    def patched_dehydrate(self, bundle):
+        bundle = dehydrate(self, bundle)
+
+        # set attribute for main tag
+        main_tag = bundle.obj.tags.get_main()
+        for index, tag in enumerate(bundle.obj.tags.all()):
+            if tag == main_tag:
+                bundle.data["tags"][index].data["main_tag"] = True
+                break
+
+        return bundle
+
+    return patched_dehydrate

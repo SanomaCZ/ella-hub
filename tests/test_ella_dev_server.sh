@@ -377,7 +377,10 @@ then
 		"authors": ["/admin-api/author/100/"],
 		"tags": [
 			"/admin-api/tag/100/",
-			"/admin-api/tag/101/",
+			{
+				"resource_uri": "/admin-api/tag/101/",
+				"main_tag": true
+			},
 			{
 				"id": 102,
 				"slug": "art-102",
@@ -400,7 +403,8 @@ then
 			{
 				"id": 104,
 				"slug": "art-104",
-				"name": "Taggisimo tag"
+				"name": "Taggisimo tag",
+				"main_tag": true
 			},
 			{
 				"id": 105,
@@ -414,11 +418,17 @@ then
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	-X PATCH --data '{
 		"app_data": null,
-		"tags": [{
-			"id": 106,
-			"slug": "art-106",
-			"name": "The taggest tag in the world"
-		}]
+		"tags": [
+			"/admin-api/tag/100/",
+			"/admin-api/tag/101/",
+			{
+				"id": 106,
+				"slug": "art-106",
+				"name": "The taggest tag in the world",
+				"main_tag": true
+			},
+			"/admin-api/tag/105/"
+		]
 	}' "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	IMAGE_PATH=./example_image.png
@@ -441,16 +451,20 @@ then
 				{
 					"id": 107,
 					"slug": "tag-107",
-					"name": "Photo tag-107"
+					"name": "Photo tag-107",
+					"main_tag": true
 				}
 			]
 		}]
 	}' "$server/admin-api/photo/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "Photo has tags: "
-	curl --dump-header - -H "$AUTH_HEADER" -X GET \
-	"$server/admin-api/photo/100/" 2> /dev/null | \
-	grep '"resource_uri": "/admin-api/tag/100/".*"resource_uri": "/admin-api/tag/107/"' > /dev/null && echo "OK" || echo "FAILED"
+	curl --dump-header - -H "$AUTH_HEADER" -X GET "$server/admin-api/photo/100/" 2> /dev/null | \
+	grep '"resource_uri": "/admin-api/tag/107/".*"resource_uri": "/admin-api/tag/100/"' > /dev/null && echo "OK" || echo "FAILED"
+
+	echo -n "Article has main tag: "
+	curl --dump-header - -H "$AUTH_HEADER" -X GET "$server/admin-api/article/100/" 2> /dev/null | \
+	grep '"main_tag": true' > /dev/null && echo "OK" || echo "FAILED"
 
 	# filter articles by tag
 	echo -n "Article filtering by tags: "
