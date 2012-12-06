@@ -4,7 +4,6 @@ import ella_hub
 install_requires = [
     'setuptools>=0.6b1',
     'ella>=3.0',
-    'PIL',
     'django-tastypie',
     'django-object-permissions',
 ]
