@@ -1,3 +1,2 @@
-PIL
 git+git://github.com/ella/ella.git
 git+git://github.com/toastdriven/django-tastypie.git
