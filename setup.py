@@ -3,12 +3,13 @@ import ella_hub
 
 install_requires = [
     'setuptools>=0.6b1',
-    'ella>=3.0',
+    'ella>=3.0.5,<4',
     'django-tastypie',
     'django-object-permissions',
+    'jsonfield',
 ]
 
-test_requires = [
+tests_require = [
     'nose',
     'coverage',
 ]
@@ -48,5 +49,5 @@ setup(
     install_requires=install_requires,
     dependency_links = ['http://github.com/toastdriven/django-tastypie/tarball/master#egg=django-tastypie'],
     test_suite='tests.run_tests.run_all',
-    test_requires=test_requires,
+    tests_require=tests_require,
 )

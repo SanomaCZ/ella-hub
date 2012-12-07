@@ -1,2 +1,4 @@
-git+git://github.com/ella/ella.git
-git+git://github.com/toastdriven/django-tastypie.git
+ella>=3.0.5,<4
+jsonfield
+git+git://github.com/toastdriven/django-tastypie.git#egg=django-tastypie
+django-object-permissions
