@@ -149,10 +149,8 @@ class ApiModelResource(ModelResource):
         Returns only field `objects` with useful data.
         """
         bundle = super(ApiModelResource, self).alter_list_data_to_serialize(request, bundle)
-        if isinstance(bundle, dict) and "objects" in bundle:
-            bundle = bundle["objects"]
 
-        for object in bundle:
+        for object in bundle["objects"]:
             self.__add_state_fields(request, object)
 
         return bundle

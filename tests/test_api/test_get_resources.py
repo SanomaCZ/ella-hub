@@ -80,7 +80,7 @@ class TestGetResources(TestCase):
             response = self.client.get("/admin-api/%s/" % resource_name, **headers)
             tools.assert_equals(response.status_code, 200)
             resource_list = self.__get_response_json(response)
-            tools.assert_true(isinstance(resource_list, list))
+            tools.assert_true(isinstance(resource_list["objects"], list))
 
             response = self.client.get("/admin-api/%s/schema/" % resource_name, **headers)
             tools.assert_equals(response.status_code, 200)
@@ -89,7 +89,7 @@ class TestGetResources(TestCase):
 
     def test_check_modified_resource_structure(self):
         """
-        Meta informations from returned JSON should be removed.
+        Meta informations from returned JSON should be present.
         """
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
@@ -98,8 +98,10 @@ class TestGetResources(TestCase):
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
 
-        tools.assert_true(isinstance(resources, list))
-        for object in resources:
+        tools.assert_true(isinstance(resources, dict))
+        tools.assert_in("meta", resources)
+
+        for object in resources["objects"]:
             tools.assert_true(isinstance(object, dict))
 
         self.__logout(headers)
@@ -114,14 +116,14 @@ class TestGetResources(TestCase):
         response = self.client.get("/admin-api/publishable/", **headers)
         resources = self.__get_response_json(response)
 
-        for object in resources:
+        for object in resources["objects"]:
             tools.assert_true("url" in object)
 
         # article should inherit every publishable field
         response = self.client.get("/admin-api/article/", **headers)
         resources = self.__get_response_json(response)
 
-        for object in resources:
+        for object in resources["objects"]:
             tools.assert_true("url" in object)
 
         self.__logout(headers)

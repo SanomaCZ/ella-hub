@@ -39,10 +39,10 @@ class TestPosition(TestCase):
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
 
-        tools.assert_equals(len(resources), 1)
-        tools.assert_is_instance(resources[0]["target"], dict)
+        tools.assert_equals(len(resources["objects"]), 1)
+        tools.assert_is_instance(resources["objects"][0]["target"], dict)
 
-        target = resources[0]["target"]
+        target = resources["objects"][0]["target"]
         tools.assert_equals(target["title"], "Article")
         tools.assert_equals(target["slug"], "article")
         tools.assert_is_instance(target["category"], dict)

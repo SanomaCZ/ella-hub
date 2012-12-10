@@ -45,7 +45,7 @@ class TestRelated(TestCase):
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
 
-        tools.assert_equals(len(resources), 1)
+        tools.assert_equals(len(resources["objects"]), 1)
 
         related.delete()
         self.__logout(headers)
