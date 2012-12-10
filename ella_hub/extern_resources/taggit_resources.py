@@ -2,14 +2,16 @@
 Resources for daz-taggit application.
 This application is part of DaZ project.
 """
-
 from django.db.models import Count
 from django.conf.urls.defaults import url
+
+from taggit.managers import TaggableManager
+from taggit.models import TaggedItem, Tag
+
 from tastypie import fields
 from tastypie.resources import ALL
-from daz.daz_taggit.models import Tag, TaggedItem, TaggableManager
+
 from ella_hub.resources import ApiModelResource
-from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
     get_resource_model)
 
@@ -55,11 +57,12 @@ class TagResource(ApiModelResource):
         tag_id_set = map(int, tag_set.split(";"))
 
         # select objects sorted according to number of given tags that contain
-        objects = TaggedItem.objects.filter(tag__id__in=tag_id_set, content_type=content_type)
-        objects = objects.values("object_id").annotate(count=Count("object_id"))
-        objects = objects.order_by("-count")[:resource._meta.limit]
+        objects = TaggedItem.objects.filter(tag__id__in=tag_id_set, content_type=content_type).\
+                        values("object_id").annotate(count=Count("object_id")).\
+                        order_by('-count')[:resource._meta.limit]
+
         # extract primary keys of selected objects
-        object_ids = map(lambda o: o["object_id"], objects)
+        object_ids = map(lambda o: o["object_id"], list(objects))
 
         # sort bundles according to number of given tags that object contains
         objects = dict((o.id, o,) for o in model_class.objects.filter(pk__in=object_ids))
@@ -106,7 +109,10 @@ def patch_save_m2m(save_m2m):
 
         for bundle_m2m in bundle.data.get("tags", ()):
             if bundle_m2m.data.get("main_tag", False):
-                bundle.obj.tags.set_main(bundle_m2m.obj)
+                #TODO - make 'MAIN' variable and make it cleaner
+                if not bundle_m2m.startswith('MAIN:'):
+                    bundle_m2m.obj.name = 'MAIN:%s' % bundle_m2m.obj.name
+                    bundle_m2m.obj.save()
 
     return patched_save_m2m
 
@@ -115,10 +121,8 @@ def patch_dehydrate(dehydrate):
     def patched_dehydrate(self, bundle):
         bundle = dehydrate(self, bundle)
 
-        # set attribute for main tag
-        main_tag = bundle.obj.tags.get_main()
         for index, tag in enumerate(bundle.obj.tags.all()):
-            if tag == main_tag:
+            if tag.namespace == 'MAIN':
                 bundle.data["tags"][index].data["main_tag"] = True
                 break
 
