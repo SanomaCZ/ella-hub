@@ -31,6 +31,7 @@ class GalleryItemResource(ApiModelResource):
             "photo": ALL_WITH_RELATIONS,
             "order": ALL,
             "title": ALL,
+            "gallery": ALL_WITH_RELATIONS,
         }
         ordering = ("order",)
         public = False
