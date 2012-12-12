@@ -57,8 +57,8 @@ class TestTag(TestCase):
 
         response = self.client.get("/admin-api/tag/", **headers)
         resources = self.__get_response_json(response)
-        tools.assert_equals(len(resources["objects"]), 3)
-        t1, t2, t3 = resources["objects"]
+        tools.assert_equals(len(resources), 3)
+        t1, t2, t3 = resources
 
         tools.assert_equals(t1["name"], "Tag1")
         tools.assert_equals(t1["slug"], "tag1")
@@ -87,9 +87,9 @@ class TestTag(TestCase):
             tools.assert_equals(response.status_code, 200)
 
             resources = self.__get_response_json(response)
-            tools.assert_true(len(resources["objects"]) > 0)
-            tools.assert_in("tags", resources["objects"][0])
-            tools.assert_equals(len(resources["objects"][0]["tags"]), 2)
+            tools.assert_true(len(resources) > 0)
+            tools.assert_in("tags", resources[0])
+            tools.assert_equals(len(resources[0]["tags"]), 2)
 
         self.__logout(headers)
 

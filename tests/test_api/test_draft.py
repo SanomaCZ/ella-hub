@@ -34,7 +34,7 @@ class TestDraft(TestCase):
         tools.assert_equals(response.status_code, 200)
 
         resources = self.__get_response_json(response)
-        tools.assert_equals(resources["objects"], [])
+        tools.assert_equals(resources, [])
 
         self.__logout(headers)
 
@@ -45,7 +45,7 @@ class TestDraft(TestCase):
         response = self.client.get("/admin-api/draft/", **headers)
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
-        tools.assert_equals(resources["objects"], [])
+        tools.assert_equals(resources, [])
 
         draft_count = 11
         self.__insert_article_drafts(draft_count)
@@ -53,7 +53,7 @@ class TestDraft(TestCase):
         response = self.client.get("/admin-api/draft/?limit=%d" % draft_count, **headers)
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
-        tools.assert_equals(len(resources["objects"]), draft_count)
+        tools.assert_equals(len(resources), draft_count)
 
         self.__logout(headers)
         self.__delete_article_drafts()
@@ -69,13 +69,13 @@ class TestDraft(TestCase):
             "/admin-api/draft/?content_type=article&limit=%d" % draft_count, **headers)
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
-        tools.assert_equals(len(resources["objects"]), draft_count)
+        tools.assert_equals(len(resources), draft_count)
 
         response = self.client.get(
             "/admin-api/draft/?content_type=author&limit=100", **headers)
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
-        tools.assert_equals(len(resources["objects"]), 0)
+        tools.assert_equals(len(resources), 0)
 
         self.__logout(headers)
         self.__delete_article_drafts()
@@ -165,7 +165,7 @@ class TestDraft(TestCase):
         tools.assert_equals(response.status_code, 200)
         resources = self.__get_response_json(response)
 
-        resources = sorted(resources["objects"], key=lambda i: i["data"]["id"])
+        resources = sorted(resources, key=lambda i: i["data"]["id"])
         for id, draft in enumerate(resources):
             tools.assert_equals(draft["name"], "")
             tools.assert_equals(type(draft["data"]), dict)
