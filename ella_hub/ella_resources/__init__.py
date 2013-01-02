@@ -58,7 +58,7 @@ class CategoryResource(ApiModelResource):
         return " > ".join(titles)
 
     class Meta(ApiModelResource.Meta):
-        queryset = Category.objects.all()
+        queryset = Category.objects.all().order_by('tree_path')
         filtering = {
             'id': ALL,
             'resource_uri': ('exact',),
