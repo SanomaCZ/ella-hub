@@ -253,6 +253,10 @@ class PublishableResource(ApiModelResource):
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
 
+    def is_valid(self, bundle, request=None):
+        bundle.obj.clean()
+        return super(PublishableResource, self).is_valid(bundle, request)
+
     def dehydrate(self, bundle):
         bundle = super(PublishableResource, self).dehydrate(bundle)
 
