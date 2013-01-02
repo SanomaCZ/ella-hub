@@ -18,7 +18,7 @@ class GalleryResource(PublishableResource):
             PublishableResource.Meta.filtering,
             created=ALL,
         )
-        public = False
+        public = True
 
 
 class GalleryItemResource(ApiModelResource):
