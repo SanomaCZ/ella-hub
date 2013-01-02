@@ -1,6 +1,7 @@
 from django.db import models, IntegrityError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import date
 
@@ -16,7 +17,7 @@ class Draft(models.Model):
     user = models.ForeignKey(User, verbose_name=_("User"))
     name = models.CharField(_("Name"), max_length=64, blank=True)
 
-    timestamp = models.DateTimeField(editable=False, auto_now=True)
+    timestamp = models.DateTimeField(editable=False)
     data = JSONField(_("Data"))
 
     def __unicode__(self):
@@ -25,6 +26,10 @@ class Draft(models.Model):
         else:
             return u"%s %s (%s)" % (_("Autosaved"), _(self.content_type.name),
                 date(self.timestamp, "y-m-d H:i"))
+
+    def save(self, *args, **kwargs):
+        self.timestamp = now().replace(microsecond=0)
+        super(Draft, self).save(*args, **kwargs)
 
     class Meta:
         app_label = "ella_hub"
