@@ -40,6 +40,9 @@ class ModelPermission(models.Model):
         app_label = "ella_hub"
         verbose_name = _("Model Permission")
         verbose_name_plural = _("Model Permissions")
+        unique_together = (
+            ('role', 'permission', 'content_type'),
+        )
 
 
 class PrincipalRoleRelation(models.Model):

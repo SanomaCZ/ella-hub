@@ -1,17 +1,12 @@
-from datetime import datetime
 from django.db import models, IntegrityError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import date
+
 from jsonfield import JSONField
+
 from ella.core.models import Publishable
-
-
-class SimpleDateTimeField(models.DateTimeField):
-    def get_prep_value(self, value):
-        value_cut_str = str(value)[:str(value).rfind('.')]
-        return value.strptime(value_cut_str, "%Y-%m-%d %H:%M:%S")
 
 
 class Draft(models.Model):
@@ -21,11 +16,11 @@ class Draft(models.Model):
     user = models.ForeignKey(User, verbose_name=_("User"))
     name = models.CharField(_("Name"), max_length=64, blank=True)
 
-    timestamp = SimpleDateTimeField(editable=False, auto_now=True)
+    timestamp = models.DateTimeField(editable=False, auto_now=True)
     data = JSONField(_("Data"))
 
     def __unicode__(self):
-        if self.name != "":
+        if self.name:
             return u"%s (%s)" % (self.name, date(self.timestamp, "y-m-d H:i"))
         else:
             return u"%s %s (%s)" % (_("Autosaved"), _(self.content_type.name),
