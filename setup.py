@@ -6,7 +6,7 @@ install_requires = [
     'ella>=3.0.5,<4',
     'django-tastypie',
     'django-object-permissions',
-    'jsonfield',
+    'django-jsonfield',
 ]
 
 tests_require = [

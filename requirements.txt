@@ -1,4 +1,4 @@
 ella>=3.0.5,<4
-jsonfield
+django-jsonfield
 git+git://github.com/toastdriven/django-tastypie.git#egg=django-tastypie
 django-object-permissions

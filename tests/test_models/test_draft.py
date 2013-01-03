@@ -47,7 +47,7 @@ class TestDraftModel(TestCase):
     def test_draft_to_string(self):
         content_type = ContentType.objects.get_for_model(Article)
         draft = Draft.objects.create(content_type=content_type,
-            user=self.user, data="payload")
+            user=self.user, data=["payload", True, 123456789])
 
         tools.assert_equals(unicode(draft), u"%s %s (%s)" % (
             _("Autosaved"), _(content_type.name), date(draft.timestamp, 'y-m-d H:i')))
