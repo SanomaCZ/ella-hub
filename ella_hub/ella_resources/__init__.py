@@ -38,6 +38,7 @@ class CategoryResource(ApiModelResource):
     parent_category = fields.ForeignKey('self', 'tree_parent',
         blank=True, null=True)
     site = fields.ForeignKey(SiteResource, 'site', full=True)
+    app_data = fields.DictField('app_data')
 
     def dehydrate(self, bundle):
         """Adds full name of category to the root category."""
@@ -252,6 +253,7 @@ class PublishableResource(ApiModelResource):
         full=True)
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
         full=True)
+    app_data = fields.DictField('app_data')
 
     def is_valid(self, bundle, request=None):
         bundle.obj.clean()
