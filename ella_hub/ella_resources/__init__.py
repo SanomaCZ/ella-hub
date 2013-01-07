@@ -140,22 +140,31 @@ class PhotoResource(MultipartFormDataModelResource):
         if 'rotate' in bundle.data:
             uploaded_image = bundle.data['image']
 
-            image = Image.open(uploaded_image)
-            angle = int(bundle.data['rotate']) % 360
-            image = image.rotate(-angle) # clockwise rotation
-            path = self._upload_to(uploaded_image.name)
+            # image already uploaded by previous PATCH
+            # image contains only path to uploaded image
+            if isinstance(uploaded_image, (basestring)):
+                path = os.path.join(settings.MEDIA_ROOT, uploaded_image)
+                image = self._rotate_image(path, bundle.data['rotate'])
+                image.save(path)
+            else:
+                path = self._upload_to(uploaded_image.name)
 
-            # create directory path if neccesary
-            directory_path = os.path.dirname(path)
-            if not os.path.exists(directory_path):
-                os.makedirs(directory_path)
+                # create directory path if neccesary
+                directory_path = os.path.dirname(path)
+                if not os.path.exists(directory_path):
+                    os.makedirs(directory_path)
+                image = self._rotate_image(uploaded_image, bundle.data['rotate'])
+                image.save(path)
 
-            image.save(path)
-
-            bundle.data['image'] = ImageFile(open(path, "rb"))
-            bundle.obj.image = bundle.data['image']
+                bundle.data['image'] = ImageFile(open(path, "rb"))
+                bundle.obj.image = bundle.data['image']
 
         return bundle
+
+    def _rotate_image(self, image_file, angle):
+        image = Image.open(image_file)
+        angle = int(angle) % 360
+        return image.rotate(-angle) # clockwise rotation
 
     def _upload_to(self, filename):
         name, ext = os.path.splitext(filename)
