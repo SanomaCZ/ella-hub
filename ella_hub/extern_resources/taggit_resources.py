@@ -110,7 +110,7 @@ def patch_save_m2m(save_m2m):
         for bundle_m2m in bundle.data.get("tags", ()):
             if bundle_m2m.data.get("main_tag", False):
                 #TODO - make 'MAIN' variable and make it cleaner
-                if not bundle_m2m.startswith('MAIN:'):
+                if not bundle_m2m.data.get('name', '').upper().startswith('MAIN:'):
                     bundle_m2m.obj.name = 'MAIN:%s' % bundle_m2m.obj.name
                     bundle_m2m.obj.save()
 
@@ -122,8 +122,9 @@ def patch_dehydrate(dehydrate):
         bundle = dehydrate(self, bundle)
 
         for index, tag in enumerate(bundle.obj.tags.all()):
-            if tag.namespace == 'MAIN':
+            if tag.namespace.upper() == 'MAIN':
                 bundle.data["tags"][index].data["main_tag"] = True
+                print 'setting main tag'
                 break
 
         return bundle
