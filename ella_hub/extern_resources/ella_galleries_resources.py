@@ -24,6 +24,7 @@ class GalleryResource(PublishableResource):
 class GalleryItemResource(ApiModelResource):
     gallery = fields.ForeignKey(GalleryResource, "gallery", full=True)
     photo = fields.ForeignKey(PhotoResource, "photo", full=True)
+    app_data = fields.DictField('app_data')
 
     class Meta(ApiModelResource.Meta):
         queryset = GalleryItem.objects.all()
