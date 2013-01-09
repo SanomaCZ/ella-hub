@@ -120,16 +120,15 @@ class SourceResource(ApiModelResource):
 
 class PhotoResource(MultipartFormDataModelResource):
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
-    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
-        full=True)
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True)
+    app_data = fields.DictField('app_data')
 
     def dehydrate(self, bundle):
         """Adds absolute URL of image."""
         bundle = super(PhotoResource, self).dehydrate(bundle)
 
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
-        bundle.data['public_url'] = bundle.request.build_absolute_uri(
-            bundle.obj.image.url)
+        bundle.data['public_url'] = bundle.request.build_absolute_uri(bundle.obj.image.url)
 
         return bundle
 
@@ -142,7 +141,7 @@ class PhotoResource(MultipartFormDataModelResource):
 
             # image already uploaded by previous PATCH
             # image contains only path to uploaded image
-            if isinstance(uploaded_image, (basestring)):
+            if isinstance(uploaded_image, (basestring,)):
                 path = os.path.join(settings.MEDIA_ROOT, uploaded_image)
                 image = self._rotate_image(path, bundle.data['rotate'])
                 image.save(path)
