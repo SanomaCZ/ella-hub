@@ -1,6 +1,7 @@
 """
-Resources for daz-taggit application.
-This application is part of DaZ project.
+Resources for django-taggit application.
+https://github.com/yedpodtrzitko/django-taggit
+git://github.com/yedpodtrzitko/django-taggit.git
 """
 from django.db.models import Count
 from django.conf.urls.defaults import url

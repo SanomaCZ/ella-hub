@@ -1,8 +1,7 @@
 -r requirements.txt
 
 pysqlite
-django-taggit
-git+git://github.com/ella/ella-taggit.git
+git+https://github.com/yedpodtrzitko/django-taggit.git#egg=django-taggit
 git+git://github.com/ella/ella-galleries.git
 -e git+gitolite@git.smdev.cz:ella-wikipages#egg=ella-wikipages
 

@@ -129,6 +129,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 
+    'taggit',
     'tastypie',
 
     'ella.core',
@@ -138,7 +139,6 @@ INSTALLED_APPS = (
 
     'ella_galleries',
     'ella_wikipages',
-    'ella_taggit',
     'ella_hub',  # install it via python setup.py develop
 )
 
@@ -147,7 +147,7 @@ RESOURCE_MODULES = (
     'ella_hub.ella_resources',
     'ella_hub.extern_resources.ella_galleries_resources',
     'ella_hub.extern_resources.ella_wikipages_resources',
-    'ella_hub.extern_resources.ella_taggit_resources',
+    'ella_hub.extern_resources.taggit_resources',
 )
 
 # Needed by object_permissions app

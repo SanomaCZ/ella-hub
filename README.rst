@@ -55,8 +55,8 @@ Setting up
         'ella_hub.extern_resources.ella_galleries_resources',
         # only when you are using ella-wikipages application
         'ella_hub.extern_resources.ella_wikipages_resources',
-        # only when you are using ella-taggit application
-        'ella_hub.extern_resources.ella_taggit_resources',
+        # only when you are using django-taggit application
+        'ella_hub.extern_resources.taggit_resources',
         # only when you are using daz-taggit application
         'ella_hub.extern_resources.daz_taggit_resources',
     )

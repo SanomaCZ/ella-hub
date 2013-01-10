@@ -7,7 +7,7 @@ from ella.core.models import Author
 from ella.articles.models import Article
 from ella.utils import timezone
 from ella.utils.test_helpers import create_basic_categories
-from ella_taggit.models import PublishableTag, PublishableTaggedItem
+from taggit.models import Tag, TaggedItem
 
 from ella_hub.utils import get_all_resource_classes
 from ella_hub.utils.workflow import init_ella_workflow
@@ -25,17 +25,14 @@ class TestTag(TestCase):
         self.user.delete()
         Author.objects.all().delete()
         Article.objects.all().delete()
-        PublishableTag.objects.all().delete()
-        PublishableTaggedItem.objects.all().delete()
+        Tag.objects.all().delete()
+        TaggedItem.objects.all().delete()
 
     def test_create_tags(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        payload = simplejson.dumps({
-            "name": "Tag1",
-        })
-        response = self.client.post("/admin-api/tag/", payload,
+        response = self.client.post("/admin-api/tag/", '{"name": "Tag1"}',
             content_type="application/json", **headers)
         tools.assert_equals(response.status_code, 201)
 
@@ -47,11 +44,7 @@ class TestTag(TestCase):
             content_type="application/json", **headers)
         tools.assert_equals(response.status_code, 201)
 
-        payload = simplejson.dumps({
-            "name": "Tag3",
-            "description": "Description of Tag#3",
-        })
-        response = self.client.post("/admin-api/tag/", payload,
+        response = self.client.post("/admin-api/tag/", '{"name": "Tag3"}',
             content_type="application/json", **headers)
         tools.assert_equals(response.status_code, 201)
 
@@ -62,39 +55,35 @@ class TestTag(TestCase):
 
         tools.assert_equals(t1["name"], "Tag1")
         tools.assert_equals(t1["slug"], "tag1")
-        tools.assert_equals(t1["description"], "")
 
         tools.assert_equals(t2["name"], "Tag2")
         tools.assert_equals(t2["slug"], "slug-for-tag2")
-        tools.assert_equals(t2["description"], "")
 
         tools.assert_equals(t3["name"], "Tag3")
         tools.assert_equals(t3["slug"], "tag3")
-        tools.assert_equals(t3["description"], "Description of Tag#3")
 
         self.__logout(headers)
 
-    def test_tags_in_publishables(self):
-        t1 = PublishableTag.objects.create(name="Tag1")
-        t2 = PublishableTag.objects.create(name="Tag2", description="Tag")
+    def test_tags_in_article(self):
+        t1 = Tag.objects.create(name="Tag1")
+        t2 = Tag.objects.create(name="Tag2")
         self.article.tags.add(t1, t2)
 
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
-        for resource in ("publishable", "article"):
-            response = self.client.get("/admin-api/%s/" % resource, **headers)
-            tools.assert_equals(response.status_code, 200)
+        response = self.client.get("/admin-api/article/", **headers)
+        tools.assert_equals(response.status_code, 200)
 
-            resources = self.__get_response_json(response)
-            tools.assert_true(len(resources) > 0)
-            tools.assert_in("tags", resources[0])
-            tools.assert_equals(len(resources[0]["tags"]), 2)
+        resources = self.__get_response_json(response)
+        tools.assert_true(len(resources) > 0)
+        tools.assert_in("tags", resources[0])
+        tools.assert_equals(len(resources[0]["tags"]), 2)
 
         self.__logout(headers)
 
     def test_upload_tags_with_publishable(self):
-        t1 = PublishableTag.objects.create(name="Model tag")
+        t1 = Tag.objects.create(name="Model tag")
 
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
@@ -115,10 +104,7 @@ class TestTag(TestCase):
             }],
             "tags": [
                 "/admin-api/tag/%d/" % t1.id,
-                {
-                    "name": "API tag",
-                    "description": "API tag description",
-                },
+                {"name": "API tag"},
             ],
         })
         response = self.client.post("/admin-api/article/", payload,
@@ -134,26 +120,23 @@ class TestTag(TestCase):
         tools.assert_equals(len(resource["tags"]), 2)
         expected_tags = [
             {
-                "name": t1.name,
-                "slug": t1.slug,
-                "description": u"",
-            },
-            {
                 "name": "API tag",
                 "slug": "api-tag",
-                "description": "API tag description",
+            },
+            {
+                "name": t1.name,
+                "slug": t1.slug,
             },
         ]
 
         for expected, returned in zip(expected_tags, resource["tags"]):
             tools.assert_equals(expected["name"], returned["name"])
             tools.assert_equals(expected["slug"], returned["slug"])
-            tools.assert_equals(expected["description"], returned["description"])
 
         self.__logout(headers)
 
     def test_update_tagged_publishable(self):
-        t1 = PublishableTag.objects.create(name="Model tag")
+        t1 = Tag.objects.create(name="Model tag")
 
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
@@ -176,8 +159,8 @@ class TestTag(TestCase):
                 "/admin-api/tag/%d/" % t1.id,
                 {
                     "name": "API tag",
-                    "description": "API tag description",
-                }, {
+                },
+                {
                     "name": "Tag#2 via API",
                     "slug": "tag-2-api",
                 },
@@ -197,34 +180,30 @@ class TestTag(TestCase):
         tools.assert_equals(len(resource["tags"]), 3)
         expected_tags = [
             {
-                "name": t1.name,
-                "slug": t1.slug,
-                "description": u"",
-            },
-            {
                 "name": u"API tag",
                 "slug": u"api-tag",
-                "description": u"API tag description",
+            },
+            {
+                "name": t1.name,
+                "slug": t1.slug,
             },
             {
                 "name": u"Tag#2 via API",
                 "slug": u"tag-2-api",
-                "description": u"",
             },
         ]
 
         for expected, returned in zip(expected_tags, resource["tags"]):
             tools.assert_equals(expected["name"], returned["name"])
             tools.assert_equals(expected["slug"], returned["slug"])
-            tools.assert_equals(expected["description"], returned["description"])
 
         self.__logout(headers)
 
     def test_filter_by_tags(self):
         Article.objects.create(title="Title non-title", slug="non-titled",
             category=self.category, publish_from=timezone.now())
-        t1 = PublishableTag.objects.create(name="Tag1")
-        t2 = PublishableTag.objects.create(name="Tag2", description="Tag")
+        t1 = Tag.objects.create(name="Tag1")
+        t2 = Tag.objects.create(name="Tag2")
         self.article.tags.add(t1, t2)
 
         api_key = self.__login("user", "pass")
@@ -246,8 +225,8 @@ class TestTag(TestCase):
         """
         article = Article.objects.create(title="Title non-title",
             category=self.category, publish_from=timezone.now(), slug="non-titled")
-        t1 = PublishableTag.objects.create(name="Tag1")
-        t2 = PublishableTag.objects.create(name="Tag2", description="Tag")
+        t1 = Tag.objects.create(name="Tag1")
+        t2 = Tag.objects.create(name="Tag2")
         article.tags.add(t1, t2)
         self.article.tags.add(t2)
 
