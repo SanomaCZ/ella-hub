@@ -129,7 +129,6 @@ def patch_dehydrate(dehydrate):
         for index, tag in enumerate(bundle.obj.tags.all()):
             if tag.namespace.upper() == 'MAIN':
                 bundle.data["tags"][index].data["main_tag"] = True
-                print 'setting main tag'
                 break
 
         return bundle
