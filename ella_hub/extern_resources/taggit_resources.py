@@ -9,7 +9,7 @@ from taggit.managers import TaggableManager
 from taggit.models import TaggedItem, Tag
 
 from tastypie import fields
-from tastypie.resources import ALL
+from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
 from ella_hub.resources import ApiModelResource
 from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
@@ -34,6 +34,9 @@ class TagResource(ApiModelResource):
             # `DeclarativeMetaclass` already created `Resource` classes
             field.contribute_to_class(resource, "tags")
             resource.base_fields["tags"] = field
+
+            # allow filtering
+            resource._meta.filtering["tags"] = ALL_WITH_RELATIONS
 
             # patch methods in resources with attribute `tags`
             # probably better solution is to inherit `ToManyField`
@@ -74,6 +77,7 @@ class TagResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
         queryset = Tag.objects.all()
         filtering = {
+            "id": ALL,
             "name": ALL,
             "slug": ALL,
         }

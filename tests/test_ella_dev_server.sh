@@ -460,16 +460,20 @@ then
 
 	echo -n "Photo has tags: "
 	curl --dump-header - -H "$AUTH_HEADER" -X GET "$server/admin-api/photo/100/" 2> /dev/null | \
-	grep '"resource_uri": "/admin-api/tag/107/".*"resource_uri": "/admin-api/tag/100/"' > /dev/null && echo "OK" || echo "FAILED"
+	grep '"resource_uri": "/admin-api/tag/10[07]/".*"resource_uri": "/admin-api/tag/10[07]/"' > /dev/null && echo "OK" || echo "FAILED"
 
 	echo -n "Article has main tag: "
 	curl --dump-header - -H "$AUTH_HEADER" -X GET "$server/admin-api/article/100/" 2> /dev/null | \
 	grep '"main_tag": true' > /dev/null && echo "OK" || echo "FAILED"
 
-	# filter articles by tag
+	# filter articles/photos by tag
 	echo -n "Article filtering by tags: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
 	"$server/admin-api/tag/related/article/100;101;106/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "Photo filtering by tags: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+	"$server/admin-api/photo/?tags__in=106,100" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Deletion of all tag-related objects.
 	echo -n "DELETE photo with tags: "
