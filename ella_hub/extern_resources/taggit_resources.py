@@ -24,8 +24,8 @@ class TagResource(ApiModelResource):
             if not getattr(resource._meta, "public", False):
                 continue
 
-            if not hasattr(resource.Meta.object_class, "tags"):
-                resource.Meta.object_class.add_to_class("tags",
+            if not hasattr(resource._meta.object_class, "tags"):
+                resource._meta.object_class.add_to_class("tags",
                     TaggableManager(through=TaggedItem))
 
             field = fields.ToManyField(TagResource, "tags", blank=True,
