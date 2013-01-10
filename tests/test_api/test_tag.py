@@ -82,6 +82,52 @@ class TestTag(TestCase):
 
         self.__logout(headers)
 
+    def test_main_tag_for_article(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        payload = simplejson.dumps({
+            "title": "Test article",
+            "slug": "test-article",
+            "category": "/admin-api/category/%d/" % self.category.id,
+            "content": "Content of article",
+            "description": "Description of article",
+            "publish_from": "2012-08-07T14:51:29",
+            "publish_to": "2012-08-15T14:51:35",
+            "authors": [{
+                "email": "mail@mail.com",
+                "description": "this is descr.",
+                "name": "Author",
+                "slug": "author",
+            }],
+            "tags": [
+                {
+                    "name": "API tag",
+                },
+                {
+                    "name": "Main tag",
+                    "main_tag": True,
+                },
+            ],
+        })
+        response = self.client.post("/admin-api/article/", payload,
+            content_type="application/json", **headers)
+        tools.assert_equals(response.status_code, 201)
+        resource = self.__get_response_json(response)
+        tools.assert_in("resource_uri", resource)
+
+        response = self.client.get(resource["resource_uri"], **headers)
+        tools.assert_equals(response.status_code, 200)
+        resource = self.__get_response_json(response)
+        tools.assert_equals(len(resource["tags"]), 2)
+
+        tools.assert_equals(resource["tags"][0]["name"], "API tag")
+        tools.assert_not_in("main_tag", resource["tags"][0])
+        tools.assert_equals(resource["tags"][1]["name"], "MAIN:Main tag")
+        tools.assert_equals(resource["tags"][1]["main_tag"], True)
+
+        self.__logout(headers)
+
     def test_upload_tags_with_publishable(self):
         t1 = Tag.objects.create(name="Model tag")
 
