@@ -3,7 +3,7 @@ import django.utils.simplejson as json
 
 from PIL import Image
 from urlparse import urlparse, urlsplit
-from nose import tools, SkipTest
+from nose import tools
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
