@@ -4,12 +4,14 @@ https://github.com/yedpodtrzitko/django-taggit
 git://github.com/yedpodtrzitko/django-taggit.git
 """
 from django.db.models import Count
+from django.db import IntegrityError
 from django.conf.urls.defaults import url
 
 from taggit.managers import TaggableManager
 from taggit.models import TaggedItem, Tag
 
 from tastypie import fields
+from tastypie.exceptions import BadRequest
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
 from ella_hub.resources import ApiModelResource
@@ -74,6 +76,18 @@ class TagResource(ApiModelResource):
         bundles = [resource.full_dehydrate(bundle) for bundle in bundles]
 
         return resource.create_response(request, bundles)
+
+    def obj_create(self, bundle, request=None, **kwargs):
+        try:
+            return super(TagResource, self).obj_create(bundle, request, **kwargs)
+        except IntegrityError:
+            # duplicate entry for 'name' or 'slug'
+            try:
+                bundle.obj = Tag.objects.get(name=bundle.data["name"])
+                return bundle
+            except Tag.DoesNotExist:
+                # duplicate entry for 'slug'
+                raise BadRequest("Slug '%s' is not unique" % bundle.data["slug"])
 
     class Meta(ApiModelResource.Meta):
         queryset = Tag.objects.all()

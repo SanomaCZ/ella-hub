@@ -1,4 +1,4 @@
-from nose import tools
+from nose import tools, SkipTest
 from django.test import TestCase
 from django.utils import simplejson
 from django.contrib.auth.models import User
@@ -61,6 +61,76 @@ class TestTag(TestCase):
 
         tools.assert_equals(t3["name"], "Tag3")
         tools.assert_equals(t3["slug"], "tag3")
+
+        self.__logout(headers)
+
+    def test_create_tag_with_existing_name(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        for slug in ("slug1", "slug2"):
+            payload = simplejson.dumps({
+                "name": "UniqueTagName",
+                "slug": slug,
+            })
+            response = self.client.post("/admin-api/tag/", payload,
+                content_type="application/json", **headers)
+            tools.assert_equals(response.status_code, 201)
+
+        response = self.client.get("/admin-api/tag/?name=UniqueTagName", **headers)
+        resources = self.__get_response_json(response)
+        tools.assert_equals(len(resources), 1)
+        tag = resources[0]
+
+        tools.assert_equals(tag["name"], "UniqueTagName")
+        tools.assert_equals(tag["slug"], "slug1")
+
+        self.__logout(headers)
+
+    def test_create_tag_with_existing_name_without_slug(self):
+        """
+        This test causes infinite cycle because method `Tag.save` tries
+        to create missing slug. That's why it is skipped for now.
+        """
+        raise SkipTest()
+
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        for i in range(2):
+            response = self.client.post("/admin-api/tag/", '{"name": "Tag"}',
+                content_type="application/json", **headers)
+            tools.assert_equals(response.status_code, 201)
+
+        response = self.client.get("/admin-api/tag/?name=Tag", **headers)
+        resources = self.__get_response_json(response)
+        tools.assert_equals(len(resources), 1)
+        tag = resources[0]
+
+        tools.assert_equals(tag["name"], "Tag")
+        tools.assert_equals(tag["slug"], "tag")
+
+        self.__logout(headers)
+
+    def test_create_tag_with_existing_slug(self):
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        payload = simplejson.dumps({
+            "name": "Some tag",
+            "slug": "unique-slug",
+        })
+        response = self.client.post("/admin-api/tag/", payload,
+            content_type="application/json", **headers)
+        tools.assert_equals(response.status_code, 201)
+
+        payload = simplejson.dumps({
+            "name": "Any tag",
+            "slug": "unique-slug",
+        })
+        response = self.client.post("/admin-api/tag/", payload,
+            content_type="application/json", **headers)
+        tools.assert_equals(response.status_code, 400)
 
         self.__logout(headers)
 
