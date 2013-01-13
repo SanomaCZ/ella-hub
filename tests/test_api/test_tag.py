@@ -1,4 +1,4 @@
-from nose import tools, SkipTest
+from nose import tools
 from django.test import TestCase
 from django.utils import simplejson
 from django.contrib.auth.models import User
@@ -88,12 +88,6 @@ class TestTag(TestCase):
         self.__logout(headers)
 
     def test_create_tag_with_existing_name_without_slug(self):
-        """
-        This test causes infinite cycle because method `Tag.save` tries
-        to create missing slug. That's why it is skipped for now.
-        """
-        raise SkipTest()
-
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
 
