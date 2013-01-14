@@ -77,6 +77,32 @@ class TestLoginResponse(TestCase):
 
         self.__logout(headers)
 
+    def test_filter_by_state(self):
+        """
+        State is virtual field so filtering has to be done manually.
+        """
+        author1 = Author.objects.create(id=self.user.id, name="1st author", slug="one")
+        author2 = Author.objects.create(name="2nd author", slug="two")
+
+        api_key = self.__login("user", "pass")
+        headers = self.__build_headers("user", api_key)
+
+        self.workflow.set_to_model(Author)
+        set_state(author1, self.state1)
+        set_state(author2, self.state2)
+        self.workflow.set_to_model(User)
+        set_state(self.user, self.state2)
+
+        url = u"/admin-api/author/?state=" + self.state2.codename
+        response = self.client.get(url, **headers)
+        tools.assert_equals(response.status_code, 200, response.content)
+
+        resources = self.__get_response_json(response)
+        tools.assert_equals(len(resources), 1)
+        tools.assert_equals(resources[0]["state"], self.state2.codename)
+
+        self.__logout(headers)
+
     def test_state_included(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)

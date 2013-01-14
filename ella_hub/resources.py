@@ -1,17 +1,19 @@
 import re
 
-from tastypie.resources import ModelResource
-from tastypie.exceptions import NotFound
-
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponseForbidden
 from django.utils import simplejson
+from django.http import HttpResponseForbidden
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.contenttypes.models import ContentType
+
+from tastypie.exceptions import NotFound
+from tastypie.resources import ModelResource
 
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub.utils import get_resource_model
 from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
+from ella_hub.models import StateObjectRelation
 
 
 class ApiModelResource(ModelResource):
@@ -260,6 +262,32 @@ class ApiModelResource(ModelResource):
 
         model_class = get_resource_model(match.group('resource_name'))
         return model_class.objects.get(pk=match.group('pk'))
+
+    def build_filters(self, filters=None):
+        """Tastypie has too strict validation for filtering."""
+        state = None
+        if filters and "state" in filters:
+            state = filters["state"]
+            del filters["state"]
+
+        filters = super(ApiModelResource, self).build_filters(filters)
+
+        if state:
+            filters["state"] = state
+
+        return filters
+
+    def apply_filters(self, request, applicable_filters):
+        # get object IDs of resource type in exact state
+        if "state" in applicable_filters:
+            content_type = ContentType.objects.get_for_model(self._meta.object_class)
+            state_object_relations = StateObjectRelation.objects.filter(
+                state__codename=applicable_filters["state"], content_type=content_type)
+            object_ids = state_object_relations[:self._meta.limit].values_list("content_id", flat=True)
+            applicable_filters["id__in"] = object_ids
+            del applicable_filters["state"]
+
+        return super(ApiModelResource, self).apply_filters(request, applicable_filters)
 
     class Meta:
         authentication = Authentication()
