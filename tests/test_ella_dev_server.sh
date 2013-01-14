@@ -180,6 +180,41 @@ then
 		"state": "added"
 	}' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
+	echo -n "POST gallery #100: "
+	curl --dump-header - -X POST -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"id": 100,
+		"title": "Gallery",
+		"slug": "1000-year-gallery",
+		"content": "So beautiful gallery",
+		"description": "Hmm..",
+		"authors": ["/admin-api/author/100/"],
+		"category": "/admin-api/category/100/",
+		"publish_from": "2013-1-14T11:37",
+		"publish_to": "3013-1-14T11:37",
+		"state": "added"
+	}' "$server/admin-api/gallery/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "POST article listing: "
+	curl --dump-header - -X POST -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"id": 100,
+		"publishable": "/admin-api/article/100/",
+		"category": "/admin-api/category/100/",
+		"publish_from": "2013-1-14T11:37",
+		"commercial": false
+	}' "$server/admin-api/listing/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "POST gallery listing: "
+	curl --dump-header - -X POST -H "$AUTH_HEADER" \
+	-H "Content-Type: application/json" --data '{
+		"id": 101,
+		"publishable": "/admin-api/gallery/100/",
+		"category": "/admin-api/category/100/",
+		"publish_from": "2013-1-14T11:37",
+		"commercial": false
+	}' "$server/admin-api/listing/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
 	echo -n "POST related article: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
@@ -188,6 +223,12 @@ then
 	}' "$server/admin-api/related/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	# Deletion of all created `core` objects.
+	echo -n "DELETE article listing: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/listing/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
+	echo -n "DELETE gallery listing: "
+	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/listing/101/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
+
 	echo -n "DELETE article: "
 	curl --dump-header - -H "Content-Type: application/json" -H "$AUTH_HEADER" -X DELETE "$server/admin-api/article/100/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
