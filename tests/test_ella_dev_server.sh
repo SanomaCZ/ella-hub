@@ -147,30 +147,37 @@ then
 	echo -n "POST article #100: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
-		"id": 100, "resource_uri":"/admin-api/article/100/",
-		"title":"test_article", "state":3, "slug": "test-article",
+		"id": 100,
+		"title": "test_article",
+		"slug": "test-article",
 		"authors": [{
 			"id": 100, "resource_uri": "/admin-api/author/100/",
 			"name": "dumb_name", "slug": "dumb-name",
-			"description": "this is descr.", "email": "mail@mail.com", "text": "this is text"
+			"email": "mail@mail.com",
+			"description": "this is descr.",
+			"text": "this is text"
 		}],
 		"category": "/admin-api/category/100/",
 		"content": "this is awesome new-article content",
 		"description": "this is awesome description",
-		"publish_from": "2012-08-07T14:51:29", "publish_to": "2012-08-15T14:51:35"
+		"publish_from": "2012-08-07T14:51:29",
+		"publish_to": "2012-08-15T14:51:35",
+		"state": 3
 	}' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "POST article #101: "
 	curl --dump-header - -X POST -H "$AUTH_HEADER" \
 	-H "Content-Type: application/json" --data '{
-		"id": 101, "resource_uri":"/admin-api/article/101/",
-		"title":"Related article", "state":"added", "slug": "related-article",
+		"id": 101,
+		"title": "Related article",
+		"slug": "related-article",
 		"content": "Funky text",
 		"description": "Description best ever",
 		"authors": ["/admin-api/author/100/"],
 		"category": "/admin-api/category/100/",
 		"publish_from": "2012-08-07T14:51:29",
-		"publish_to": "2012-08-15T14:51:35"
+		"publish_to": "2012-08-15T14:51:35",
+		"state": "added"
 	}' "$server/admin-api/article/" 2> /dev/null | head -n 1 | sed -e 's/HTTP\/1.0 \(.*\)/\1/'
 
 	echo -n "POST related article: "
