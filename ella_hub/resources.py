@@ -310,7 +310,18 @@ class MultipartFormDataModelResource(ApiModelResource):
             data = simplejson.loads(request.POST['resource_data'])
             for object in data['objects']:
                 for key, value in object.items():
-                    self.__attach_object(attached_objects, object, key, unquote(value))
+                    if not isinstance(value, unicode):
+                        continue
+
+                    is_attachment = self.__attach_object(attached_objects, object, key, value)
+
+                    if not is_attachment:
+                        try:
+                            value = unquote(str(value))
+                        except:
+                            pass
+                        else:
+                            object[key] = value
 
             return data
 
@@ -331,6 +342,7 @@ class MultipartFormDataModelResource(ApiModelResource):
                 raise ValueError("Attached object with ID '%s' not found." % attached_object_id)
 
             object[key] = attached_objects[attached_object_id]
+            return True
 
     def put_detail(self, request, **kwargs):
         """
