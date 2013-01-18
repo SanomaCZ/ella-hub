@@ -1,6 +1,5 @@
 import os
 
-from urllib import unquote
 from PIL import Image
 from tastypie import fields
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
@@ -136,9 +135,6 @@ class PhotoResource(MultipartFormDataModelResource):
     def hydrate(self, bundle):
         """Rotates image if possible"""
         bundle = super(PhotoResource, self).hydrate(bundle)
-
-        for one in ('title', 'description'):
-            bundle.data[one] = unquote(bundle.data.get(one))
 
         if 'rotate' in bundle.data:
             uploaded_image = bundle.data['image']

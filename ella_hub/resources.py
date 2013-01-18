@@ -1,3 +1,4 @@
+from urllib import unquote
 import re
 
 from django.utils import simplejson
@@ -309,7 +310,7 @@ class MultipartFormDataModelResource(ApiModelResource):
             data = simplejson.loads(request.POST['resource_data'])
             for object in data['objects']:
                 for key, value in object.items():
-                    self.__attach_object(attached_objects, object, key, value)
+                    self.__attach_object(attached_objects, object, key, unquote(value))
 
             return data
 
