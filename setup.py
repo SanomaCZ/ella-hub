@@ -2,7 +2,6 @@ from setuptools import setup, find_packages
 import ella_hub
 
 install_requires = [
-    'setuptools>=0.6b1',
     'ella>=3.0.5,<4',
     'django-tastypie',
     'django-object-permissions',
@@ -14,7 +13,7 @@ tests_require = [
     'coverage',
 ]
 
-long_description = open('README.rst').read() 
+long_description = open('README.rst').read()
 
 setup(
     name='Ella-Hub',
@@ -47,7 +46,9 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=install_requires,
-    dependency_links = ['http://github.com/toastdriven/django-tastypie/tarball/master#egg=django-tastypie'],
+    dependency_links=[
+        'http://github.com/toastdriven/django-tastypie/tarball/master#egg=django-tastypie'
+    ],
     test_suite='tests.run_tests.run_all',
     tests_require=tests_require,
 )
