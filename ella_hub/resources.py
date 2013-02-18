@@ -1,7 +1,7 @@
-from urllib import unquote
 import re
 
 from django.utils import simplejson
+from django.utils.http import urlunquote_plus
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
@@ -307,21 +307,11 @@ class MultipartFormDataModelResource(ApiModelResource):
             attached_objects[file.name] = file
 
         if format.lower().startswith('multipart/form-data'):
-            data = simplejson.loads(request.POST['resource_data'])
+            data = urlunquote_plus(request.POST['resource_data'])
+            data = simplejson.loads(data)
             for object in data['objects']:
                 for key, value in object.items():
-                    if not isinstance(value, unicode):
-                        continue
-
-                    is_attachment = self.__attach_object(attached_objects, object, key, value)
-
-                    if not is_attachment:
-                        try:
-                            value = unquote(str(value))
-                        except:
-                            pass
-                        else:
-                            object[key] = value
+                    self.__attach_object(attached_objects, object, key, value)
 
             return data
 
@@ -330,7 +320,7 @@ class MultipartFormDataModelResource(ApiModelResource):
 
     def __attach_object(self, attached_objects, object, key, value):
         if not isinstance(value, unicode):
-            return
+            return False
 
         if value.startswith('attached_object_id:'):
             parts = value.split(':')

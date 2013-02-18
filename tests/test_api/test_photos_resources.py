@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 import os
 import django.utils.simplejson as json
 
@@ -22,7 +24,8 @@ class TestPhotosResources(TestCase):
         self.client = Client()
 
         self.author = Author.objects.create(name="Author", slug="author")
-        self.photo_filename = self.__create_tmp_image("test_image.jpg")
+        self.photo_filename = self.__create_tmp_image(
+            u"ľščťžýáíéěäňúô ĽŠČŤŽÝÁÍÉĚÄŇÚÔ.jpg")
         self.photo = Photo.objects.create(id=999, title="Title of photo #999",
             image=self.photo_filename)
 
@@ -52,7 +55,7 @@ class TestPhotosResources(TestCase):
                 "objects": [
                     {
                         "id": 100,
-                        "title": "Title of photo",
+                        "title": u"Title: ľščťžýáíéěäňúô ĽŠČŤŽÝÁÍÉĚÄŇÚÔ",
                         "image": "attached_object_id:" + os.path.basename(self.photo_filename),
                         "authors": ["/admin-api/author/%d/" % self.author.id],
                         "created": "2012-08-07T14:51:29",
@@ -70,6 +73,8 @@ class TestPhotosResources(TestCase):
         resource = self.__get_response_json(response)
         tools.assert_true('image' in resource)
         tools.assert_true('public_url' in resource)
+        tools.assert_true('title' in resource)
+        tools.assert_equals(resource['title'], u"Title: ľščťžýáíéěäňúô ĽŠČŤŽÝÁÍÉĚÄŇÚÔ")
 
         self.__logout(headers)
 
