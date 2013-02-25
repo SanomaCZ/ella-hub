@@ -6,6 +6,7 @@ install_requires = [
     'django-tastypie',
     'django-object-permissions',
     'django-jsonfield',
+    'django-tastypie==0.9.12',
 ]
 
 tests_require = [
@@ -46,9 +47,6 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=install_requires,
-    dependency_links=[
-        'http://github.com/toastdriven/django-tastypie/tarball/master#egg=django-tastypie'
-    ],
     test_suite='tests.run_tests.run_all',
     tests_require=tests_require,
 )

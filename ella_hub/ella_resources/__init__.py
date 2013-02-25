@@ -263,9 +263,9 @@ class PublishableResource(ApiModelResource):
         full=True)
     app_data = fields.DictField('app_data')
 
-    def is_valid(self, bundle, request=None):
+    def is_valid(self, bundle):
         bundle.obj.clean()
-        return super(PublishableResource, self).is_valid(bundle, request)
+        return super(PublishableResource, self).is_valid(bundle)
 
     def dehydrate(self, bundle):
         bundle = super(PublishableResource, self).dehydrate(bundle)
