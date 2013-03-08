@@ -156,15 +156,15 @@ class ApiModelResource(ModelResource):
             bundle = bundle["objects"]
 
         for object in bundle:
-            self.__add_state_fields(request, object)
+            self._add_state_fields(request, object)
 
         return bundle
 
     def alter_detail_data_to_serialize(self, request, bundle):
         bundle = super(ApiModelResource, self).alter_detail_data_to_serialize(request, bundle)
-        return self.__add_state_fields(request, bundle)
+        return self._add_state_fields(request, bundle)
 
-    def __add_state_fields(self, request, bundle):
+    def _add_state_fields(self, request, bundle):
         """Adds current state and next allowed states of object."""
         state = get_state(bundle.obj)
         next_states = []
