@@ -161,6 +161,7 @@ class PhotoResource(MultipartFormDataModelResource):
         return bundle
 
     def _rotate_image(self, image_file, angle):
+        image_file.seek(0)
         image = Image.open(image_file)
         angle = int(angle) % 360
         return image.rotate(-angle) # clockwise rotation
