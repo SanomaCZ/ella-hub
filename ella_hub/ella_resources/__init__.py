@@ -1,3 +1,4 @@
+import operator
 import os
 
 from PIL import Image
@@ -9,6 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.files.images import ImageFile
 from django.utils.encoding import force_unicode, smart_str
+from django.db.models import Q
 
 from ella.core.models import Publishable, Listing, Category, Author, Source, Related
 from ella.articles.models import Article
@@ -177,7 +179,6 @@ class PhotoResource(MultipartFormDataModelResource):
             name + ext
         )
 
-
     class Meta(MultipartFormDataModelResource.Meta):
         queryset = Photo.objects.all()
         filtering = {
@@ -273,6 +274,32 @@ class PublishableResource(ApiModelResource):
 
         bundle.data['url'] = bundle.obj.get_domain_url()
         return bundle
+
+    def build_filters(self, filters=None):
+        if filters is None:
+            filters = {}
+        orm_filters = super(PublishableResource, self).build_filters(filters)
+
+        if 'titleslug' in filters:
+            orm_filters['titleslug'] = []
+            query = filters['titleslug']
+            orm_lookups = ['title__icontains', 'slug__icontains']
+
+            for bit in query.split():
+                or_queries = [Q(**{orm_lookup: bit}) for orm_lookup in orm_lookups]
+                orm_filters['titleslug'].append(or_queries)
+        return orm_filters
+
+    def apply_filters(self, request, applicable_filters):
+        custom = applicable_filters.pop('titleslug', [])
+
+        semi_filtered = super(PublishableResource, self).apply_filters(request, applicable_filters)
+
+        for one in custom:
+            semi_filtered = semi_filtered.filter(reduce(operator.or_, one))
+
+        return semi_filtered
+
 
     class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()
