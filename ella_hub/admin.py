@@ -1,6 +1,4 @@
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
-from ella.core.admin import PublishableAdmin, ListingInlineAdmin, RelatedInlineAdmin
 
 from ella_hub.models import Draft
 from ella_hub.models import Permission, Role, ModelPermission, PrincipalRoleRelation

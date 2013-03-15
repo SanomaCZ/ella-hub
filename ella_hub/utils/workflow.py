@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _
 
 from ella.articles.models import Article
+from ella.core.cache import get_cached_object
 from ella_hub import conf
 
 from ella_hub.models import Role, Permission, ModelPermission, PrincipalRoleRelation
@@ -172,12 +173,18 @@ def get_workflow(model):
     Returns workflow set to <model>.
     """
     content_type = ContentType.objects.get_for_model(model)
-    try:
-        relation = WorkflowModelRelation.objects.get(content_type=content_type)
-    except WorkflowModelRelation.DoesNotExist:
-        return None
-    else:
-        return relation.workflow
+    cache_key = WorkflowModelRelation.cache_key(content_type.pk)
+    workflow = cache.get(cache_key)
+    if workflow is None:
+        try:
+            relation = WorkflowModelRelation.objects.get(content_type=content_type)
+        except WorkflowModelRelation.DoesNotExist:
+            workflow = False
+        else:
+            workflow = relation.workflow
+
+        cache.set(cache_key, workflow, timeout=conf.STATES_CACHE_TIMEOUT)
+    return workflow
 
 
 def update_permissions(model):
@@ -205,7 +212,7 @@ def set_state(obj, state):
     """
     if not isinstance(state, State):
         try:
-            state = State.objects.get(codename=state)
+            state = get_cached_object(State, codename=state)
         except State.DoesNotExist:
             return False
 

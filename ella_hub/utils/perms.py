@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from ella.core.cache import get_cached_object
 
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
 from ella_hub.models import StatePermissionRelation, State
@@ -35,7 +36,7 @@ def has_model_state_permission(model, user, permission, state=None, roles=None):
 
     if state and not isinstance(state, State):
         try:
-            state = State.objects.get(codename=state)
+            state = get_cached_object(State, codename=state)
         except State.DoesNotExist:
             return False
 
@@ -47,7 +48,7 @@ def has_model_state_permission(model, user, permission, state=None, roles=None):
 
     if not isinstance(permission, Permission):
         try:
-            permission = Permission.objects.get(codename=permission)
+            permission = get_cached_object(Permission, codename=permission)
         except Permission.DoesNotExist:
             return False
 
@@ -88,7 +89,7 @@ def has_object_permission(model_obj, user, codename, roles=None):
     ct = ContentType.objects.get_for_model(model_obj)
 
     try:
-        perm = Permission.objects.get(codename=codename)
+        perm = get_cached_object(Permission, codename=codename)
     except Permission.DoesNotExist:
         return False
 
@@ -125,7 +126,7 @@ def grant_permission(model, role, permission):
     """
     if not isinstance(permission, Permission):
         try:
-            permission = Permission.objects.get(codename=permission)
+            permission = get_cached_object(Permission, codename=permission)
         except Permission.DoesNotExist:
             return False
 
