@@ -6,7 +6,7 @@ install_requires = [
     'django-tastypie',
     'django-object-permissions',
     'django-jsonfield',
-    'django-tastypie==0.9.13',
+    'django-tastypie==0.9.12',
 ]
 
 tests_require = [

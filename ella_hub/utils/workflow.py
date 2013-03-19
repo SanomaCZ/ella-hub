@@ -182,7 +182,7 @@ def get_workflow(model):
             workflow = False
         else:
             workflow = relation.workflow
-            cache.set(cache_key, workflow, timeout=conf.STATES_CACHE_TIMEOUT)
+        cache.set(cache_key, workflow, timeout=conf.STATES_CACHE_TIMEOUT)
 
     return workflow
 
