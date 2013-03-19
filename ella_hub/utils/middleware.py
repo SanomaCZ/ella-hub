@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db import connection
 
 
 class CrossDomainAccessMiddleware(object):
@@ -45,4 +46,11 @@ class CrossDomainAccessMiddleware(object):
 
             response[header] = header_value
 
+        return response
+
+class SQLMiddleware(object):
+
+    def process_response(self, request, response):
+        print "\n" * 10
+        print len(connection.queries)
         return response

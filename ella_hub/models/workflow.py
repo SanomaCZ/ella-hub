@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 
 from ella_hub.models.permissions import Permission
 
@@ -121,6 +122,15 @@ class WorkflowModelRelation(models.Model):
         unique=True)
     workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"),
         related_name="wmr_workflow")
+
+    @staticmethod
+    def cache_key(pk):
+        return "HUB_get_workflow_%s" % pk
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            cache.delete(WorkflowModelRelation.cache_key(self.pk))
+        return super(WorkflowModelRelation, self).save(*args, **kwargs)
 
     def __unicode__(self):
         return "%s / %s" % (self.content_type.name, self.workflow.title)

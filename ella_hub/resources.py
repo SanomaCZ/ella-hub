@@ -92,7 +92,7 @@ class ApiModelResource(ModelResource):
         """
         self.method_check(request, allowed=['get'])
         self.is_authenticated(request)
-        self.is_authorized(request)
+        #self.is_authorized(request)
         self.throttle_check(request)
         self.log_throttled_access(request)
         schema = self.build_schema()
