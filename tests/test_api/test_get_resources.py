@@ -72,7 +72,6 @@ class TestGetResources(TestCase):
     def test_ella_resources_accessible(self):
         api_key = self.__login("user", "pass")
         headers = self.__build_headers("user", api_key)
-
         response = self.client.get("/admin-api/", **headers)
         resources = self.__get_response_json(response)
 
@@ -81,7 +80,6 @@ class TestGetResources(TestCase):
             tools.assert_equals(response.status_code, 200)
             resource_list = self.__get_response_json(response)
             tools.assert_true(isinstance(resource_list, list))
-
             response = self.client.get("/admin-api/%s/schema/" % resource_name, **headers)
             tools.assert_equals(response.status_code, 200)
 

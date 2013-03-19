@@ -67,7 +67,6 @@ def has_model_state_permission(model, user, permission, state=None, roles=None):
         content_type=ct, permission=permission).select_related('permission')
 
     perms = [model_perm.permission for model_perm in model_perms]
-
     if state:
         return StatePermissionRelation.objects.filter(state=state,
             permission__in=perms, role__in=roles).count()

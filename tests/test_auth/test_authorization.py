@@ -49,7 +49,7 @@ class TestAuthorization(TestCase):
         self.client = PatchClient()
         create_basic_workflow(self)
 
-        (self.admin_user, self.banned_user, self.role_user) = self.__create_test_users(self.test_role)
+        self.admin_user, self.banned_user, self.role_user = self.__create_test_users(self.test_role)
 
         self.article_model_ct = None
         self.photo_filename = self.__create_tmp_image(".test_image.jpg")
@@ -179,7 +179,6 @@ class TestAuthorization(TestCase):
         os.remove(self.photo_filename)
         connection.close()
 
-
     def __create_test_users(self, test_role):
         # Creating admin user.
         admin_user = User.objects.create_user(username="admin_user", password="pass1")
@@ -200,8 +199,7 @@ class TestAuthorization(TestCase):
         user.save()
         PrincipalRoleRelation.objects.get_or_create(user=user, role=test_role)
 
-        return (admin_user, banned_user, user)
-
+        return admin_user, banned_user, user
 
     def test_role_user_state1_perms(self):
         """
@@ -261,7 +259,7 @@ class TestAuthorization(TestCase):
         tools.assert_equals(response.status_code, 202)
 
         response = self.client.delete("/admin-api/author/100/", **headers)
-        tools.assert_equals(response.status_code, 403)
+        tools.assert_equals(response.status_code, 401)
 
         self.__logout(headers)
 
@@ -285,14 +283,14 @@ class TestAuthorization(TestCase):
 
         response = self.client.put("/admin-api/author/100/", data=self.new_author,
             content_type='application/json', **headers)
-        tools.assert_equals(response.status_code, 403)
+        tools.assert_equals(response.status_code, 401)
 
         response = self.client.patch("/admin-api/author/100/", data=self.new_author,
             content_type='application/json', **headers)
-        tools.assert_equals(response.status_code, 403)
+        tools.assert_equals(response.status_code, 401)
 
         response = self.client.delete("/admin-api/author/100/", **headers)
-        tools.assert_equals(response.status_code, 403)
+        tools.assert_equals(response.status_code, 401)
 
         self.__logout(headers)
 
@@ -398,39 +396,34 @@ class TestAuthorization(TestCase):
 
         for resource_type, new_resource_obj in TEST_CASES:
             response = self.client.get("/admin-api/%s/100/" % resource_type, **headers)
-            tools.assert_equals(response.status_code, 403,
-                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
+            tools.assert_equals(response.status_code, 401)
 
             response = self.client.post("/admin-api/%s/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 403,
-                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
+            tools.assert_equals(response.status_code, 403)
 
             response = self.client.put("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 403,
-                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
+            tools.assert_equals(response.status_code, 401)
 
             response = self.client.patch("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 403,
-                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
+            tools.assert_equals(response.status_code, 401)
 
             response = self.client.delete("/admin-api/%s/100/" % resource_type, **headers)
-            tools.assert_equals(response.status_code, 403,
-                "status %d for %s: %s" % (response.status_code, resource_type, response.content))
+            tools.assert_equals(response.status_code, 401)
 
         response = self.client.patch("/admin-api/photo/", payload, **headers)
-        tools.assert_equals(response.status_code, 403)
+        tools.assert_equals(response.status_code, 401)
 
-        TEST_FORMAT_CASES =(
+        TEST_FORMAT_CASES = (
             ("format", self.new_format),
-            ("formatedphoto", self.new_formatedphoto)
+            ("formatedphoto", self.new_formatedphoto),
         )
 
-        for (resource_type, new_resource_obj) in TEST_FORMAT_CASES:
+        for resource_type, new_resource_obj in TEST_FORMAT_CASES:
             response = self.client.get("/admin-api/%s/" % resource_type, **headers)
-            tools.assert_equals(response.status_code, 403)
+            tools.assert_equals(response.status_code, 401)
 
             response = self.client.post("/admin-api/%s/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
@@ -438,11 +431,11 @@ class TestAuthorization(TestCase):
 
             response = self.client.put("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 403)
+            tools.assert_equals(response.status_code, 401)
 
             response = self.client.patch("/admin-api/%s/100/" % resource_type,
                 data=new_resource_obj, content_type='application/json', **headers)
-            tools.assert_equals(response.status_code, 403)
+            tools.assert_equals(response.status_code, 401)
 
         self.__logout(headers)
 
@@ -606,7 +599,7 @@ class TestAuthorization(TestCase):
 
     def __build_headers(self, username, api_key):
         return {
-            "HTTP_AUTHORIZATION" : "ApiKey %s:%s" % (username, api_key),
+            "HTTP_AUTHORIZATION": "ApiKey %s:%s" % (username, api_key),
         }
 
     def __get_response_json(self, response):

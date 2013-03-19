@@ -5,7 +5,7 @@ from django.contrib.auth.models import AnonymousUser
 
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
-from tastypie.exceptions import ImmediateHttpResponse
+from tastypie.exceptions import ImmediateHttpResponse, Unauthorized
 from tastypie.http import HttpForbidden
 from tastypie.models import ApiKey
 
@@ -53,42 +53,97 @@ class ApiAuthorization(Authorization):
     # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
 
-    def is_authorized(self, request, object=None):
-        self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
-
-        if request.user.is_superuser:
-            return True
-
-        if request.method == "POST":
-            resource_model = utils.get_resource_model(self.resource_name)
-            if not has_model_state_permission(resource_model, request.user, REST_PERMS[request.method]):
-                raise ImmediateHttpResponse(response=HttpForbidden())
-
-        return True
-
-    def apply_limits(self, request, object_list):
-        """
-        Applying permission limits, this method is NOT called by POST requests.
-        TODO: object-level permissions
-        """
-        user = request.user
-
+    def read_list(self, object_list, bundle):
+        user = bundle.request.user
         if user.is_superuser:
             return object_list
 
-        resource_model = utils.get_resource_model(self.resource_name)
+        if not object_list:
+            raise Unauthorized('nada')
 
-        allowed_ids = []
         for obj in object_list:
-            if has_object_permission(obj, user, REST_PERMS[request.method]):
-                allowed_ids.append(obj.id)
+            if not has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
+                raise Unauthorized('nada')
 
-        if request.method == "GET":
-            if not has_model_state_permission(resource_model, user, REST_PERMS[request.method]):
-                raise ImmediateHttpResponse(response=HttpForbidden())
-            return object_list.filter(id__in=allowed_ids).all()
+        return object_list
 
-        if not allowed_ids:
+    def read_detail(self, object_list, bundle):
+        user = bundle.request.user
+        if user.is_superuser:
+            return True
+
+        obj = object_list[0]
+        if has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
+            return True
+
+        raise Unauthorized("nope")
+
+    def _common_create(self, request):
+        self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
+        resource_model = utils.get_resource_model(self.resource_name)
+        if not has_model_state_permission(resource_model, request.user, REST_PERMS[request.method]):
             raise ImmediateHttpResponse(response=HttpForbidden())
 
-        return object_list.filter(id__in=allowed_ids).all()
+    def create_list(self, object_list, bundle):
+        self._common_create(bundle.request)
+        if bundle.request.user.is_superuser:
+            return object_list
+        return object_list
+
+    def create_detail(self, object_list, bundle):
+        self._common_create(bundle.request)
+        user = bundle.request.user
+        if user.is_superuser:
+            return True
+
+        obj = object_list[0] if object_list else False
+        if not obj:
+            raise Unauthorized("nope")
+
+        if has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
+            return True
+
+        raise Unauthorized("nope")
+
+    def update_list(self, object_list, bundle):
+        allowed = []
+
+        # Since they may not all be saved, iterate over them.
+        for obj in object_list:
+            if obj.user == bundle.request.user or bundle.request.user.is_superuser:
+                allowed.append(obj)
+
+        return allowed
+
+    def update_detail(self, object_list, bundle):
+        if bundle.request.user.is_superuser:
+            return True
+        return bundle.obj.user == bundle.request.user
+
+    def delete_list(self, object_list, bundle):
+        self._common_create(bundle.request)
+
+        user = bundle.request.user
+        if user.is_superuser:
+            return True
+
+        if not object_list:
+            raise Unauthorized('nada')
+
+        for obj in object_list:
+            if not has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
+                raise Unauthorized('nada')
+
+        raise Unauthorized("nada")
+
+    def delete_detail(self, object_list, bundle):
+        self._common_create(bundle.request)
+
+        user = bundle.request.user
+        if user.is_superuser:
+            return True
+
+        if has_object_permission(object_list[0], user, REST_PERMS[bundle.request.method]):
+            return True
+
+        raise Unauthorized("nope")

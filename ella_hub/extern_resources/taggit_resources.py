@@ -79,7 +79,7 @@ class TagResource(ApiModelResource):
 
     def obj_create(self, bundle, request=None, **kwargs):
         try:
-            return super(TagResource, self).obj_create(bundle, request, **kwargs)
+            return super(TagResource, self).obj_create(bundle, **kwargs)
         except IntegrityError:
             # duplicate entry for 'name' or 'slug'
             try:
