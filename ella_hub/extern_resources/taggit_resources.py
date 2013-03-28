@@ -3,6 +3,8 @@ Resources for django-taggit application.
 https://github.com/yedpodtrzitko/django-taggit
 git://github.com/yedpodtrzitko/django-taggit.git
 """
+import logging
+
 from django.db.models import Count
 from django.db import IntegrityError
 from django.conf.urls.defaults import url
@@ -17,6 +19,9 @@ from tastypie.resources import ALL, ALL_WITH_RELATIONS
 from ella_hub.resources import ApiModelResource
 from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
     get_resource_model)
+
+
+logger = logging.getLogger(__name__)
 
 
 class TagResource(ApiModelResource):
@@ -61,20 +66,21 @@ class TagResource(ApiModelResource):
         resource = get_resource_by_name(resource_name)
         model_class = get_resource_model(resource_name)
         tag_id_set = map(int, tag_set.split(";"))
+        try:
+            exclude = [int(one) for one in request.GET.getlist('exclude')]
+        except Exception, e:
+            logger.exception(e)
+            exclude = []
 
         # select objects sorted according to number of given tags that contain
-        objects = TaggedItem.objects.filter(tag__id__in=tag_id_set, content_type=content_type).\
-                        values("object_id").annotate(count=Count("object_id")).\
-                        order_by('-count')[:resource._meta.limit]
+        object_ids = TaggedItem.objects.filter(tag__id__in=tag_id_set, content_type=content_type). \
+                        exclude(object_id__in=exclude).values_list("object_id", flat=True). \
+                        annotate(count=Count("object_id")).order_by('-count')[:resource._meta.limit]
 
-        # extract primary keys of selected objects
-        object_ids = map(lambda o: o["object_id"], list(objects))
 
-        # sort bundles according to number of given tags that object contains
-        objects = dict((o.id, o,) for o in model_class.objects.filter(pk__in=object_ids))
-        bundles = [resource.build_bundle(obj=objects[id], request=request) for id in object_ids]
+        objects = model_class.objects.filter(pk__in=list(object_ids))
+        bundles = [resource.build_bundle(obj=one, request=request) for one in objects]
         bundles = [resource.full_dehydrate(bundle) for bundle in bundles]
-
         return resource.create_response(request, bundles)
 
     def obj_create(self, bundle, request=None, **kwargs):
