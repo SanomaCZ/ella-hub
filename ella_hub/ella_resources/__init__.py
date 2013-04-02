@@ -1,3 +1,4 @@
+import logging
 import operator
 import os
 
@@ -23,6 +24,9 @@ from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
 from ella_hub.models import Draft
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.utils import get_content_type_for_resource, get_resource_for_object
+
+
+logger = logging.getLogger(__name__)
 
 
 class SiteResource(ApiModelResource):
@@ -299,24 +303,35 @@ class PublishableResource(ApiModelResource):
         if filters is None:
             filters = {}
         orm_filters = super(PublishableResource, self).build_filters(filters)
+        orm_filters['__custom'] = {'filter': [], 'exclude': []}
 
         if 'titleslug' in filters:
-            orm_filters['titleslug'] = []
-            query = filters['titleslug']
-            orm_lookups = ['title__icontains', 'slug__icontains']
+            titleslug_qs = []
+            for bit in filters['titleslug'].split():
+                or_queries = [Q(**{orm_lookup: bit}) for orm_lookup in ('title__icontains', 'slug__icontains')]
+                titleslug_qs += or_queries
 
-            for bit in query.split():
-                or_queries = [Q(**{orm_lookup: bit}) for orm_lookup in orm_lookups]
-                orm_filters['titleslug'].append(or_queries)
+            orm_filters['__custom']['filter'].append(titleslug_qs)
+
+        if 'excluded_ids' in filters:
+            try:
+                exclude = [int(one) for one in filters.getlist('excluded_ids')]
+            except Exception, e:
+                logger.exception(e)
+            else:
+                orm_filters['__custom']['exclude'].append([Q(id__in=exclude)])
         return orm_filters
 
     def apply_filters(self, request, applicable_filters):
-        custom = applicable_filters.pop('titleslug', [])
-
+        custom = applicable_filters.pop('__custom', {})
         semi_filtered = super(PublishableResource, self).apply_filters(request, applicable_filters)
 
-        for one in custom:
-            semi_filtered = semi_filtered.filter(reduce(operator.or_, one))
+        for act, val in custom.items():
+            for or_queries in val:
+                if act == 'filter':
+                    semi_filtered = semi_filtered.filter(reduce(operator.or_, or_queries))
+                elif act == 'exclude':
+                    semi_filtered = semi_filtered.exclude(reduce(operator.or_, or_queries))
 
         return semi_filtered
 
