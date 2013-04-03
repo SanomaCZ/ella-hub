@@ -184,6 +184,7 @@ class EllaHubApi(Api):
             api_key, created = ApiKey.objects.get_or_create(user=user)
             return HttpJsonResponse({
                 "api_key": self.__regenerate_key(api_key),
+                "user_id": api_key.user_id,
                 "auth_tree": self.__create_auth_tree(request),
                 "system": self.__get_system_info(request),
             })
