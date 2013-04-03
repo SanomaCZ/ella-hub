@@ -280,6 +280,17 @@ class PublishableResource(ApiModelResource):
         bundle.data['url'] = bundle.obj.get_domain_url()
         return bundle
 
+    def hydrate_app_data(self, bundle):
+        """
+        update app data, merge each sent namespace w/ existing data
+        """
+        if bundle.obj and bundle.obj.pk and bundle.data.get('app_data'):
+            current_data = bundle.obj.app_data.serialize()
+            for key, items in bundle.data['app_data'].items():
+                current_data.setdefault(key, {}).update(items)
+            bundle.data['app_data'] = current_data
+        return bundle
+
     def _add_state_fields(self, request, bundle):
         """Adds current state and next allowed states of object."""
         state = get_state(bundle.obj)
