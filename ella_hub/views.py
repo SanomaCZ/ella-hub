@@ -1,9 +1,8 @@
-from django.http import Http404
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
 from ella.core.models import Publishable
 from ella.core.views import EllaCoreView
-from tastypie.models import ApiKey
 
 
 class ArticlePreview(EllaCoreView):
@@ -22,15 +21,9 @@ class ArticlePreview(EllaCoreView):
 
 
 def preview_publishable(request, id):
-
-    try:
-        api_key = ApiKey.objects.get(user_id=request.GET.get('user'))
-    except ApiKey.DoesNotExist:
-        raise Http404("Invalid user")
-    else:
-        if api_key.key[:8] != request.GET.get('hash'):
-            raise Http404("Invalid key")
+    item = get_object_or_404(Publishable, pk=id)
+    if item.is_published():
+        return HttpResponseRedirect(item.get_absolute_url())
 
     view = ArticlePreview()
-
     return view(request, id=id)
