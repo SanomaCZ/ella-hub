@@ -96,8 +96,7 @@ class UserResource(ApiModelResource):
 
 
 class AuthorResource(ApiModelResource):
-    user = fields.ForeignKey(UserResource, 'user', blank=True, null=True,
-        full=True)
+    user = fields.ForeignKey(UserResource, 'user', blank=True, null=True, full=True)
 
     class Meta(ApiModelResource.Meta):
         queryset = Author.objects.all()
@@ -125,7 +124,37 @@ class SourceResource(ApiModelResource):
         public = False
 
 
-class PhotoResource(MultipartFormDataModelResource):
+class ExcludeItemsMixin(object):
+    def build_filters(self, filters=None):
+        if filters is None:
+            filters = {}
+        orm_filters = super(ExcludeItemsMixin, self).build_filters(filters)
+        if '__custom' not in orm_filters:
+            orm_filters['__custom'] = {'filter': [], 'exclude': []}
+
+        if 'excluded_ids' in filters:
+            try:
+                exclude = [int(one) for one in filters.getlist('excluded_ids')]
+            except Exception, e:
+                logger.exception(e)
+            else:
+                orm_filters['__custom']['exclude'].append([Q(id__in=exclude)])
+        return orm_filters
+
+    def apply_filters(self, request, applicable_filters):
+        custom = applicable_filters.pop('__custom', {})
+        semi_filtered = super(ExcludeItemsMixin, self).apply_filters(request, applicable_filters)
+
+        for act, val in custom.items():
+            for or_queries in val:
+                if act == 'filter':
+                    semi_filtered = semi_filtered.filter(reduce(operator.or_, or_queries))
+                elif act == 'exclude':
+                    semi_filtered = semi_filtered.exclude(reduce(operator.or_, or_queries))
+        return semi_filtered
+
+
+class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True)
     app_data = fields.DictField('app_data')
@@ -261,7 +290,7 @@ class FormatedPhotoResource(ApiModelResource):
         public = True
 
 
-class PublishableResource(ApiModelResource):
+class PublishableResource(ExcludeItemsMixin, ApiModelResource):
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
     photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True,
@@ -314,7 +343,6 @@ class PublishableResource(ApiModelResource):
         if filters is None:
             filters = {}
         orm_filters = super(PublishableResource, self).build_filters(filters)
-        orm_filters['__custom'] = {'filter': [], 'exclude': []}
 
         if 'titleslug' in filters:
             titleslug_qs = []
@@ -324,28 +352,7 @@ class PublishableResource(ApiModelResource):
 
             orm_filters['__custom']['filter'].append(titleslug_qs)
 
-        if 'excluded_ids' in filters:
-            try:
-                exclude = [int(one) for one in filters.getlist('excluded_ids')]
-            except Exception, e:
-                logger.exception(e)
-            else:
-                orm_filters['__custom']['exclude'].append([Q(id__in=exclude)])
         return orm_filters
-
-    def apply_filters(self, request, applicable_filters):
-        custom = applicable_filters.pop('__custom', {})
-        semi_filtered = super(PublishableResource, self).apply_filters(request, applicable_filters)
-
-        for act, val in custom.items():
-            for or_queries in val:
-                if act == 'filter':
-                    semi_filtered = semi_filtered.filter(reduce(operator.or_, or_queries))
-                elif act == 'exclude':
-                    semi_filtered = semi_filtered.exclude(reduce(operator.or_, or_queries))
-
-        return semi_filtered
-
 
     class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()
