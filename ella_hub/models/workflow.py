@@ -4,6 +4,7 @@ from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 
+from ella.core.cache import CachedForeignKey, CachedGenericForeignKey
 from ella_hub.models.permissions import Permission
 
 
@@ -11,7 +12,7 @@ class Workflow(models.Model):
 
     title = models.CharField(_("Title"), max_length=128, blank=False, unique=True)
     description = models.TextField(_("Description"), blank=True)
-    initial_state =models.ForeignKey("State", verbose_name=_("Initial state"),
+    initial_state = CachedForeignKey("State", verbose_name=_("Initial state"),
         blank=True, null=True, related_name="workflow_initial_state")
 
     permissions = models.ManyToManyField(Permission, verbose_name=_("Permissions"),
@@ -53,7 +54,7 @@ class State(models.Model):
     title = models.CharField(_("Title"), max_length=128, blank=False)
     codename = models.CharField(_("Codename"), max_length=128, blank=False)
     description = models.TextField(_("Description"), blank=True)
-    workflow = models.ForeignKey("Workflow", verbose_name=_("Workflow"),
+    workflow = CachedForeignKey("Workflow", verbose_name=_("Workflow"),
         blank=True, null=True, related_name="states")
     transitions = models.ManyToManyField("Transition", verbose_name=_("Transitions"),
         blank=True, null=True)
@@ -71,8 +72,8 @@ class Transition(models.Model):
 
     title = models.CharField(_("Title"), max_length=128, blank=False)
     description = models.TextField(_("Description"), blank=True)
-    workflow = models.ForeignKey("Workflow", verbose_name=_("Workflow"), blank=True)
-    destination = models.ForeignKey("State", verbose_name=_("Destination"), blank=False)
+    workflow = CachedForeignKey("Workflow", verbose_name=_("Workflow"), blank=True)
+    destination = CachedForeignKey("State", verbose_name=_("Destination"), blank=False)
 
     def __unicode__(self):
         return u"%s (-> %s)" % (self.title, self.destination.title)
@@ -85,42 +86,43 @@ class Transition(models.Model):
 
 class StateObjectRelation(models.Model):
 
-    content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"),
+    content_type = CachedForeignKey(ContentType, verbose_name=_("Content type"),
         related_name="state_object", blank=True, null=True)
     content_id = models.PositiveIntegerField(_("Content id"), blank=True, null=True)
-    content_object = generic.GenericForeignKey("content_type", "content_id")
-    state = models.ForeignKey(State, verbose_name = _("State"))
+    content_object = CachedGenericForeignKey("content_type", "content_id")
+    state = CachedForeignKey(State, verbose_name = _("State"))
 
     def __unicode__(self):
         return "%s %s - %s" % (self.content_type.name, self.content_id, self.state.title)
 
     class Meta:
-        unique_together = ("content_type", "content_id", "state")
         app_label = "ella_hub"
+        unique_together = ("content_type", "content_id", "state")
         verbose_name = _("State-Object Relation")
         verbose_name_plural = _("State-Object Relations")
 
 
 class StatePermissionRelation(models.Model):
 
-    state = models.ForeignKey("State", verbose_name=_("State"))
-    permission = models.ForeignKey("Permission", verbose_name=_("Permission"))
-    role = models.ForeignKey("Role", verbose_name=_("Role"))
+    state = CachedForeignKey("State", verbose_name=_("State"))
+    permission = CachedForeignKey("Permission", verbose_name=_("Permission"))
+    role = CachedForeignKey("Role", verbose_name=_("Role"))
 
     def __unicode__(self):
         return "%s / %s / %s" % (self.state.title, self.role.title, self.permission.title)
 
     class Meta:
         app_label = "ella_hub"
+        unique_together = (('state', 'permission', 'role'),)
         verbose_name = _("State-Permission Relation")
         verbose_name_plural = _("State-Permission Relations")
 
 
 class WorkflowModelRelation(models.Model):
 
-    content_type = models.ForeignKey(ContentType, verbose_name=_("Content Type"),
+    content_type = CachedForeignKey(ContentType, verbose_name=_("Content Type"),
         unique=True)
-    workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"),
+    workflow = CachedForeignKey(Workflow, verbose_name=_("Workflow"),
         related_name="wmr_workflow")
 
     @staticmethod
@@ -137,20 +139,22 @@ class WorkflowModelRelation(models.Model):
 
     class Meta:
         app_label = "ella_hub"
+        unique_together = (('content_type', 'workflow'),)
         verbose_name = _("Workflow-Model Relation")
         verbose_name_plural = _("Workflow-Model Relations")
 
 
 class WorkflowPermissionRelation(models.Model):
 
-    workflow = models.ForeignKey(Workflow, verbose_name=_("Workflow"),
+    workflow = CachedForeignKey(Workflow, verbose_name=_("Workflow"),
         related_name="wpr_workflow")
-    permission = models.ForeignKey(Permission, related_name="permissions")
+    permission = CachedForeignKey(Permission, related_name="permissions")
 
     def __unicode__(self):
         return "%s / %s" % (self.workflow.title, self.permission.title)
 
     class Meta:
         app_label = "ella_hub"
+        unique_together = (('workflow', 'permission'),)
         verbose_name = _("Workflow-Permission Relation")
         verbose_name_plural = _("Workflow-Permission Relations")

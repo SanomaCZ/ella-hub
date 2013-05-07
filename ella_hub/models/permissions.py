@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from ella.core.cache import CachedForeignKey
 
 
 class Permission(models.Model):
@@ -29,9 +30,9 @@ class ModelPermission(models.Model):
     """
     Mapping a <role> to a <permission> for specific <content_type>.
     """
-    role = models.ForeignKey("Role", verbose_name=_("Role"), blank=True, null=True)
-    permission = models.ForeignKey(Permission, verbose_name=_("Permission"))
-    content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"))
+    role = CachedForeignKey("Role", verbose_name=_("Role"), blank=True, null=True)
+    permission = CachedForeignKey(Permission, verbose_name=_("Permission"))
+    content_type = CachedForeignKey(ContentType, verbose_name=_("Content type"))
 
     def __unicode__(self):
         return "%s / %s / %s" % (self.permission.title, self.role.title, self.content_type.name)
@@ -49,11 +50,11 @@ class PrincipalRoleRelation(models.Model):
     """
     Mapping <role> to principal (<user> or <group>).
     """
-    user = models.ForeignKey(User, verbose_name=_("User"), blank=True, null=True)
-    group = models.ForeignKey(Group, verbose_name=_("Group"), blank=True, null=True)
-    role = models.ForeignKey("Role", verbose_name=_("Role"))
+    user = CachedForeignKey(User, verbose_name=_("User"), blank=True, null=True)
+    group = CachedForeignKey(Group, verbose_name=_("Group"), blank=True, null=True)
+    role = CachedForeignKey("Role", verbose_name=_("Role"))
 
-    content_type = models.ForeignKey(ContentType, verbose_name=_("Content type"), blank=True, null=True)
+    content_type = CachedForeignKey(ContentType, verbose_name=_("Content type"), blank=True, null=True)
     content_id = models.PositiveIntegerField(verbose_name=_("Content id"), blank=True, null=True)
     content = generic.GenericForeignKey(ct_field="content_type", fk_field="content_id")
 
