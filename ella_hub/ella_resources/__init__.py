@@ -47,9 +47,9 @@ class CategoryResource(ApiModelResource):
     site = fields.ForeignKey(SiteResource, 'site', full=True)
     app_data = fields.DictField('app_data')
 
-    def dehydrate(self, bundle):
+    def dehydrate(self, bundle, *args, **kwargs):
         """Adds full name of category to the root category."""
-        bundle = super(CategoryResource, self).dehydrate(bundle)
+        bundle = super(CategoryResource, self).dehydrate(bundle, *args, **kwargs)
 
         bundle.data['full_title'] = self._get_full_title(bundle.obj)
 
@@ -159,18 +159,18 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True)
     app_data = fields.DictField('app_data')
 
-    def dehydrate(self, bundle):
+    def dehydrate(self, bundle, *args, **kwargs):
         """Adds absolute URL of image."""
-        bundle = super(PhotoResource, self).dehydrate(bundle)
+        bundle = super(PhotoResource, self).dehydrate(bundle, *args, **kwargs)
 
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
         bundle.data['public_url'] = bundle.request.build_absolute_uri(bundle.obj.image.url)
 
         return bundle
 
-    def hydrate(self, bundle):
+    def hydrate(self, bundle, *args, **kwargs):
         """Rotates image if possible"""
-        bundle = super(PhotoResource, self).hydrate(bundle)
+        bundle = super(PhotoResource, self).hydrate(bundle, *args, **kwargs)
 
         if 'rotate' in bundle.data:
             uploaded_image = bundle.data['image']
@@ -270,7 +270,7 @@ class FormatedPhotoResource(ApiModelResource):
     format = fields.ForeignKey(FormatResource, 'format', full=True)
     photo = fields.ForeignKey(PhotoResource, 'photo', full=True)
 
-    def dehydrate(self, bundle):
+    def dehydrate(self, bundle, *args, **kwargs):
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
         return bundle
 
@@ -293,18 +293,16 @@ class FormatedPhotoResource(ApiModelResource):
 class PublishableResource(ExcludeItemsMixin, ApiModelResource):
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
-    photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True,
-        full=True)
-    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True,
-        full=True)
+    photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True, full=True)
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True)
     app_data = fields.DictField('app_data')
 
     def is_valid(self, bundle):
         bundle.obj.clean()
         return super(PublishableResource, self).is_valid(bundle)
 
-    def dehydrate(self, bundle):
-        bundle = super(PublishableResource, self).dehydrate(bundle)
+    def dehydrate(self, bundle, *args, **kwargs):
+        bundle = super(PublishableResource, self).dehydrate(bundle, *args, **kwargs)
 
         bundle.data['url'] = bundle.obj.get_domain_url()
         return bundle
@@ -410,8 +408,8 @@ class RelatedResource(ApiModelResource):
     publishable = fields.ForeignKey(PublishableResource, 'publishable', full=True)
     related = fields.ForeignKey(PublishableResource, 'related', full=True)
 
-    def hydrate(self, bundle):
-        bundle = super(RelatedResource, self).hydrate(bundle)
+    def hydrate(self, bundle, *args, **kwargs):
+        bundle = super(RelatedResource, self).hydrate(bundle, *args, **kwargs)
 
         parts = bundle.data['related'].split('/')
         bundle.obj.related_ct = get_content_type_for_resource(parts[-3])
@@ -450,17 +448,16 @@ class DraftResource(ApiModelResource):
             applicable_filters)
         return object_list.filter(user=request.user)
 
-    def hydrate(self, bundle):
+    def hydrate(self, bundle, *args, **kwargs):
         """
         Translates content_type name into real Django ContentType object.
 
         Name of content type is case insensitive and correspond to the name
         of resource.
         """
-        bundle.obj.content_type = get_content_type_for_resource(
-            bundle.data['content_type'])
+        bundle.obj.content_type = get_content_type_for_resource(bundle.data['content_type'])
 
-        return super(DraftResource, self).hydrate(bundle)
+        return super(DraftResource, self).hydrate(bundle, *args, **kwargs)
 
     def alter_list_data_to_serialize(self, request, bundle):
         """

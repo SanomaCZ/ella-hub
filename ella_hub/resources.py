@@ -178,7 +178,7 @@ class ApiModelResource(ModelResource):
         )
         return bundle
 
-    def full_dehydrate(self, bundle):
+    def full_dehydrate(self, bundle, *args, **kwargs):
         """
         Generates fields that are common for all objects of this resource.
         """
@@ -224,7 +224,7 @@ class ApiModelResource(ModelResource):
         self._set_cached_field("read_only_fields", read_only_fields)
         self._set_cached_field("disabled_fields", tuple(disabled_fields))
 
-    def hydrate(self, bundle):
+    def hydrate(self, bundle, *args, **kwargs):
         """Fills user fields by current logged user."""
         for field_name in getattr(self._meta, "user_fields", ()):
             setattr(bundle.obj, field_name, bundle.request.user)
