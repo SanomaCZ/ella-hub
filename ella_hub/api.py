@@ -30,6 +30,7 @@ from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import get_init_states, get_workflow
+from ella_hub.utils.timezone import now
 from ella_hub.auth import ApiAuthentication
 from ella_hub import conf
 
@@ -116,7 +117,6 @@ class EllaHubApi(Api):
                 if self._is_resource_subclass(resource) and resource not in resources:
                     utils.save_resource_class(resource)
                     resources.append(resource)
-
         return resources
 
     def _is_resource_subclass(self, resource):
@@ -181,7 +181,8 @@ class EllaHubApi(Api):
         if user is not None and user.is_active:
             login(request, user)
 
-            api_key, created = ApiKey.objects.get_or_create(user=user)
+            api_key, created = ApiKey.objects.get_or_create(user=user,
+                                                            defaults={"created": now()})
             return HttpJsonResponse({
                 "api_key": self.__regenerate_key(api_key),
                 "user_id": api_key.user_id,
