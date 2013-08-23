@@ -207,7 +207,9 @@ class EllaHubApi(Api):
         self.__regenerate_key(api_key)
         logout(request)
 
-        return HttpResponseRedirect('/%s/' % self.api_name)
+        return HttpJsonResponse({
+            "success": True
+        })
 
     @cross_domain_api_post_view
     def validate_api_key_view(self, request):
@@ -299,7 +301,7 @@ class EllaHubApi(Api):
 
         for res_obj in allowed_public_resources:
             auth_tree.update({
-                res_obj._meta.resource_name: self.__create_resource_tree(res_obj,request.user)
+                res_obj._meta.resource_name: self.__create_resource_tree(res_obj, request.user)
             })
 
         # covering article types under "articles" node
