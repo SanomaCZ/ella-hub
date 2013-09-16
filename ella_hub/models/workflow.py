@@ -90,7 +90,7 @@ class StateObjectRelation(models.Model):
         related_name="state_object", blank=True, null=True)
     content_id = models.PositiveIntegerField(_("Content id"), blank=True, null=True)
     content_object = CachedGenericForeignKey("content_type", "content_id")
-    state = CachedForeignKey(State, verbose_name=_("State"))
+    state = CachedForeignKey(State, verbose_name = _("State"))
 
     def __unicode__(self):
         return "%s %s - %s" % (self.content_type.name, self.content_id, self.state.title)

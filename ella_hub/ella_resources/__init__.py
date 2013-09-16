@@ -318,7 +318,7 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
             bundle.data['app_data'] = current_data
         return bundle
 
-    def _add_state_fields(self, bundle):
+    def _add_state_fields(self, request, bundle):
         """Adds current state and next allowed states of object."""
         state = get_state(bundle.obj)
         if (((state and state.codename != "published") or not state)

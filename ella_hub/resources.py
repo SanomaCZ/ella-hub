@@ -1,6 +1,6 @@
 import re
-import json
 
+from django.utils import simplejson
 from django.utils.http import urlunquote_plus
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ObjectDoesNotExist
@@ -153,25 +153,28 @@ class ApiModelResource(ModelResource):
         """
         bundle = super(ApiModelResource, self).alter_list_data_to_serialize(request, bundle)
         if isinstance(bundle, dict) and "objects" in bundle:
-            bundle['data'] = [self._add_state_fields(one) for one in bundle['objects']]
-            del bundle['objects']
+            bundle = bundle["objects"]
+
+        for object in bundle:
+            self._add_state_fields(request, object)
+
         return bundle
 
     def alter_detail_data_to_serialize(self, request, bundle):
         bundle = super(ApiModelResource, self).alter_detail_data_to_serialize(request, bundle)
-        return self._add_state_fields(bundle)
+        return self._add_state_fields(request, bundle)
 
-    def _add_state_fields(self, bundle):
+    def _add_state_fields(self, request, bundle):
         """Adds current state and next allowed states of object."""
         state = get_state(bundle.obj)
         next_states = []
 
         if state:
             bundle.data["state"] = state.codename
-            next_states = [trans.destination for trans in state.transitions.select_related().all()]
+            next_states = [trans.destination for trans in state.transitions.all()]
 
         bundle.data["allowed_states"] = dict(
-            (state.codename, state.title) for state in next_states
+            [(state.codename, state.title) for state in next_states]
         )
         return bundle
 
@@ -305,7 +308,7 @@ class MultipartFormDataModelResource(ApiModelResource):
 
         if format.lower().startswith('multipart/form-data'):
             data = urlunquote_plus(request.POST['resource_data'])
-            data = json.loads(data)
+            data = simplejson.loads(data)
             for object in data['objects']:
                 for key, value in object.items():
                     self.__attach_object(attached_objects, object, key, value)
