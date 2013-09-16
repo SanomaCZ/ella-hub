@@ -465,7 +465,7 @@ class DraftResource(ApiModelResource):
         """
         bundle = super(DraftResource, self).alter_list_data_to_serialize(request, bundle)
 
-        for object in bundle:
+        for object in bundle['data']:
             self.__alter_data_to_serialize(object)
         return bundle
 
