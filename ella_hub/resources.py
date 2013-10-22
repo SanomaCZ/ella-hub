@@ -305,7 +305,7 @@ class MultipartFormDataModelResource(ApiModelResource):
 
         if format.lower().startswith('multipart/form-data'):
             data = urlunquote_plus(request.POST['resource_data'])
-            data = json.loads(data)
+            data = json.loads(data, strict=False)
             for object in data['objects']:
                 for key, value in object.items():
                     self.__attach_object(attached_objects, object, key, value)
