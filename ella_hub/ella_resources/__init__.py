@@ -307,6 +307,20 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
         bundle.data['url'] = bundle.obj.get_domain_url()
         return bundle
 
+    def full_hydrate(self, bundle):
+        """
+        Given a populated bundle, distill it and turn it back into
+        a full-fledged object instance.
+        """
+        bundle = super(PublishableResource, self).full_hydrate(bundle)
+
+        # hack for reseting Photo
+        if "photo" in bundle.data:
+            if bundle.data["photo"] is None:
+                setattr(bundle.obj, "photo", None)
+
+        return bundle
+
     def hydrate_app_data(self, bundle):
         """
         update app data, merge each sent namespace w/ existing data
