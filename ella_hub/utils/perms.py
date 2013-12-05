@@ -30,6 +30,8 @@ def has_model_state_permission(model, user, permission, state=None, roles=None):
     if isinstance(user, AnonymousUser):
         return False
 
+
+
     return True
 
 
