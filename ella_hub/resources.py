@@ -6,13 +6,13 @@ from django.http import HttpResponseForbidden
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 
-from tastypie.exceptions import NotFound, ApiFieldError
+from tastypie.exceptions import NotFound
 from tastypie.resources import ModelResource
 
 from ella_hub.auth import ApiAuthentication as Authentication
 from ella_hub.auth import ApiAuthorization as Authorization
 from ella_hub.utils import get_resource_model
-from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
+from ella_hub.utils.perms import has_model_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.models import StateObjectRelation
 
@@ -105,7 +105,7 @@ class ApiModelResource(ModelResource):
         res_model = self._meta.object_class
 
         for request_str, perm_str in REST_PERMS.items():
-            if has_model_state_permission(res_model, request.user,
+            if has_model_permission(res_model, request.user,
                 REST_PERMS[request_str]):
                 allowed_methods.append(request_str.lower())
 
@@ -191,7 +191,6 @@ class ApiModelResource(ModelResource):
     def _fill_fields_pemissions(self, bundle):
         resource_model = self._meta.object_class
         user = bundle.request.user
-        obj_state = get_state(bundle.obj)
 
         disabled_fields = []
         read_only_fields = []
@@ -199,8 +198,8 @@ class ApiModelResource(ModelResource):
 
         # set allowed_http_methods also
         for request_str, perm_str in REST_PERMS.items():
-            if has_model_state_permission(resource_model, user,
-                REST_PERMS[request_str], obj_state):
+            if has_model_permission(resource_model, user,
+                REST_PERMS[request_str]):
                 allowed_http_methods.append(request_str.lower())
 
         self._set_cached_field("allowed_http_methods", allowed_http_methods)

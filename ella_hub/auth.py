@@ -5,15 +5,13 @@ from django.contrib.auth.models import AnonymousUser
 
 from tastypie.authentication import ApiKeyAuthentication as Authentication
 from tastypie.authorization import Authorization
-from tastypie.exceptions import ImmediateHttpResponse, Unauthorized
-from tastypie.http import HttpForbidden
+from tastypie.exceptions import Unauthorized
 from tastypie.models import ApiKey
 
 from ella.utils import timezone
 
-from ella_hub import utils
 from ella_hub import conf
-from ella_hub.utils.perms import has_model_state_permission, has_object_permission, REST_PERMS
+from ella_hub.utils.perms import has_object_permission, REST_PERMS
 
 
 class ApiAuthentication(Authentication):
@@ -83,8 +81,6 @@ class ApiAuthorization(Authorization):
 
     def create_list(self, object_list, bundle):
         self._common_create(bundle.request)
-        if bundle.request.user.is_superuser:
-            return object_list
         return object_list
 
     def create_detail(self, object_list, bundle):
@@ -96,6 +92,8 @@ class ApiAuthorization(Authorization):
         obj = object_list[0] if object_list else False
         if not obj:
             raise Unauthorized("nope")
+
+
 
         if has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
             return True
