@@ -6,11 +6,11 @@ from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
 
 
 REST_PERMS = {
-    "GET": "can_view",
-    "POST": "can_add",
-    "PUT": "can_change",
-    "PATCH": "can_change",
-    "DELETE": "can_delete"
+    "GET": "change",
+    "POST": "add",
+    "PUT": "change",
+    "PATCH": "change",
+    "DELETE": "delete"
 }
 
 
