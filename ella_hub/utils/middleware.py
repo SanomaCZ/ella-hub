@@ -51,6 +51,7 @@ class CrossDomainAccessMiddleware(object):
 class SQLMiddleware(object):
 
     def process_response(self, request, response):
-        print "\n" * 10
+        print "\n" * 2
+        print request.path
         print len(connection.queries)
         return response

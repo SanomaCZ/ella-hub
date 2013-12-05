@@ -59,13 +59,15 @@ def has_model_state_permission(model, user, permission, state=None, roles=None):
     if user.is_superuser and not permission.restriction:
         return True
 
-    print datetime.datetime.now().strftime("%H:%M:%S.%f")
+
 
     # if no roles are specified, lookup all user roles
     if not roles:
 
+        print datetime.datetime.now().strftime("%H:%M:%S.%f")
+
         # !!!!!
-        # return True
+        return True
 
         relations = PrincipalRoleRelation.objects.filter(user=user).\
                         select_related('role')
@@ -104,9 +106,11 @@ def has_object_permission(model_obj, user, codename, roles=None):
     if user.is_superuser and not perm.restriction:
         return True
 
-    print datetime.datetime.now().strftime("%H:%M:%S.%f")
+
 
     if not roles:
+
+        print datetime.datetime.now().strftime("%H:%M:%S.%f")
 
         # !!!!
         return True
