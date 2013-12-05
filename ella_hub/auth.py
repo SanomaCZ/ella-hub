@@ -11,7 +11,7 @@ from tastypie.models import ApiKey
 from ella.utils import timezone
 
 from ella_hub import conf
-from ella_hub.utils.perms import has_object_permission, REST_PERMS
+from ella_hub.utils.perms import has_object_permission, REST_PERMS, has_model_permission
 
 
 class ApiAuthentication(Authentication):
@@ -46,22 +46,18 @@ class ApiAuthentication(Authentication):
 
 class ApiAuthorization(Authorization):
     """
-    Authorization class that handles basic(class-specific) and advances(object-specific) permissions.
+    Authorization class that handles basic(class-specific).
     """
     # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
 
     def read_list(self, object_list, bundle):
         user = bundle.request.user
-        if user.is_superuser:
+        if user.is_superuser or not object_list:
             return object_list
 
-        if not object_list:
+        if not has_object_permission(object_list[0], user, REST_PERMS[bundle.request.method]):
             raise Unauthorized('nada')
-
-        for obj in object_list:
-            if not has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
-                raise Unauthorized('nada')
 
         return object_list
 
@@ -92,8 +88,6 @@ class ApiAuthorization(Authorization):
         obj = object_list[0] if object_list else False
         if not obj:
             raise Unauthorized("nope")
-
-
 
         if has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
             return True
