@@ -1,92 +1,35 @@
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from ella.core.cache import get_cached_object
 
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
-from ella_hub.models import StatePermissionRelation, State
-
-import datetime
 
 
 REST_PERMS = {
-    "GET":"can_view",
-    "POST":"can_add",
-    "PUT":"can_change",
-    "PATCH":"can_change",
-    "DELETE":"can_delete"
+    "GET": "can_view",
+    "POST": "can_add",
+    "PUT": "can_change",
+    "PATCH": "can_change",
+    "DELETE": "can_delete"
 }
 
 
-def has_model_state_permission(model, user, permission, state=None, roles=None):
+def has_model_permission(model, user, permission):
     """
-    Returns True if objects of class <model> in <state>
-    defined for <user> role/roles has <permission>,
-    otherwise returns False. If <roles> is None, all <user> roles are considered.
-
-    Example:
-    User Peter has editor role, so he can edit articles in "editing" state,
-    but can't publish articles in "editing" state.
-    """
-    if isinstance(user, AnonymousUser):
-        return False
-
-
-
-    return True
-
-
-def has_object_permission(model_obj, user, codename, roles=None):
-    """
-    Returns True if <user> has at least one of <roles> which
-    has permission specified by <codename> for specified <model_obj>,
-    otherwise returns False.
-
-    If roles is None, all <user> roles are considered.
+    Uses only standard django model permissions
     """
 
-    if isinstance(user, AnonymousUser):
-        return False
+    ct = ContentType.objects.get_for_model(model)
+    return user.has_perm("%s.%s_%s" % (ct.app_label, permission, ct.model))
 
-    if user.is_superuser:
-        return True
 
-    ct = ContentType.objects.get_for_model(model_obj)
+def has_object_permission(model_obj, user, codename):
+    """
+    Fallback
+    """
 
-    try:
-        perm = get_cached_object(Permission, codename=codename)
-    except Permission.DoesNotExist:
-        return False
+    return has_model_permission(model_obj, user, codename)
 
-    if user.is_superuser and not perm.restriction:
-        return True
-
-    if not roles:
-
-        print datetime.datetime.now().strftime("%H:%M:%S.%f")
-        # !!!!
-        #return True
-
-        relations = PrincipalRoleRelation.objects.filter(user=user).\
-                        select_related('role')
-        roles = [relation.role for relation in relations]
-
-    o_perms = ModelPermission.objects.filter(role__in=roles,
-        content_type=ct, permission=perm)
-
-    if not o_perms.exists():
-        return False
-
-    import ella_hub.utils.workflow
-
-    state = ella_hub.utils.workflow.get_state(model_obj)
-
-    try:
-        StatePermissionRelation.objects.get(state=state,
-            permission=perm, role__in=roles)
-    except StatePermissionRelation.DoesNotExist:
-        return False
-    else:
-        return True
 
 def grant_permission(model, role, permission):
     """
