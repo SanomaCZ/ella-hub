@@ -17,10 +17,6 @@ from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.models import StateObjectRelation
 
 
-class NOT_HYDRATED(object):
-    pass
-
-
 class ApiModelResource(ModelResource):
     __GENERATED_FIELDS_CACHE = {}
 

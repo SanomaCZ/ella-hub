@@ -1,11 +1,8 @@
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from ella.core.cache import get_cached_object
 
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
-from ella_hub.models import StatePermissionRelation, State
-
-import datetime
 
 
 REST_PERMS = {
@@ -28,44 +25,10 @@ def has_model_permission(model, user, permission):
 
 def has_object_permission(model_obj, user, codename):
     """
-    Returns True if <user> has at least one of <roles> which
-    has permission specified by <codename> for specified <model_obj>,
-    otherwise returns False.
-
-    If roles is None, all <user> roles are considered.
+    Fallback
     """
 
-    print(codename, model_obj)
-    if isinstance(user, AnonymousUser):
-        return False
-
-    if user.is_superuser:
-        return True
-
-    ct = ContentType.objects.get_for_model(model_obj)
-
-    try:
-        perm = get_cached_object(Permission, codename=codename)
-    except Permission.DoesNotExist:
-        return False
-
-    o_perms = ModelPermission.objects.filter(role__in=roles,
-        content_type=ct, permission=perm)
-
-    if not o_perms.exists():
-        return False
-
-    import ella_hub.utils.workflow
-
-    state = ella_hub.utils.workflow.get_state(model_obj)
-
-    try:
-        StatePermissionRelation.objects.get(state=state,
-            permission=perm, role__in=roles)
-    except StatePermissionRelation.DoesNotExist:
-        return False
-    else:
-        return True
+    return has_model_permission(model_obj, user, codename)
 
 
 def grant_permission(model, role, permission):
