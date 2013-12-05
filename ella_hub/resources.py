@@ -112,13 +112,6 @@ class ApiModelResource(ModelResource):
         if not allowed_methods:
             return HttpResponseForbidden()
 
-        for fn, attrs in schema["fields"].items():
-            if has_model_state_permission(res_model, request.user, "readonly_" + fn):
-                schema["fields"][fn]["readonly"] = True
-
-            schema["fields"][fn]["disabled"] = has_model_state_permission(res_model,
-                request.user, "disabled_" + fn)
-
         schema['allowed_detail_http_methods'] = allowed_methods
         schema['allowed_list_http_methods'] = allowed_methods
 
@@ -203,17 +196,6 @@ class ApiModelResource(ModelResource):
         disabled_fields = []
         read_only_fields = []
         allowed_http_methods = []
-
-        # filter fields according to actual permissions/restrictions
-        for field_name in bundle.obj._meta.get_all_field_names():
-            if has_model_state_permission(resource_model, user,
-                "disabled_" + field_name, obj_state):
-                disabled_fields.append(field_name)
-
-            if (not has_model_state_permission(resource_model, user, "can_change") or
-                has_model_state_permission(resource_model, user,
-                    "readonly_" + field_name, obj_state)):
-                    read_only_fields.append(field_name)
 
         # set allowed_http_methods also
         for request_str, perm_str in REST_PERMS.items():

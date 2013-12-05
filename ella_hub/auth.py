@@ -80,9 +80,6 @@ class ApiAuthorization(Authorization):
 
     def _common_create(self, request):
         self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
-        resource_model = utils.get_resource_model(self.resource_name)
-        if not has_model_state_permission(resource_model, request.user, REST_PERMS[request.method]):
-            raise ImmediateHttpResponse(response=HttpForbidden())
 
     def create_list(self, object_list, bundle):
         self._common_create(bundle.request)
