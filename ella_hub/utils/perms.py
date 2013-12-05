@@ -5,6 +5,8 @@ from ella.core.cache import get_cached_object
 from ella_hub.models import Permission, ModelPermission, PrincipalRoleRelation
 from ella_hub.models import StatePermissionRelation, State
 
+import datetime
+
 
 REST_PERMS = {
     "GET":"can_view",
@@ -57,8 +59,14 @@ def has_model_state_permission(model, user, permission, state=None, roles=None):
     if user.is_superuser and not permission.restriction:
         return True
 
+    print datetime.datetime.now().strftime("%H:%M:%S.%f")
+
     # if no roles are specified, lookup all user roles
     if not roles:
+
+        # !!!!!
+        return True
+
         relations = PrincipalRoleRelation.objects.filter(user=user).\
                         select_related('role')
         roles = [relation.role for relation in relations]
@@ -82,6 +90,7 @@ def has_object_permission(model_obj, user, codename, roles=None):
 
     If roles is None, all <user> roles are considered.
     """
+
     if isinstance(user, AnonymousUser):
         return False
 

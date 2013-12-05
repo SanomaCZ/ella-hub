@@ -6,7 +6,7 @@ from django.http import HttpResponseForbidden
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 
-from tastypie.exceptions import NotFound
+from tastypie.exceptions import NotFound, ApiFieldError
 from tastypie.resources import ModelResource
 
 from ella_hub.auth import ApiAuthentication as Authentication
@@ -15,6 +15,10 @@ from ella_hub.utils import get_resource_model
 from ella_hub.utils.perms import has_model_state_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.models import StateObjectRelation
+
+
+class NOT_HYDRATED(object):
+    pass
 
 
 class ApiModelResource(ModelResource):
@@ -228,6 +232,29 @@ class ApiModelResource(ModelResource):
 
         if "state" in bundle.data:
             set_state(bundle.obj, bundle.data["state"])
+
+        return bundle
+
+    def full_hydrate(self, bundle):
+        """
+        Given a populated bundle, distill it and turn it back into
+        a full-fledged object instance.
+        """
+        bundle = super(ApiModelResource, self).full_hydrate(bundle)
+
+        if "photo" in bundle.data:
+            if bundle.data["photo"] is None:
+                setattr(bundle.obj, "photo", None)
+
+            # we allow to set photo to None, if previous value wasn't None
+            # because sometimes we want to remove photo from article
+#            if field_object.instance_name == "photo":
+#
+#                print "d: name ", field_object.instance_name, field_object
+#                print "d: name ", bundle.requset, field_object
+#
+#                if getattr(bundle.obj, field_object.attribute, None) is not None:
+#                    setattr(bundle.obj, field_object.attribute, None)
 
         return bundle
 
