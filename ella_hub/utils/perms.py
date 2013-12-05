@@ -30,58 +30,7 @@ def has_model_state_permission(model, user, permission, state=None, roles=None):
     if isinstance(user, AnonymousUser):
         return False
 
-    import ella_hub.utils.workflow
-
-    workflow = ella_hub.utils.workflow.get_workflow(model)
-    if not workflow and state:
-        return False
-
-    if state and not isinstance(state, State):
-        try:
-            state = get_cached_object(State, codename=state)
-        except State.DoesNotExist:
-            return False
-
-     # state need to belong to the workflow
-    if state and state.workflow != workflow:
-        return False
-
-    ct = ContentType.objects.get_for_model(model)
-
-    if not isinstance(permission, Permission):
-        try:
-            permission = get_cached_object(Permission, codename=permission)
-        except Permission.DoesNotExist:
-            return False
-
-    # if Permission is specified as restriction (perm.restriction==True),
-    # superuser is not restricted
-    if user.is_superuser and not permission.restriction:
-        return True
-
-
-
-    # if no roles are specified, lookup all user roles
-    if not roles:
-
-        print datetime.datetime.now().strftime("%H:%M:%S.%f")
-
-        # !!!!!
-        return True
-
-        relations = PrincipalRoleRelation.objects.filter(user=user).\
-                        select_related('role')
-        roles = [relation.role for relation in relations]
-
-    model_perms = ModelPermission.objects.filter(role__in=roles,
-        content_type=ct, permission=permission).select_related('permission')
-
-    perms = [model_perm.permission for model_perm in model_perms]
-    if state:
-        return StatePermissionRelation.objects.filter(state=state,
-            permission__in=perms, role__in=roles).count()
-
-    return len(perms)
+    return True
 
 
 def has_object_permission(model_obj, user, codename, roles=None):
@@ -96,6 +45,9 @@ def has_object_permission(model_obj, user, codename, roles=None):
     if isinstance(user, AnonymousUser):
         return False
 
+    if user.is_superuser:
+        return True
+
     ct = ContentType.objects.get_for_model(model_obj)
 
     try:
@@ -106,14 +58,11 @@ def has_object_permission(model_obj, user, codename, roles=None):
     if user.is_superuser and not perm.restriction:
         return True
 
-
-
     if not roles:
 
         print datetime.datetime.now().strftime("%H:%M:%S.%f")
-
         # !!!!
-        return True
+        #return True
 
         relations = PrincipalRoleRelation.objects.filter(user=user).\
                         select_related('role')

@@ -55,10 +55,6 @@ class EllaHubApi(Api):
             api_name = self.api_name
 
         for resource_name in sorted(self._registry.keys()):
-            res_model = self._registry[resource_name]._meta.object_class
-            if not has_model_state_permission(res_model, request.user, REST_PERMS["GET"]):
-                continue
-
             available_resources[resource_name] = {
                 'list_endpoint': self._build_reverse_url("api_dispatch_list", kwargs={
                     'api_name': api_name,
@@ -352,16 +348,7 @@ class EllaHubApi(Api):
             init_state = workflow.get_initial_state()
 
         for fn, attrs in schema["fields"].items():
-            field_attrs = {"readonly": False, "nullable": False}
-
-            if (not has_model_state_permission(res_model, user, "can_change") or
-                has_model_state_permission(res_model, user, "readonly_%s" % fn, init_state)):
-                field_attrs["readonly"] = True
-            else:
-                field_attrs["readonly"] = attrs["readonly"]
-            field_attrs["nullable"] = attrs["nullable"]
-
-            field_attrs["disabled"] = bool(has_model_state_permission(res_model, user, "disabled_%s" % fn, init_state))
+            field_attrs = {"readonly": False, "nullable": False, "disabled": False}
             res_tree["fields"].update({fn: field_attrs})
 
         res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
