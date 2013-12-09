@@ -4,7 +4,7 @@ import datetime
 from django.contrib.auth.models import AnonymousUser
 
 from tastypie.authentication import ApiKeyAuthentication as Authentication
-from tastypie.authorization import Authorization
+from tastypie.authorization import DjangoAuthorization
 from tastypie.exceptions import Unauthorized
 from tastypie.models import ApiKey
 
@@ -44,95 +44,9 @@ class ApiAuthentication(Authentication):
         api_key.save()
 
 
-class ApiAuthorization(Authorization):
+class ApiAuthorization(DjangoAuthorization):
     """
-    Authorization class that handles basic(class-specific).
+    Authorization class that handles basic(class-specific) based on DjangoAuthorization.
     """
     # Regular Expression parsing resource name from `request.path`.
     __re_objects_class = re.compile(r"/[^/]*/(?P<resource_name>[^/]*)/.*")
-
-    def read_list(self, object_list, bundle):
-        user = bundle.request.user
-        if user.is_superuser or not object_list:
-            return object_list
-
-        if not has_object_permission(object_list[0], user, REST_PERMS[bundle.request.method]):
-            raise Unauthorized('nada')
-
-        return object_list
-
-    def read_detail(self, object_list, bundle):
-        user = bundle.request.user
-        if user.is_superuser:
-            return True
-
-        obj = object_list[0]
-        if has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
-            return True
-
-        raise Unauthorized("nope")
-
-    def _common_create(self, request):
-        self.resource_name = self.__re_objects_class.match(request.path).group("resource_name")
-
-    def create_list(self, object_list, bundle):
-        self._common_create(bundle.request)
-        return object_list
-
-    def create_detail(self, object_list, bundle):
-        self._common_create(bundle.request)
-        user = bundle.request.user
-        if user.is_superuser:
-            return True
-
-        obj = object_list[0] if object_list else False
-        if not obj:
-            raise Unauthorized("nope")
-
-        if has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
-            return True
-
-        raise Unauthorized("nope")
-
-    def update_list(self, object_list, bundle):
-        allowed = []
-
-        # Since they may not all be saved, iterate over them.
-        for obj in object_list:
-            if obj.user == bundle.request.user or bundle.request.user.is_superuser:
-                allowed.append(obj)
-
-        return allowed
-
-    def update_detail(self, object_list, bundle):
-        if bundle.request.user.is_superuser:
-            return True
-        return bundle.obj.user == bundle.request.user
-
-    def delete_list(self, object_list, bundle):
-        self._common_create(bundle.request)
-
-        user = bundle.request.user
-        if user.is_superuser:
-            return True
-
-        if not object_list:
-            raise Unauthorized('nada')
-
-        for obj in object_list:
-            if not has_object_permission(obj, user, REST_PERMS[bundle.request.method]):
-                raise Unauthorized('nada')
-
-        raise Unauthorized("nada")
-
-    def delete_detail(self, object_list, bundle):
-        self._common_create(bundle.request)
-
-        user = bundle.request.user
-        if user.is_superuser:
-            return True
-
-        if has_object_permission(object_list[0], user, REST_PERMS[bundle.request.method]):
-            return True
-
-        raise Unauthorized("nope")

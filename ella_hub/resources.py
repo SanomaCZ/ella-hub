@@ -10,7 +10,7 @@ from tastypie.exceptions import NotFound
 from tastypie.resources import ModelResource
 
 from ella_hub.auth import ApiAuthentication as Authentication
-from ella_hub.auth import ApiAuthorization as Authorization
+from ella_hub.auth import ApiAuthorization
 from ella_hub.utils import get_resource_model
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
@@ -293,7 +293,7 @@ class ApiModelResource(ModelResource):
 
     class Meta:
         authentication = Authentication()
-        authorization = Authorization()
+        authorization = ApiAuthorization()
         always_return_data = True
 
 
