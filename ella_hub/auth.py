@@ -11,7 +11,6 @@ from tastypie.models import ApiKey
 from ella.utils import timezone
 
 from ella_hub import conf
-from ella_hub.utils.perms import has_object_permission, REST_PERMS, has_model_permission
 
 
 class ApiAuthentication(Authentication):
@@ -60,7 +59,7 @@ class ApiAuthorization(DjangoAuthorization):
         permission = '%s.change_%s' % (klass._meta.app_label, klass._meta.module_name)
 
         if not bundle.request.user.has_perm(permission):
-            raise Unauthorized("You are not allowed to access that resource.")
+            raise Unauthorized("You are not allowed to access that resource - %s" % (permission,))
 
         return object_list
 
@@ -73,6 +72,6 @@ class ApiAuthorization(DjangoAuthorization):
         permission = '%s.change_%s' % (klass._meta.app_label, klass._meta.module_name)
 
         if not bundle.request.user.has_perm(permission):
-            raise Unauthorized("You are not allowed to access that resource.")
+            raise Unauthorized("You are not allowed to access that resource - %s" % (permission,))
 
         return True
