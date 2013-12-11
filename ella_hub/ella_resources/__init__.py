@@ -156,8 +156,8 @@ class ExcludeItemsMixin(object):
 
 class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
     authors = fields.ToManyField(AuthorResource, 'authors', full=True)
-    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True)
-    app_data = fields.DictField('app_data')
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True, use_in='datail')
+    app_data = fields.DictField('app_data', use_in='detail')
 
     def dehydrate(self, bundle, *args, **kwargs):
         """Adds absolute URL of image."""
@@ -291,11 +291,11 @@ class FormatedPhotoResource(ApiModelResource):
 
 
 class PublishableResource(ExcludeItemsMixin, ApiModelResource):
-    authors = fields.ToManyField(AuthorResource, 'authors', full=True)
+    authors = fields.ToManyField(AuthorResource, 'authors', full=True,  use_in='detail')
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
     photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True, full=True)
-    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True)
-    app_data = fields.DictField('app_data')
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True,  use_in='detail')
+    app_data = fields.DictField('app_data',  use_in='detail')
 
     def is_valid(self, bundle):
         bundle.obj.clean()
@@ -420,7 +420,7 @@ class ListingResource(ApiModelResource):
 
 class RelatedResource(ApiModelResource):
     publishable = fields.ForeignKey(PublishableResource, 'publishable', full=True)
-    related = fields.ForeignKey(PublishableResource, 'related', full=True)
+    related = fields.ForeignKey(PublishableResource, 'related', full=True, use_in='detail')
 
     def hydrate(self, bundle, *args, **kwargs):
         bundle = super(RelatedResource, self).hydrate(bundle, *args, **kwargs)
