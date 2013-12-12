@@ -31,7 +31,8 @@ class ApiModelResource(ModelResource):
         """
         final_fields = {}
         fields = fields or []
-        excludes = excludes or []
+        # excludes = excludes or []
+        excludes = ['tags', ]
 
         if not cls._meta.object_class:
             return final_fields

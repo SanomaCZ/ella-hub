@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.db import connection
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class CrossDomainAccessMiddleware(object):
     """
@@ -52,6 +56,36 @@ class SQLMiddleware(object):
 
     def process_response(self, request, response):
         print "\n" * 2
-        print request.path
+#        print request.path
         print len(connection.queries)
+        # logging to file:
+        sum_select = 0
+        sum_update = 0
+        sum_other = 0
+
+        sum_taggit = 0
+
+        logger.info("### req: " + request.path)
+        for q in connection.queries:
+            logger.info(q)
+
+            query_time = float(q.get('time'))
+
+            if 'taggit' in q.get('sql'):
+                sum_taggit += query_time
+
+            if q.get('sql').startswith("SELECT"):
+                sum_select += query_time
+            elif q.get('sql').startswith("UPDATE"):
+                sum_update += query_time
+            else:
+                sum_select += query_time
+
+
+        logger.info("select: " + str(sum_select))
+        logger.info("update: " + str(sum_update))
+        logger.info("other: " + str(sum_other))
+        logger.info("taggit: " + str(sum_taggit))
+        logger.info("---------------------")
+
         return response

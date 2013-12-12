@@ -37,7 +37,7 @@ class TagResource(ApiModelResource):
                 TaggableManager(through=TaggedItem))
 
             field = fields.ToManyField(TagResource, "tags", blank=True,
-                null=True, full=True)
+                null=True, full=True, use_in='detail')
             # call `contribute_to_class` manually because
             # `DeclarativeMetaclass` already created `Resource` classes
             field.contribute_to_class(resource, "tags")

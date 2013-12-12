@@ -368,6 +368,7 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
 
     class Meta(ApiModelResource.Meta):
         queryset = Publishable.objects.all()
+
         filtering = {
             'id': ALL,
             'title': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
@@ -381,7 +382,8 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
             'announced': ALL,
             'authors': ALL_WITH_RELATIONS,
             'category': ALL_WITH_RELATIONS,
-            'photo': ALL_WITH_RELATIONS,
+#            'photo': ALL_WITH_RELATIONS,
+            'photo': ALL,
         }
         ordering = (
             'id',
