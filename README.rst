@@ -75,9 +75,7 @@ Setting up
     from ella_hub.api import EllaHubApi
     from ella_hub.utils.workflow import init_ella_workflow
     admin_api = EllaHubApi('admin-api')
-    resources = admin_api.collect_resources()
-    admin_api.register_resources(resources)
-    init_ella_workflow(resources)
+    admin_api.register_resources(resources=admin_api.collect_resources())
 
 
     urlpatterns = patterns('',
@@ -92,6 +90,7 @@ Setting up
 ::
 
     python manage.py syncdb
+    python manage.py init_ella_workflow
 
 
 
