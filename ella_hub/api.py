@@ -82,7 +82,8 @@ class EllaHubApi(Api):
         serialized = serializer.serialize(available_resources, desired_format, options)
         return HttpResponse(content=serialized, content_type=build_content_type(desired_format))
 
-    def collect_resources(self):
+    @classmethod
+    def collect_resources(cls):
         resource_modules = []
 
         # get resources from installed apps first
@@ -109,12 +110,13 @@ class EllaHubApi(Api):
         for mod in resource_modules:
             for attr in mod.__dict__:
                 resource = getattr(mod, attr)
-                if self._is_resource_subclass(resource) and resource not in resources:
+                if cls._is_resource_subclass(resource) and resource not in resources:
                     utils.save_resource_class(resource)
                     resources.append(resource)
         return resources
 
-    def _is_resource_subclass(self, resource):
+    @classmethod
+    def _is_resource_subclass(cls, resource):
         if not isclass(resource):
             return False
 
