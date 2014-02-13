@@ -157,7 +157,8 @@ class ApiModelResource(ModelResource):
     def _add_states_fields(self, bundle):
         """Adds current state and next allowed states for objects db optimalized."""
         ids_dict = dict((one.obj.pk, (one.obj, one)) for one in bundle['objects'])
-        next_states = State.objects.get_states_choices_as_dict()
+        #FIXME: if you have good reason uncomment line below
+        #next_states = State.objects.get_states_choices_as_dict()
         bundle['data'] = []
         if ids_dict:
             ct = ContentType.objects.get_for_model(bundle['objects'][0].obj)
@@ -167,7 +168,8 @@ class ApiModelResource(ModelResource):
                 state = sor_dict.get(obj_pk, None)
                 if state:
                     obj_bundle.data["state"] = state.codename
-                obj_bundle.data["allowed_states"] = next_states
+                #FIXME: if you have good reason uncomment line below
+                #obj_bundle.data["allowed_states"] = next_states
                 bundle['data'].append(obj_bundle)
         del bundle['objects']
 
