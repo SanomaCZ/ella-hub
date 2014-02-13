@@ -6,6 +6,7 @@ from django.core.cache import cache
 
 from ella.core.cache import CachedForeignKey, CachedGenericForeignKey
 from ella_hub.models.permissions import Permission
+from ella_hub.managers import StateObjectRelationManager, StateManager
 
 
 class Workflow(models.Model):
@@ -59,6 +60,8 @@ class State(models.Model):
     transitions = models.ManyToManyField("Transition", verbose_name=_("Transitions"),
         blank=True, null=True)
 
+    objects = StateManager()
+
     def __unicode__(self):
         return u"%s" % self.title
 
@@ -91,6 +94,8 @@ class StateObjectRelation(models.Model):
     content_id = models.PositiveIntegerField(_("Content id"), blank=True, null=True)
     content_object = CachedGenericForeignKey("content_type", "content_id")
     state = CachedForeignKey(State, verbose_name=_("State"))
+
+    objects = StateObjectRelationManager()
 
     def __unicode__(self):
         return "%s %s - %s" % (self.content_type.name, self.content_id, self.state.title)

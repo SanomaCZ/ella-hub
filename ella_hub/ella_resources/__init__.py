@@ -21,7 +21,7 @@ from ella.photos.conf import photos_settings
 from ella.utils.timezone import now
 
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
-from ella_hub.models import Draft
+from ella_hub.models import Draft, State
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.utils import get_content_type_for_resource, get_resource_for_object
 
@@ -340,15 +340,12 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
 
             set_state(bundle.obj, "published")
             state = get_state(bundle.obj)
-        next_states = []
 
         if state:
             bundle.data["state"] = state.codename
-            next_states = [trans.destination for trans in state.transitions.all()]
 
-        bundle.data["allowed_states"] = dict(
-            [(state.codename, state.title) for state in next_states]
-        )
+        # FIXME: Use correct transition table
+        bundle.data["allowed_states"] = State.objects.get_states_choices_as_dict()
         return bundle
 
     def build_filters(self, filters=None):

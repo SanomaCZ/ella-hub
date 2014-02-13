@@ -82,31 +82,10 @@ def init_ella_workflow(resources):
     )
 
     # create states
-    added_state = State.objects.get_or_create(title=unicode(_("Added")),
-        codename="added", workflow=workflow)[0]
-    ready_state = State.objects.get_or_create(title=unicode(_("Ready")),
-        codename="ready", workflow=workflow)[0]
-    deleted_state = State.objects.get_or_create(title=unicode(_("Deleted")),
-        codename="deleted", workflow=workflow)[0]
 
     all_models = [resource._meta.object_class for resource in resources]
 
     state_obj_list = _create_states(STATES, workflow)
-
-    to_added = Transition.objects.get_or_create(title="to %s" % added_state.title,
-            workflow=workflow, destination=added_state)[0]
-    to_ready = Transition.objects.get_or_create(title="to %s" % ready_state.title,
-            workflow=workflow, destination=ready_state)[0]
-    to_deleted = Transition.objects.get_or_create(title="to %s" % deleted_state.title,
-            workflow=workflow, destination=deleted_state)[0]
-
-    added_state.transitions.add(to_added)
-    added_state.transitions.add(to_ready)
-    added_state.transitions.add(to_deleted)
-    ready_state.transitions.add(to_added)
-    ready_state.transitions.add(to_ready)
-    deleted_state.transitions.add(to_added)
-    deleted_state.transitions.add(to_deleted)
 
     # only view permissions
     for model in all_models:
@@ -235,7 +214,7 @@ def get_state(obj):
     """
     content_type = ContentType.objects.get_for_model(obj)
     try:
-        relation = StateObjectRelation.objects.get(content_id=obj.pk,
+        relation = StateObjectRelation.objects.select_related('state').get(content_id=obj.pk,
             content_type=content_type)
     except StateObjectRelation.DoesNotExist:
         return None

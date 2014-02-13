@@ -14,7 +14,7 @@ from ella_hub.auth import ApiAuthorization
 from ella_hub.utils import get_resource_model
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
-from ella_hub.models import StateObjectRelation
+from ella_hub.models import StateObjectRelation, State
 
 
 class ApiModelResource(ModelResource):
@@ -147,26 +147,38 @@ class ApiModelResource(ModelResource):
         """
         bundle = super(ApiModelResource, self).alter_list_data_to_serialize(request, bundle)
         if isinstance(bundle, dict) and "objects" in bundle:
-            bundle['data'] = [self._add_state_fields(one) for one in bundle['objects']]
-            del bundle['objects']
+            self._add_states_fields(bundle)
         return bundle
 
     def alter_detail_data_to_serialize(self, request, bundle):
         bundle = super(ApiModelResource, self).alter_detail_data_to_serialize(request, bundle)
         return self._add_state_fields(bundle)
 
+    def _add_states_fields(self, bundle):
+        """Adds current state and next allowed states for objects db optimalized."""
+        ids_dict = dict((one.obj.pk, (one.obj, one)) for one in bundle['objects'])
+        next_states = State.objects.get_states_choices_as_dict()
+        bundle['data'] = []
+        if ids_dict:
+            ct = ContentType.objects.get_for_model(bundle['objects'][0].obj)
+            sor_dict = StateObjectRelation.objects.get_for_ids_as_dict(ids_dict.keys(), ct=ct)
+            for obj_pk, obj_bundle_tuple in ids_dict.items():
+                obj, obj_bundle = obj_bundle_tuple
+                state = sor_dict.get(obj_pk, None)
+                if state:
+                    obj_bundle.data["state"] = state.codename
+                obj_bundle.data["allowed_states"] = next_states
+                bundle['data'].append(obj_bundle)
+        del bundle['objects']
+
     def _add_state_fields(self, bundle):
         """Adds current state and next allowed states of object."""
         state = get_state(bundle.obj)
-        next_states = []
-
         if state:
             bundle.data["state"] = state.codename
-            next_states = [trans.destination for trans in state.transitions.select_related().all()]
 
-        bundle.data["allowed_states"] = dict(
-            (state.codename, state.title) for state in next_states
-        )
+        # FIXME: Use correct transition table
+        bundle.data["allowed_states"] = State.objects.get_states_choices_as_dict()
         return bundle
 
     def full_dehydrate(self, bundle, *args, **kwargs):
