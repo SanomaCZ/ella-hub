@@ -17,6 +17,7 @@ from tastypie.exceptions import BadRequest
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
 from ella_hub.resources import ApiModelResource
+from ella_hub.utils.fields import use_in_clever
 from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
     get_resource_model)
 
@@ -37,7 +38,7 @@ class TagResource(ApiModelResource):
                 TaggableManager(through=TaggedItem))
 
             field = fields.ToManyField(TagResource, "tags", blank=True,
-                null=True, full=True, use_in='detail')
+                null=True, full=True, use_in=use_in_clever)
             # call `contribute_to_class` manually because
             # `DeclarativeMetaclass` already created `Resource` classes
             field.contribute_to_class(resource, "tags")
@@ -146,10 +147,11 @@ def patch_dehydrate(dehydrate):
     def patched_dehydrate(self, bundle):
         bundle = dehydrate(self, bundle)
 
-        for index, tag in enumerate(bundle.obj.tags.all()):
-            if tag.namespace.upper() == 'MAIN':
-                bundle.data["tags"][index].data["main_tag"] = True
-                break
+        if "tags" in bundle.data:
+            for index, tag in enumerate(bundle.obj.tags.all()):
+                if tag.namespace.upper() == 'MAIN':
+                    bundle.data["tags"][index].data["main_tag"] = True
+                    break
 
         return bundle
 

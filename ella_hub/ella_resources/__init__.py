@@ -24,6 +24,7 @@ from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
 from ella_hub.models import Draft, State
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.utils import get_content_type_for_resource, get_resource_for_object
+from ella_hub.utils.fields import use_in_clever
 
 
 logger = logging.getLogger(__name__)
@@ -291,11 +292,11 @@ class FormatedPhotoResource(ApiModelResource):
 
 
 class PublishableResource(ExcludeItemsMixin, ApiModelResource):
-    authors = fields.ToManyField(AuthorResource, 'authors', full=True,  use_in='detail')
+    authors = fields.ToManyField(AuthorResource, 'authors', full=True,  use_in=use_in_clever)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
     photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True, full=True)
-    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True,  use_in='detail')
-    app_data = fields.DictField('app_data',  use_in='detail')
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True,  use_in=use_in_clever)
+    app_data = fields.DictField('app_data',  use_in=use_in_clever)
 
     def is_valid(self, bundle):
         bundle.obj.clean()
