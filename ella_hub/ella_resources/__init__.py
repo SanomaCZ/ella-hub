@@ -44,8 +44,8 @@ class SiteResource(ApiModelResource):
 
 class CategoryResource(ApiModelResource):
     parent_category = fields.ForeignKey('self', 'tree_parent',
-        blank=True, null=True)
-    site = fields.ForeignKey(SiteResource, 'site', full=True)
+        blank=True, null=True, use_in=use_in_clever)
+    site = fields.ForeignKey(SiteResource, 'site', full=True, use_in=use_in_clever)
     app_data = fields.DictField('app_data')
 
     def dehydrate(self, bundle, *args, **kwargs):
@@ -156,8 +156,8 @@ class ExcludeItemsMixin(object):
 
 
 class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
-    authors = fields.ToManyField(AuthorResource, 'authors', full=True)
-    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True, use_in='datail')
+    authors = fields.ToManyField(AuthorResource, 'authors', full=True, use_in=use_in_clever)
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True, use_in=use_in_clever)
     app_data = fields.DictField('app_data', use_in='detail')
 
     def dehydrate(self, bundle, *args, **kwargs):
@@ -292,11 +292,11 @@ class FormatedPhotoResource(ApiModelResource):
 
 
 class PublishableResource(ExcludeItemsMixin, ApiModelResource):
-    authors = fields.ToManyField(AuthorResource, 'authors', full=True,  use_in=use_in_clever)
+    authors = fields.ToManyField(AuthorResource, 'authors', full=True, use_in=use_in_clever)
     category = fields.ForeignKey(CategoryResource, 'category', full=True)
     photo = fields.ForeignKey(PhotoResource, 'photo', blank=True, null=True, full=True)
-    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True,  use_in=use_in_clever)
-    app_data = fields.DictField('app_data',  use_in=use_in_clever)
+    source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True, use_in=use_in_clever)
+    app_data = fields.DictField('app_data', use_in=use_in_clever)
 
     def is_valid(self, bundle):
         bundle.obj.clean()
