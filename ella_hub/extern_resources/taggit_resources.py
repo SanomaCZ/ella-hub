@@ -16,6 +16,8 @@ from tastypie import fields
 from tastypie.exceptions import BadRequest
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
+from ella.core.models import Publishable
+
 from ella_hub.resources import ApiModelResource
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
@@ -78,8 +80,10 @@ class TagResource(ApiModelResource):
                         exclude(object_id__in=exclude).values_list("object_id", flat=True). \
                         annotate(count=Count("object_id")).order_by('-count')[:resource._meta.limit]
 
-
         objects = model_class.objects.filter(pk__in=list(object_ids))
+        # for publishable type use ordering by publish_from
+        if issubclass(model_class, Publishable) and len(tag_id_set) == 1:
+            objects = objects.order_by('-publish_from')
         bundles = [resource.build_bundle(obj=one, request=request) for one in objects]
         bundles = [resource.full_dehydrate(bundle) for bundle in bundles]
         return resource.create_response(request, bundles)
