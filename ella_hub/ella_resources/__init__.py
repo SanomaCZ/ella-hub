@@ -228,6 +228,7 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
             'important_bottom': ALL,
             'important_right': ALL,
             'authors': ALL_WITH_RELATIONS,
+            'tags': ALL_WITH_RELATIONS,
             'source': ALL_WITH_RELATIONS,
             'created': ALL,
         }
@@ -379,6 +380,7 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
             'last_updated': ALL,
             'announced': ALL,
             'authors': ALL_WITH_RELATIONS,
+            'tags': ALL_WITH_RELATIONS,
             'category': ALL_WITH_RELATIONS,
 #            'photo': ALL_WITH_RELATIONS,
             'photo': ALL,
