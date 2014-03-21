@@ -2,14 +2,14 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
 from ella.core.models import Publishable
-from ella.core.views import EllaCoreView
+from ella.core.views import ObjectDetail
 
 
-class ArticlePreview(EllaCoreView):
+class ArticlePreview(ObjectDetail):
     template_name = 'object.html'
 
-    def get_context(self, request, **kwargs):
-        publishable = get_object_or_404(Publishable, pk=kwargs['id'])
+    def get_context(self, request, category, slug, year, month, day, id):
+        publishable = get_object_or_404(Publishable, pk=id)
 
         context = {
             'object': publishable.target,
@@ -26,4 +26,4 @@ def preview_publishable(request, id):
         return HttpResponseRedirect(item.get_absolute_url())
 
     view = ArticlePreview()
-    return view(request, id=id)
+    return view(request, category=item.category, slug=item.slug, id=id)
