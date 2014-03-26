@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.utils.importlib import import_module
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 
 from tastypie.api import Api
 from tastypie.exceptions import BadRequest, ImmediateHttpResponse
@@ -152,7 +153,7 @@ class EllaHubApi(Api):
             url(r"^%s/logout/$" % self.api_name, self.wrap_view('logout_view')),
             url(r"^%s/validate-api-key/$" % self.api_name, self.wrap_view('validate_api_key_view')),
 
-            url(r"^preview/(?P<id>\d+)/$", views.preview_publishable),
+            url(r"^preview/(?P<id>\d+)/$", self.preview_publishable),
         ]
 
     def wrap_view(self, view):
@@ -354,3 +355,32 @@ class EllaHubApi(Api):
 
         res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
         return res_tree
+
+    def _auto_login_user(self, request):
+        """
+        Try to auto login user for django pages
+        if user is authenticate by ella_hub ApiAuthentication
+        """
+        user_id = request.GET.get("user", None)
+        key = request.GET.get("hash", None)
+        try:
+            api_key = ApiKey.objects.get(user_id=int(user_id), key__startswith=key)
+        except (ApiKey.DoesNotExist, ValueError, TypeError):
+            pass
+        else:
+            user = api_key.user
+            #REGENERATE, this is question
+            #self.__regenerate_key(api_key)
+            #FIXME: remove try to replace this hack used instead of django
+            #authenticate method but I do not have raw password and I want
+            #user log in auto if he auth in ella-hope admin
+            django_auth_backend = "django.contrib.auth.backends.ModelBackend"
+            if user.is_active and django_auth_backend in settings.AUTHENTICATION_BACKENDS:
+                user.backend = django_auth_backend
+                login(request, user)
+
+    def preview_publishable(self, request, id):
+        item = get_object_or_404(Publishable, pk=id)
+        if not item.is_published():
+            self._auto_login_user(request)
+        return HttpResponseRedirect(item.get_absolute_url())
