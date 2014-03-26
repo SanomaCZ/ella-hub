@@ -12,6 +12,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.utils.importlib import import_module
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import REDIRECT_FIELD_NAME
 
 from tastypie.api import Api
 from tastypie.exceptions import BadRequest, ImmediateHttpResponse
@@ -26,7 +27,7 @@ from ella.core.models import Publishable
 from ella.utils import timezone
 
 from ella_hub.models import PublishableLock
-from ella_hub import utils, views
+from ella_hub import utils
 from ella_hub.decorators import cross_domain_api_post_view
 from ella_hub.ella_resources import PublishableResource
 from ella_hub.utils.workflow import get_init_states, get_workflow
@@ -356,31 +357,10 @@ class EllaHubApi(Api):
         res_tree["allowed_http_methods"] = schema["allowed_detail_http_methods"]
         return res_tree
 
-    def _auto_login_user(self, request):
-        """
-        Try to auto login user for django pages
-        if user is authenticate by ella_hub ApiAuthentication
-        """
-        user_id = request.GET.get("user", None)
-        key = request.GET.get("hash", None)
-        try:
-            api_key = ApiKey.objects.get(user_id=int(user_id), key__startswith=key)
-        except (ApiKey.DoesNotExist, ValueError, TypeError):
-            pass
-        else:
-            user = api_key.user
-            #REGENERATE, this is question
-            #self.__regenerate_key(api_key)
-            #FIXME: remove try to replace this hack used instead of django
-            #authenticate method but I do not have raw password and I want
-            #user log in auto if he auth in ella-hope admin
-            django_auth_backend = "django.contrib.auth.backends.ModelBackend"
-            if user.is_active and django_auth_backend in settings.AUTHENTICATION_BACKENDS:
-                user.backend = django_auth_backend
-                login(request, user)
-
     def preview_publishable(self, request, id):
         item = get_object_or_404(Publishable, pk=id)
+        url = item.get_absolute_url()
         if not item.is_published():
-            self._auto_login_user(request)
-        return HttpResponseRedirect(item.get_absolute_url())
+            if not request.user.is_authenticated():
+                url = "%s?%s=%s" % (settings.LOGIN_URL, REDIRECT_FIELD_NAME, url,)
+        return HttpResponseRedirect(url)
