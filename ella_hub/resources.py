@@ -128,7 +128,6 @@ class ApiModelResource(ModelResource):
         obj_identifiers = kwargs.get(kwarg_name, '').split(';')
         objects = []
 
-
         for identifier in obj_identifiers:
             try:
                 obj = self.obj_get(request, **{self._meta.detail_uri_name: identifier})
@@ -304,6 +303,10 @@ class ApiModelResource(ModelResource):
             del applicable_filters["state"]
 
         return super(ApiModelResource, self).apply_filters(request, applicable_filters)
+
+    def is_valid(self, bundle):
+        bundle.obj.full_clean()
+        return super(ApiModelResource, self).is_valid(bundle)
 
     class Meta:
         authentication = Authentication()

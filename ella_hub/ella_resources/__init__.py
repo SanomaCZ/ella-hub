@@ -299,10 +299,6 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
     source = fields.ForeignKey(SourceResource, 'source', blank=True, null=True, full=True, use_in=use_in_clever)
     app_data = fields.DictField('app_data', use_in=use_in_clever)
 
-    def is_valid(self, bundle):
-        bundle.obj.full_clean()
-        return super(PublishableResource, self).is_valid(bundle)
-
     def dehydrate(self, bundle, *args, **kwargs):
         bundle = super(PublishableResource, self).dehydrate(bundle, *args, **kwargs)
 
