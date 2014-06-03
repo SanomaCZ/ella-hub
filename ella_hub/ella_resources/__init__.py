@@ -300,7 +300,7 @@ class PublishableResource(ExcludeItemsMixin, ApiModelResource):
     app_data = fields.DictField('app_data', use_in=use_in_clever)
 
     def is_valid(self, bundle):
-        bundle.obj.clean()
+        bundle.obj.full_clean()
         return super(PublishableResource, self).is_valid(bundle)
 
     def dehydrate(self, bundle, *args, **kwargs):
