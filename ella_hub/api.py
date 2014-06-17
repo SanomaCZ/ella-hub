@@ -5,7 +5,7 @@ import ella_hub.resources
 from inspect import isclass
 
 from django.conf import settings
-from django.conf.urls.defaults import url
+from django.conf.urls import url
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden

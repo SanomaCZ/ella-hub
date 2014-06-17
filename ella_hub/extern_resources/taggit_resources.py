@@ -7,7 +7,7 @@ import logging
 
 from django.db.models import Count
 from django.db import IntegrityError
-from django.conf.urls.defaults import url
+from django.conf.urls import url
 
 from taggit.managers import TaggableManager
 from taggit.models import TaggedItem, Tag

@@ -1,9 +1,10 @@
 import re
 import json
+import logging
 
 from django.utils.http import urlunquote_plus
 from django.http import HttpResponseForbidden
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.contenttypes.models import ContentType
 
 from tastypie.exceptions import NotFound
@@ -15,6 +16,8 @@ from ella_hub.utils import get_resource_model
 from ella_hub.utils.perms import has_model_permission, REST_PERMS
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.models import StateObjectRelation, State
+
+logger = logging.getLogger(__name__)
 
 
 class ApiModelResource(ModelResource):
@@ -305,7 +308,11 @@ class ApiModelResource(ModelResource):
         return super(ApiModelResource, self).apply_filters(request, applicable_filters)
 
     def is_valid(self, bundle):
-        bundle.obj.full_clean()
+        try:
+            bundle.obj.full_clean()
+        except ValidationError as e:
+            logger.error('Validation Error', exc_info=True)
+            raise e
         return super(ApiModelResource, self).is_valid(bundle)
 
     class Meta:
