@@ -5,7 +5,7 @@ git://github.com/ella/ella-taggit.git
 """
 
 from django.db.models import Count
-from django.conf.urls.defaults import url
+from django.conf.urls import url
 from tastypie import fields
 from tastypie.resources import ALL
 from ella_taggit.models import PublishableTag, PublishableTaggedItem
