@@ -36,8 +36,8 @@ class TagResource(ApiModelResource):
                 continue
 
             # this may override previous declared attribute with name "tags"
-            # resource._meta.object_class.add_to_class("tags",
-            #     TaggableManager(through=TaggedItem))
+            resource._meta.object_class.add_to_class("tags",
+                TaggableManager(through=TaggedItem))
 
             field = fields.ToManyField(TagResource, "tags", blank=True,
                 null=True, full=True, use_in=use_in_clever)
