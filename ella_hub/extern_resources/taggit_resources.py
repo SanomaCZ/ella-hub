@@ -9,7 +9,7 @@ from django.db.models import Count
 from django.db import IntegrityError
 from django.conf.urls import url
 
-from taggit.managers import TaggableManager
+from taggit.managers import _TaggableManager
 from taggit.models import TaggedItem, Tag
 
 from tastypie import fields
@@ -34,27 +34,24 @@ class TagResource(ApiModelResource):
             # tag only public objects (articles, photos, ...)
             if not getattr(resource._meta, "public", False):
                 continue
+            if hasattr(resource._meta.object_class, "tags") \
+                and isinstance(resource._meta.object_class.tags, _TaggableManager):
+                field = fields.ToManyField(TagResource, "tags", blank=True,
+                    null=True, full=True, use_in=use_in_clever)
+                # call `contribute_to_class` manually because
+                # `DeclarativeMetaclass` already created `Resource` classes
+                field.contribute_to_class(resource, "tags")
+                resource.base_fields["tags"] = field
 
-            # this may override previous declared attribute with name "tags"
-            resource._meta.object_class.add_to_class("tags",
-                TaggableManager(through=TaggedItem))
+                # allow filtering
+                resource._meta.filtering["tags"] = ALL_WITH_RELATIONS
 
-            field = fields.ToManyField(TagResource, "tags", blank=True,
-                null=True, full=True, use_in=use_in_clever)
-            # call `contribute_to_class` manually because
-            # `DeclarativeMetaclass` already created `Resource` classes
-            field.contribute_to_class(resource, "tags")
-            resource.base_fields["tags"] = field
-
-            # allow filtering
-            resource._meta.filtering["tags"] = ALL_WITH_RELATIONS
-
-            # patch methods in resources with attribute `tags`
-            # probably better solution is to inherit `ToManyField`
-            # but inherited field didn't work for me
-            resource.hydrate_m2m = patch_hydrate_m2m(resource.hydrate_m2m)
-            resource.save_m2m = patch_save_m2m(resource.save_m2m)
-            resource.dehydrate = patch_dehydrate(resource.dehydrate)
+                # patch methods in resources with attribute `tags`
+                # probably better solution is to inherit `ToManyField`
+                # but inherited field didn't work for me
+                resource.hydrate_m2m = patch_hydrate_m2m(resource.hydrate_m2m)
+                resource.save_m2m = patch_save_m2m(resource.save_m2m)
+                resource.dehydrate = patch_dehydrate(resource.dehydrate)
 
     def prepend_urls(self):
         urls = super(TagResource, self).prepend_urls()
@@ -79,7 +76,6 @@ class TagResource(ApiModelResource):
         object_ids = TaggedItem.objects.filter(tag__id__in=tag_id_set, content_type=content_type). \
                         exclude(object_id__in=exclude).values_list("object_id", flat=True). \
                         annotate(count=Count("object_id")).order_by('-count')[:resource._meta.limit]
-
         objects = model_class.objects.filter(pk__in=list(object_ids))
         # for publishable type use ordering by publish_from
         if issubclass(model_class, Publishable) and len(tag_id_set) == 1:

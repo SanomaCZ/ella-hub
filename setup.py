@@ -3,9 +3,8 @@ import ella_hub
 
 install_requires = [
     'ella>=3.0.5,<4',
-    'django-object-permissions',
     'django-jsonfield',
-    'django-tastypie==0.9.14',
+    'django-tastypie==0.11.1',
 ]
 
 tests_require = [
