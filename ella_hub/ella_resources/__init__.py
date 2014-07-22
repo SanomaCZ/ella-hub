@@ -195,13 +195,17 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
                 bundle.data['image'] = ImageFile(open(path, "rb"))
                 bundle.obj.image = bundle.data['image']
 
+        # if slug is empty delete it means not specified or not changed
+        if "slug" in bundle.data and not bundle.data['slug']:
+            del bundle.data['slug']
+
         return bundle
 
     def _rotate_image(self, image_file, angle):
         image_file.seek(0)
         image = Image.open(image_file)
         angle = int(angle) % 360
-        return image.rotate(-angle) # clockwise rotation
+        return image.rotate(-angle)  # clockwise rotation
 
     def _upload_to(self, filename):
         name, ext = os.path.splitext(filename)
