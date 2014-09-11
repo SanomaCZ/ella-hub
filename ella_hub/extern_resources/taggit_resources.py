@@ -5,15 +5,16 @@ git://github.com/yedpodtrzitko/django-taggit.git
 """
 import logging
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.db import IntegrityError
 from django.conf.urls import url
+from django.core.exceptions import ValidationError
+from django.template.defaultfilters import slugify
 
 from taggit.managers import _TaggableManager
 from taggit.models import TaggedItem, Tag
 
 from tastypie import fields
-from tastypie.exceptions import BadRequest
 from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
 from ella.core.models import Publishable
@@ -84,17 +85,47 @@ class TagResource(ApiModelResource):
         bundles = [resource.full_dehydrate(bundle) for bundle in bundles]
         return resource.create_response(request, bundles)
 
+    def is_valid(self, bundle):
+        '''
+        Ignore unique validation errors becouse of obj_create method
+        resolve this
+        '''
+        bundle.obj.slug = slugify(bundle.obj.slug)
+        try:
+            res = super(TagResource, self).is_valid(bundle)
+        except ValidationError as e:
+            if not bundle.obj.slug or not bundle.obj.name:
+                raise e
+            else:
+                res = True
+        return res
+
     def obj_create(self, bundle, request=None, **kwargs):
         try:
             return super(TagResource, self).obj_create(bundle, **kwargs)
         except IntegrityError:
             # duplicate entry for 'name' or 'slug'
-            try:
-                bundle.obj = Tag.objects.get(name=bundle.data["name"])
-                return bundle
-            except Tag.DoesNotExist:
-                # duplicate entry for 'slug'
-                raise BadRequest("Slug '%s' is not unique" % bundle.data["slug"])
+            slug = bundle.obj.slug
+            name = bundle.obj.name
+            qs = Tag.objects.filter(Q(slug=slug) | Q(name=name))
+            if len(qs) == 1:
+                obj = qs[0]
+                print obj.name, obj.slug
+                if obj.name != name:
+                    count = 1
+                    slug = '-'.join([slug, str(count)])
+                    while Tag.objects.filter(slug=slug).exists():
+                        count += 1
+                        slug = '-'.join([slug, str(count)])
+                    bundle.obj.slug = slug
+                    bundle.obj.save()
+                bundle.obj = obj
+            else:
+                for obj in qs:
+                    if name == obj.name:
+                        bundle.obj = obj
+                        break
+            return bundle
 
     class Meta(ApiModelResource.Meta):
         queryset = Tag.objects.all()
@@ -131,14 +162,20 @@ def patch_hydrate_m2m(hydrate_m2m):
 
 def patch_save_m2m(save_m2m):
     def patched_save_m2m(self, bundle):
-        save_m2m(self, bundle)
 
         for bundle_m2m in bundle.data.get("tags", ()):
             if bundle_m2m.data.get("main_tag", False):
                 #TODO - make 'MAIN' variable and make it cleaner
                 if not bundle_m2m.data.get('name', '').upper().startswith('MAIN:'):
-                    bundle_m2m.obj.name = 'MAIN:%s' % bundle_m2m.obj.name
-                    bundle_m2m.obj.save()
+                    name = 'MAIN:%s' % bundle_m2m.obj.name
+                    try:
+                        tag = Tag.objects.get(name=name)
+                    except Tag.DoesNotExist:
+                        bundle_m2m.obj.name = name
+                        bundle_m2m.obj.save()
+                    else:
+                        bundle_m2m.obj = tag
+        save_m2m(self, bundle)
 
     return patched_save_m2m
 
