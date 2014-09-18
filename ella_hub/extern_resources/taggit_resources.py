@@ -85,12 +85,19 @@ class TagResource(ApiModelResource):
         bundles = [resource.full_dehydrate(bundle) for bundle in bundles]
         return resource.create_response(request, bundles)
 
+    def hydrate_slug(self, bundle, *args, **kwargs):
+        setattr(bundle.obj, 'slug', slugify(bundle.data['slug'].strip()))
+        return bundle
+
+    def hydrate_name(self, bundle, *args, **kwargs):
+        setattr(bundle.obj, 'name', bundle.data['name'].strip())
+        return bundle
+
     def is_valid(self, bundle):
         '''
         Ignore unique validation errors becouse of obj_create method
         resolve this
         '''
-        bundle.obj.slug = slugify(bundle.obj.slug)
         try:
             res = super(TagResource, self).is_valid(bundle)
         except ValidationError as e:
@@ -110,13 +117,12 @@ class TagResource(ApiModelResource):
             qs = Tag.objects.filter(Q(slug=slug) | Q(name=name))
             if len(qs) == 1:
                 obj = qs[0]
-                print obj.name, obj.slug
                 if obj.name != name:
                     count = 1
-                    slug = '-'.join([slug, str(count)])
+                    slug = '--'.join([slug, str(count)])
                     while Tag.objects.filter(slug=slug).exists():
                         count += 1
-                        slug = '-'.join([slug, str(count)])
+                        slug = '--'.join([slug, str(count)])
                     bundle.obj.slug = slug
                     bundle.obj.save()
                 bundle.obj = obj
