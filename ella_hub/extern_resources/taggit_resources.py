@@ -8,7 +8,6 @@ import logging
 from django.db.models import Count, Q
 from django.db import IntegrityError
 from django.conf.urls import url
-from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from taggit.managers import _TaggableManager
@@ -22,8 +21,11 @@ from ella.core.models import Publishable
 from ella_hub.validation import ModelValidation
 from ella_hub.resources import ApiModelResource
 from ella_hub.utils.fields import use_in_clever
-from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
-    get_resource_model)
+from ella_hub.utils import (
+    get_content_type_for_resource,
+    get_resource_by_name,
+    get_resource_model
+)
 
 
 logger = logging.getLogger(__name__)
@@ -36,10 +38,10 @@ class TagResource(ApiModelResource):
             # tag only public objects (articles, photos, ...)
             if not getattr(resource._meta, "public", False):
                 continue
-            if hasattr(resource._meta.object_class, "tags") \
-                and isinstance(resource._meta.object_class.tags, _TaggableManager):
+            if hasattr(resource._meta.object_class, "tags") and\
+                    isinstance(resource._meta.object_class.tags, _TaggableManager):
                 field = fields.ToManyField(TagResource, "tags", blank=True,
-                    null=True, full=True, use_in=use_in_clever)
+                                           null=True, full=True, use_in=use_in_clever)
                 # call `contribute_to_class` manually because
                 # `DeclarativeMetaclass` already created `Resource` classes
                 field.contribute_to_class(resource, "tags")
@@ -75,9 +77,10 @@ class TagResource(ApiModelResource):
             exclude = []
 
         # select objects sorted according to number of given tags that contain
-        object_ids = TaggedItem.objects.filter(tag__id__in=tag_id_set, content_type=content_type). \
-                        exclude(object_id__in=exclude).values_list("object_id", flat=True). \
-                        annotate(count=Count("object_id")).order_by('-count')[:resource._meta.limit]
+        object_ids = TaggedItem.objects. \
+            filter(tag__id__in=tag_id_set, content_type=content_type). \
+            exclude(object_id__in=exclude).values_list("object_id", flat=True). \
+            annotate(count=Count("object_id")).order_by('-count')[:resource._meta.limit]
         objects = model_class.objects.filter(pk__in=list(object_ids))
         # for publishable type use ordering by publish_from
         if issubclass(model_class, Publishable) and len(tag_id_set) == 1:
@@ -159,7 +162,7 @@ def patch_save_m2m(save_m2m):
 
         for bundle_m2m in bundle.data.get("tags", ()):
             if bundle_m2m.data.get("main_tag", False):
-                #TODO - make 'MAIN' variable and make it cleaner
+                # TODO - make 'MAIN' variable and make it cleaner
                 if not bundle_m2m.data.get('name', '').upper().startswith('MAIN:'):
                     name = 'MAIN:%s' % bundle_m2m.obj.name
                     try:
