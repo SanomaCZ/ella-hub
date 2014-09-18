@@ -19,6 +19,7 @@ from tastypie.resources import ALL, ALL_WITH_RELATIONS
 
 from ella.core.models import Publishable
 
+from ella_hub.validation import ModelValidation
 from ella_hub.resources import ApiModelResource
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.utils import (get_content_type_for_resource, get_resource_by_name,
@@ -93,20 +94,6 @@ class TagResource(ApiModelResource):
         setattr(bundle.obj, 'name', bundle.data['name'].strip())
         return bundle
 
-    def is_valid(self, bundle):
-        '''
-        Ignore unique validation errors becouse of obj_create method
-        resolve this
-        '''
-        try:
-            res = super(TagResource, self).is_valid(bundle)
-        except ValidationError as e:
-            if not bundle.obj.slug or not bundle.obj.name:
-                raise e
-            else:
-                res = True
-        return res
-
     def obj_create(self, bundle, request=None, **kwargs):
         try:
             return super(TagResource, self).obj_create(bundle, **kwargs)
@@ -134,6 +121,7 @@ class TagResource(ApiModelResource):
             return bundle
 
     class Meta(ApiModelResource.Meta):
+        validation = ModelValidation(validate_unique=False)
         queryset = Tag.objects.all()
         filtering = {
             "id": ALL,
