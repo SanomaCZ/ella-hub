@@ -6,6 +6,9 @@ from django.utils.http import urlunquote_plus
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
+from django.db import IntegrityError
+from django.template.defaultfilters import slugify
 
 from tastypie.exceptions import NotFound
 from tastypie.resources import ModelResource
@@ -395,3 +398,41 @@ class MultipartFormDataModelResource(ApiModelResource):
 
     class Meta(ApiModelResource.Meta):
         pass
+
+
+class NameSlugPredictedMixIn(object):
+
+    def hydrate_slug(self, bundle, *args, **kwargs):
+        setattr(bundle.obj, 'slug', slugify(bundle.data['slug'].strip()))
+        return bundle
+
+    def hydrate_name(self, bundle, *args, **kwargs):
+        setattr(bundle.obj, 'name', bundle.data['name'].strip())
+        return bundle
+
+    def obj_create(self, bundle, request=None, **kwargs):
+        try:
+            return super(NameSlugPredictedMixIn, self).obj_create(bundle, **kwargs)
+        except IntegrityError:
+            # duplicate entry for 'name' or 'slug'
+            slug = bundle.obj.slug
+            name = bundle.obj.name
+            cls = bundle.obj.__class__
+            qs = cls.objects.filter(Q(slug=slug) | Q(name=name))
+            if len(qs) == 1:
+                obj = qs[0]
+                if obj.name != name:
+                    count = 1
+                    slug = '--'.join([slug, str(count)])
+                    while cls.objects.filter(slug=slug).exists():
+                        count += 1
+                        slug = '--'.join([slug, str(count)])
+                    bundle.obj.slug = slug
+                    bundle.obj.save()
+                bundle.obj = obj
+            else:
+                for obj in qs:
+                    if name == obj.name:
+                        bundle.obj = obj
+                        break
+            return bundle

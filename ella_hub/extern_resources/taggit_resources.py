@@ -5,10 +5,8 @@ git://github.com/yedpodtrzitko/django-taggit.git
 """
 import logging
 
-from django.db.models import Count, Q
-from django.db import IntegrityError
 from django.conf.urls import url
-from django.template.defaultfilters import slugify
+from django.db.models import Count
 
 from taggit.managers import _TaggableManager
 from taggit.models import TaggedItem, Tag
@@ -19,7 +17,7 @@ from tastypie.resources import ALL, ALL_WITH_RELATIONS
 from ella.core.models import Publishable
 
 from ella_hub.validation import ModelValidation
-from ella_hub.resources import ApiModelResource
+from ella_hub.resources import ApiModelResource, NameSlugPredictedMixIn
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.utils import (
     get_content_type_for_resource,
@@ -31,7 +29,7 @@ from ella_hub.utils import (
 logger = logging.getLogger(__name__)
 
 
-class TagResource(ApiModelResource):
+class TagResource(NameSlugPredictedMixIn, ApiModelResource):
     @staticmethod
     def initialize(resources):
         for resource in resources:
@@ -88,40 +86,6 @@ class TagResource(ApiModelResource):
         bundles = [resource.build_bundle(obj=one, request=request) for one in objects]
         bundles = [resource.full_dehydrate(bundle) for bundle in bundles]
         return resource.create_response(request, bundles)
-
-    def hydrate_slug(self, bundle, *args, **kwargs):
-        setattr(bundle.obj, 'slug', slugify(bundle.data['slug'].strip()))
-        return bundle
-
-    def hydrate_name(self, bundle, *args, **kwargs):
-        setattr(bundle.obj, 'name', bundle.data['name'].strip())
-        return bundle
-
-    def obj_create(self, bundle, request=None, **kwargs):
-        try:
-            return super(TagResource, self).obj_create(bundle, **kwargs)
-        except IntegrityError:
-            # duplicate entry for 'name' or 'slug'
-            slug = bundle.obj.slug
-            name = bundle.obj.name
-            qs = Tag.objects.filter(Q(slug=slug) | Q(name=name))
-            if len(qs) == 1:
-                obj = qs[0]
-                if obj.name != name:
-                    count = 1
-                    slug = '--'.join([slug, str(count)])
-                    while Tag.objects.filter(slug=slug).exists():
-                        count += 1
-                        slug = '--'.join([slug, str(count)])
-                    bundle.obj.slug = slug
-                    bundle.obj.save()
-                bundle.obj = obj
-            else:
-                for obj in qs:
-                    if name == obj.name:
-                        bundle.obj = obj
-                        break
-            return bundle
 
     class Meta(ApiModelResource.Meta):
         validation = ModelValidation(validate_unique=False)

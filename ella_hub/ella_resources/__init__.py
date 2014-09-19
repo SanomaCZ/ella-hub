@@ -20,11 +20,12 @@ from ella.photos.models import Photo, FormatedPhoto, Format
 from ella.photos.conf import photos_settings
 from ella.utils.timezone import now
 
-from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource
+from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource, NameSlugPredictedMixIn
 from ella_hub.models import Draft, State
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.utils import get_content_type_for_resource, get_resource_for_object
 from ella_hub.utils.fields import use_in_clever
+from ella_hub.validation import ModelValidation
 
 
 logger = logging.getLogger(__name__)
@@ -96,10 +97,11 @@ class UserResource(ApiModelResource):
         public = False
 
 
-class AuthorResource(ApiModelResource):
+class AuthorResource(NameSlugPredictedMixIn, ApiModelResource):
     user = fields.ForeignKey(UserResource, 'user', blank=True, null=True, full=True)
 
     class Meta(ApiModelResource.Meta):
+        validation = ModelValidation(validate_unique=False)
         queryset = Author.objects.all()
         filtering = {
             'id': ALL,
@@ -116,6 +118,20 @@ class AuthorResource(ApiModelResource):
 
 
 class SourceResource(ApiModelResource):
+
+    def hydrate_name(self, bundle, *args, **kwargs):
+        setattr(bundle.obj, 'name', bundle.data['name'].strip())
+        return bundle
+
+    def obj_create(self, bundle, request=None, **kwargs):
+        hydrated_bundle = self.full_hydrate(bundle)
+        s = Source.objects.filter(name=hydrated_bundle.data["name"])[0:1]
+        if not s:
+            return super(SourceResource, self).obj_create(bundle, **kwargs)
+        else:
+            bundle.obj = s[0]
+            return bundle
+
     class Meta(ApiModelResource.Meta):
         queryset = Source.objects.all()
         filtering = {
