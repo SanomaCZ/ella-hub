@@ -1,6 +1,9 @@
 include MANIFEST.in
 include README.rst
+include setup.py
 recursive-include ella_hub *
 
 global-exclude .coverage
 global-exclude nosetests.xml
+global-exclude *.pyc
+global-exclude *.pyo
