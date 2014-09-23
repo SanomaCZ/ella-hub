@@ -20,7 +20,7 @@ from ella.photos.models import Photo, FormatedPhoto, Format
 from ella.photos.conf import photos_settings
 from ella.utils.timezone import now
 
-from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource, NameSlugPredictedMixIn
+from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource, NameSlugPredictedMixin
 from ella_hub.models import Draft, State
 from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.utils import get_content_type_for_resource, get_resource_for_object
@@ -97,7 +97,7 @@ class UserResource(ApiModelResource):
         public = False
 
 
-class AuthorResource(NameSlugPredictedMixIn, ApiModelResource):
+class AuthorResource(NameSlugPredictedMixin, ApiModelResource):
     user = fields.ForeignKey(UserResource, 'user', blank=True, null=True, full=True)
 
     class Meta(ApiModelResource.Meta):

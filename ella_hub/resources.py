@@ -400,7 +400,7 @@ class MultipartFormDataModelResource(ApiModelResource):
         pass
 
 
-class NameSlugPredictedMixIn(object):
+class NameSlugPredictedMixin(object):
 
     def hydrate_slug(self, bundle, *args, **kwargs):
         setattr(bundle.obj, 'slug', slugify(bundle.data['slug'].strip()))
@@ -412,7 +412,7 @@ class NameSlugPredictedMixIn(object):
 
     def obj_create(self, bundle, request=None, **kwargs):
         try:
-            return super(NameSlugPredictedMixIn, self).obj_create(bundle, **kwargs)
+            return super(NameSlugPredictedMixin, self).obj_create(bundle, **kwargs)
         except IntegrityError:
             # duplicate entry for 'name' or 'slug'
             slug = bundle.obj.slug

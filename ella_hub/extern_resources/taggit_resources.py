@@ -17,7 +17,7 @@ from tastypie.resources import ALL, ALL_WITH_RELATIONS
 from ella.core.models import Publishable
 
 from ella_hub.validation import ModelValidation
-from ella_hub.resources import ApiModelResource, NameSlugPredictedMixIn
+from ella_hub.resources import ApiModelResource, NameSlugPredictedMixin
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.utils import (
     get_content_type_for_resource,
@@ -29,7 +29,7 @@ from ella_hub.utils import (
 logger = logging.getLogger(__name__)
 
 
-class TagResource(NameSlugPredictedMixIn, ApiModelResource):
+class TagResource(NameSlugPredictedMixin, ApiModelResource):
     @staticmethod
     def initialize(resources):
         for resource in resources:
