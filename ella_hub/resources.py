@@ -401,38 +401,44 @@ class MultipartFormDataModelResource(ApiModelResource):
 
 
 class NameSlugPredictedMixin(object):
+    name_attr = 'name'
+    separator = '--'
 
-    def hydrate_slug(self, bundle, *args, **kwargs):
-        setattr(bundle.obj, 'slug', slugify(bundle.data['slug'].strip()))
+    def full_hydrate(self, bundle):
+        bundle = super(NameSlugPredictedMixin, self).full_hydrate(bundle)
+        setattr(bundle.obj, 'slug', slugify(bundle.obj.slug.strip()))
+        setattr(bundle.obj, self.name_attr, getattr(bundle.obj, self.name_attr).strip())
         return bundle
 
-    def hydrate_name(self, bundle, *args, **kwargs):
-        setattr(bundle.obj, 'name', bundle.data['name'].strip())
-        return bundle
+    def get_unique_slug(self, slug, obj_class):
+        count = 1
+        slug = self.separator.join([slug, str(count)])
+        while obj_class.objects.filter(slug=slug).exists():
+            count += 1
+            slug = self.separator.join([slug, str(count)])
+        return slug
 
     def obj_create(self, bundle, request=None, **kwargs):
         try:
             return super(NameSlugPredictedMixin, self).obj_create(bundle, **kwargs)
         except IntegrityError:
-            # duplicate entry for 'name' or 'slug'
+            # duplicate entry for 'name_attr' or 'slug'
+            name_attr = self.name_attr
             slug = bundle.obj.slug
-            name = bundle.obj.name
+            name = getattr(bundle.obj, name_attr)
             cls = bundle.obj.__class__
-            qs = cls.objects.filter(Q(slug=slug) | Q(name=name))
+            qs = cls.objects.filter(Q(slug=slug) | Q(**{name_attr: name}))
             if len(qs) == 1:
                 obj = qs[0]
-                if obj.name != name:
-                    count = 1
-                    slug = '--'.join([slug, str(count)])
-                    while cls.objects.filter(slug=slug).exists():
-                        count += 1
-                        slug = '--'.join([slug, str(count)])
-                    bundle.obj.slug = slug
+                if getattr(obj, name_attr) != name:
+                    new_slug = self.get_unique_slug(slug, cls)
+                    bundle.obj.slug = new_slug
                     bundle.obj.save()
-                bundle.obj = obj
+                else:
+                    bundle.obj = obj
             else:
                 for obj in qs:
-                    if name == obj.name:
+                    if name == getattr(obj, name_attr):
                         bundle.obj = obj
                         break
             return bundle

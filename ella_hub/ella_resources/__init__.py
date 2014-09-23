@@ -120,12 +120,12 @@ class AuthorResource(NameSlugPredictedMixin, ApiModelResource):
 class SourceResource(ApiModelResource):
 
     def hydrate_name(self, bundle, *args, **kwargs):
-        setattr(bundle.obj, 'name', bundle.data['name'].strip())
+        bundle.data["name"] = bundle.data["name"].strip()
         return bundle
 
     def obj_create(self, bundle, request=None, **kwargs):
-        hydrated_bundle = self.full_hydrate(bundle)
-        s = Source.objects.filter(name=hydrated_bundle.data["name"])[0:1]
+        bundle = self.full_hydrate(bundle)
+        s = Source.objects.filter(name=bundle.data["name"])[0:1]
         if not s:
             return super(SourceResource, self).obj_create(bundle, **kwargs)
         else:
