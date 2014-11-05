@@ -30,6 +30,15 @@ from ella_hub.validation import ModelValidation
 
 logger = logging.getLogger(__name__)
 
+# get format for thumbnail
+THUMB_FORMAT = None
+thumb_format_name = getattr(settings, 'HUB_THUMBNAIL_FORMAT', None)
+if thumb_format_name is not None:
+    try:
+        THUMB_FORMAT = Format.objects.get_for_name(thumb_format_name)
+    except Format.DoesNotExist:
+        pass
+
 
 class SiteResource(ApiModelResource):
     class Meta(ApiModelResource.Meta):
@@ -182,6 +191,10 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
 
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
         bundle.data['public_url'] = bundle.request.build_absolute_uri(bundle.obj.image.url)
+
+        if bundle.obj.image and THUMB_FORMAT is not None:
+            fp = FormatedPhoto.objects.get_photo_in_format(bundle.obj.id, THUMB_FORMAT)
+            bundle.data['thumbnail_url'] = bundle.request.build_absolute_uri(fp['url'])
 
         return bundle
 
