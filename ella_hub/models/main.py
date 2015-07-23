@@ -24,8 +24,11 @@ class Draft(models.Model):
         if self.name:
             return u"%s (%s)" % (self.name, date(self.timestamp, "y-m-d H:i"))
         else:
-            return u"%s %s (%s)" % (_("Autosaved"), _(self.content_type.name),
-                date(self.timestamp, "y-m-d H:i"))
+            return u"%s %s (%s)" % (
+                _("Autosaved"),
+                _(self.content_type.name),
+                date(self.timestamp, "y-m-d H:i")
+            )
 
     def save(self, *args, **kwargs):
         self.timestamp = now().replace(microsecond=0)
@@ -61,8 +64,11 @@ class PublishableLock(models.Model):
 
     objects = PublishableLockManager()
 
-    publishable = models.ForeignKey(Publishable, unique=True,
-        verbose_name=_("Locked publishable"))
+    publishable = models.ForeignKey(
+        Publishable,
+        unique=True,
+        verbose_name=_("Locked publishable")
+    )
     locked_by = models.ForeignKey(User)
     timestamp = models.DateTimeField(editable=False, auto_now=True)
 

@@ -43,8 +43,11 @@ def grant_permission(model, role, permission):
             return False
 
     ct = ContentType.objects.get_for_model(model)
-    ModelPermission.objects.get_or_create(role=role, content_type=ct,
-        permission=permission)
+    ModelPermission.objects.get_or_create(
+        role=role,
+        content_type=ct,
+        permission=permission
+    )
 
     return True
 
@@ -53,15 +56,23 @@ def add_role(principal, role):
     "Adds <role> to user or group (<principal>)."
     if isinstance(principal, User):
         try:
-            relation = PrincipalRoleRelation.objects.get(user=principal,
-                role=role, content_id=None, content_type=None)
+            PrincipalRoleRelation.objects.get(
+                user=principal,
+                role=role,
+                content_id=None,
+                content_type=None
+            )
         except PrincipalRoleRelation.DoesNotExist:
             PrincipalRoleRelation.objects.create(user=principal, role=role)
             return True
     else:
         try:
-            relation = PrincipalRoleRelation.objects.get(group=principal,
-                role=role, content_id=None, content_type=None)
+            PrincipalRoleRelation.objects.get(
+                group=principal,
+                role=role,
+                content_id=None,
+                content_type=None
+            )
         except PrincipalRoleRelation.DoesNotExist:
             PrincipalRoleRelation.objects.create(group=principal, role=role)
             return True
@@ -71,11 +82,19 @@ def remove_role(principal, role):
     "Removes specific <role> from user or group (<principal>)."
     try:
         if isinstance(principal, User):
-            relation = PrincipalRoleRelation.objects.get(user=principal,
-                role=role, content_id=None, content_type=None)
+            relation = PrincipalRoleRelation.objects.get(
+                user=principal,
+                role=role,
+                content_id=None,
+                content_type=None
+            )
         else:
-            relation = PrincipalRoleRelation.objects.get(group=principal,
-                role=role, content_id=None, content_type=None)
+            relation = PrincipalRoleRelation.objects.get(
+                group=principal,
+                role=role,
+                content_id=None,
+                content_type=None
+            )
     except PrincipalRoleRelation.DoesNotExist:
         return False
     else:
@@ -86,11 +105,17 @@ def remove_role(principal, role):
 def remove_roles(principal):
     "Removes all roles from user or group (<principal>)."
     if isinstance(principal, User):
-        relations = PrincipalRoleRelation.objects.filter(user=principal,
-            content_id=None, content_type=None)
+        relations = PrincipalRoleRelation.objects.filter(
+            user=principal,
+            content_id=None,
+            content_type=None
+        )
     else:
-        relations = PrincipalRoleRelation.objects.filter(group=principal,
-            content_id=None, content_type=None)
+        relations = PrincipalRoleRelation.objects.filter(
+            group=principal,
+            content_id=None,
+            content_type=None
+        )
     if relations:
         relations.delete()
         return True
@@ -104,7 +129,6 @@ def get_roles(principal):
         kwargs = {'user': principal}
     else:
         kwargs = {'group': principal}
-    relations = PrincipalRoleRelation.objects.filter(**kwargs).\
-                    select_related('role')
+    relations = PrincipalRoleRelation.objects.filter(**kwargs).select_related('role')
     roles = [relation.role for relation in relations]
     return roles

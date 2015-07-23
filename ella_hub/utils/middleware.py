@@ -52,6 +52,7 @@ class CrossDomainAccessMiddleware(object):
 
         return response
 
+
 class SQLMiddleware(object):
 
     def process_response(self, request, response):
@@ -80,7 +81,6 @@ class SQLMiddleware(object):
                 sum_update += query_time
             else:
                 sum_select += query_time
-
 
         logger.info("select: " + str(sum_select))
         logger.info("update: " + str(sum_update))

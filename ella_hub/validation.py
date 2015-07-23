@@ -31,7 +31,7 @@ class ModelValidation(Validation):
             if k != NON_FIELD_ERRORS:
                 self._errors.setdefault(k, self.error_class()).extend(v)
                 # Remove the data from the cleaned_data dict since it was invalid
-                #if k in self.cleaned_data:
+                # if k in self.cleaned_data:
                 #    del self.cleaned_data[k]
         if NON_FIELD_ERRORS in message_dict:
             messages = message_dict[NON_FIELD_ERRORS]

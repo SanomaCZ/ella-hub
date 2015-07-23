@@ -100,7 +100,7 @@ class ApiModelResource(ModelResource):
         """
         self.method_check(request, allowed=['get'])
         self.is_authenticated(request)
-        #self.is_authorized(request)
+        # self.is_authorized(request)
         self.throttle_check(request)
         self.log_throttled_access(request)
         schema = self.build_schema()
@@ -109,8 +109,7 @@ class ApiModelResource(ModelResource):
         res_model = self._meta.object_class
 
         for request_str, perm_str in REST_PERMS.items():
-            if has_model_permission(res_model, request.user,
-                REST_PERMS[request_str]):
+            if has_model_permission(res_model, request.user, REST_PERMS[request_str]):
                 allowed_methods.append(request_str.lower())
 
         if not allowed_methods:
@@ -163,8 +162,8 @@ class ApiModelResource(ModelResource):
     def _add_states_fields(self, bundle):
         """Adds current state and next allowed states for objects db optimalized."""
         ids_list = [one.obj.pk for one in bundle['objects']]
-        #FIXME: if you have good reason uncomment line below
-        #next_states = State.objects.get_states_choices_as_dict()
+        # FIXME: if you have good reason uncomment line below
+        # next_states = State.objects.get_states_choices_as_dict()
         bundle['data'] = []
         if ids_list:
             ct = ContentType.objects.get_for_model(bundle['objects'][0].obj)
@@ -173,8 +172,8 @@ class ApiModelResource(ModelResource):
                 state = sor_dict.get(obj_bundle.obj.pk, None)
                 if state:
                     obj_bundle.data["state"] = state.codename
-                #FIXME: if you have good reason uncomment line below
-                #obj_bundle.data["allowed_states"] = next_states
+                # FIXME: if you have good reason uncomment line below
+                # obj_bundle.data["allowed_states"] = next_states
                 bundle['data'].append(obj_bundle)
         del bundle['objects']
 
@@ -214,8 +213,7 @@ class ApiModelResource(ModelResource):
 
         # set allowed_http_methods also
         for request_str, perm_str in REST_PERMS.items():
-            if has_model_permission(resource_model, user,
-                REST_PERMS[request_str]):
+            if has_model_permission(resource_model, user, REST_PERMS[request_str]):
                 allowed_http_methods.append(request_str.lower())
 
         self._set_cached_field("allowed_http_methods", allowed_http_methods)
@@ -365,8 +363,7 @@ class MultipartFormDataModelResource(ApiModelResource):
         https://github.com/toastdriven/django-tastypie/issues/42#issuecomment-6069008
         """
         content_type = request.META.get('CONTENT_TYPE', '').lower()
-        if (content_type.startswith('multipart/form-data') and
-            not hasattr(request, '_body')):
+        if content_type.startswith('multipart/form-data') and not hasattr(request, '_body'):
             request._body = ''
 
         return super(MultipartFormDataModelResource, self).put_detail(

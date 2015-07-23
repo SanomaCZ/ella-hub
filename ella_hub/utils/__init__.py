@@ -38,8 +38,10 @@ def get_resource_for_object(instance):
 
 
 def get_all_resource_content_types():
-    return tuple(ContentType.objects.get_for_model(r._meta.object_class)
-        for r in __REGISTERED_RESOURCES.values())
+    return tuple(
+        ContentType.objects.get_for_model(r._meta.object_class)
+        for r in __REGISTERED_RESOURCES.values()
+    )
 
 
 def get_all_resource_classes():

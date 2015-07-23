@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 
@@ -13,11 +12,19 @@ class Workflow(models.Model):
 
     title = models.CharField(_("Title"), max_length=128, blank=False, unique=True)
     description = models.TextField(_("Description"), blank=True)
-    initial_state = CachedForeignKey("State", verbose_name=_("Initial state"),
-        blank=True, null=True, related_name="workflow_initial_state")
+    initial_state = CachedForeignKey(
+        "State",
+        verbose_name=_("Initial state"),
+        blank=True,
+        null=True,
+        related_name="workflow_initial_state"
+    )
 
-    permissions = models.ManyToManyField(Permission, verbose_name=_("Permissions"),
-        through="WorkflowPermissionRelation")
+    permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_("Permissions"),
+        through="WorkflowPermissionRelation"
+    )
 
     def get_initial_state(self):
         if self.initial_state:
@@ -55,10 +62,19 @@ class State(models.Model):
     title = models.CharField(_("Title"), max_length=128, blank=False)
     codename = models.CharField(_("Codename"), max_length=128, blank=False)
     description = models.TextField(_("Description"), blank=True)
-    workflow = CachedForeignKey("Workflow", verbose_name=_("Workflow"),
-        blank=True, null=True, related_name="states")
-    transitions = models.ManyToManyField("Transition", verbose_name=_("Transitions"),
-        blank=True, null=True)
+    workflow = CachedForeignKey(
+        "Workflow",
+        verbose_name=_("Workflow"),
+        blank=True,
+        null=True,
+        related_name="states"
+    )
+    transitions = models.ManyToManyField(
+        "Transition",
+        verbose_name=_("Transitions"),
+        blank=True,
+        null=True
+    )
 
     objects = StateManager()
 
@@ -89,8 +105,13 @@ class Transition(models.Model):
 
 class StateObjectRelation(models.Model):
 
-    content_type = CachedForeignKey(ContentType, verbose_name=_("Content type"),
-        related_name="state_object", blank=True, null=True)
+    content_type = CachedForeignKey(
+        ContentType,
+        verbose_name=_("Content type"),
+        related_name="state_object",
+        blank=True,
+        null=True
+    )
     content_id = models.PositiveIntegerField(_("Content id"), blank=True, null=True)
     content_object = CachedGenericForeignKey("content_type", "content_id")
     state = CachedForeignKey(State, verbose_name=_("State"))
@@ -125,10 +146,16 @@ class StatePermissionRelation(models.Model):
 
 class WorkflowModelRelation(models.Model):
 
-    content_type = CachedForeignKey(ContentType, verbose_name=_("Content Type"),
-        unique=True)
-    workflow = CachedForeignKey(Workflow, verbose_name=_("Workflow"),
-        related_name="wmr_workflow")
+    content_type = CachedForeignKey(
+        ContentType,
+        verbose_name=_("Content Type"),
+        unique=True
+    )
+    workflow = CachedForeignKey(
+        Workflow,
+        verbose_name=_("Workflow"),
+        related_name="wmr_workflow"
+    )
 
     @staticmethod
     def cache_key(pk):
@@ -151,8 +178,11 @@ class WorkflowModelRelation(models.Model):
 
 class WorkflowPermissionRelation(models.Model):
 
-    workflow = CachedForeignKey(Workflow, verbose_name=_("Workflow"),
-        related_name="wpr_workflow")
+    workflow = CachedForeignKey(
+        Workflow,
+        verbose_name=_("Workflow"),
+        related_name="wpr_workflow"
+    )
     permission = CachedForeignKey(Permission, related_name="permissions")
 
     def __unicode__(self):

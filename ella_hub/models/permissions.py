@@ -14,8 +14,13 @@ class Permission(models.Model):
     codename = models.CharField(_("Codename"), max_length=128, unique=True)
     description = models.TextField(_("Description"), blank=True)
     restriction = models.BooleanField(_("Restriction"), default=False)
-    content_types = models.ManyToManyField(ContentType, verbose_name=_("Content Types"),
-        blank=True, null=True, related_name="content_types")
+    content_types = models.ManyToManyField(
+        ContentType,
+        verbose_name=_("Content Types"),
+        blank=True,
+        null=True,
+        related_name="content_types"
+    )
 
     def __unicode__(self):
         return "%s (%s)" % (self.title, self.codename)
@@ -103,16 +108,20 @@ class Role(models.Model):
         """
         Returns all groups role is assigned to.
         """
-        relations = PrincipalRoleRelation.objects.filter(role=self,
-            content_id=None, content_type=None).exclude(group=None).select_related('group')
+        relations = PrincipalRoleRelation.objects.filter(
+            role=self,
+            content_id=None,
+            content_type=None).exclude(group=None).select_related('group')
         return [relation.group for relation in relations]
 
     def get_users(self, content=None):
         """
         Returns all users role is assigned to.
         """
-        relations = PrincipalRoleRelation.objects.filter(role=self,
-            content_id=None, content_type=None).exclude(user=None).select_related('user')
+        relations = PrincipalRoleRelation.objects.filter(
+            role=self,
+            content_id=None,
+            content_type=None).exclude(user=None).select_related('user')
         return [relation.user for relation in relations]
 
     def __unicode__(self):

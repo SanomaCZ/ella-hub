@@ -1,5 +1,4 @@
 import datetime
-import ella_hub.signals
 import ella_hub.resources
 
 from inspect import isclass
@@ -39,8 +38,11 @@ from ella_hub import conf
 class HttpJsonResponse(HttpResponse):
     def __init__(self, object, **kwargs):
         payload = Serializer().to_json(object)
-        super(HttpJsonResponse, self).__init__(payload,
-            content_type='application/json', **kwargs)
+        super(HttpJsonResponse, self).__init__(
+            payload,
+            content_type='application/json',
+            **kwargs
+        )
 
 
 class EllaHubApi(Api):
@@ -125,9 +127,12 @@ class EllaHubApi(Api):
         if not issubclass(resource, Resource):
             return False
 
-        return resource not in (Resource, ModelResource,
+        return resource not in (
+            Resource,
+            ModelResource,
             ella_hub.resources.ApiModelResource,
-            ella_hub.resources.MultipartFormDataModelResource)
+            ella_hub.resources.MultipartFormDataModelResource
+        )
 
     def register_resources(self, resources):
         "Register one or more resources"
@@ -168,7 +173,7 @@ class EllaHubApi(Api):
         if isinstance(auth_result, HttpResponse):
             raise ImmediateHttpResponse(response=auth_result)
 
-        if not auth_result is True:
+        if auth_result is not True:
             raise ImmediateHttpResponse(response=HttpUnauthorized())
 
     @cross_domain_api_post_view
@@ -304,9 +309,11 @@ class EllaHubApi(Api):
             })
 
         # covering article types under "articles" node
-        article_resources = [res_obj for res_name, res_obj in self._registry.items()
-            if issubclass(res_obj.__class__, PublishableResource) and \
-                type(res_obj) is not PublishableResource]
+        article_resources = [
+            res_obj for res_name, res_obj in self._registry.items()
+            if issubclass(res_obj.__class__, PublishableResource) and
+            type(res_obj) is not PublishableResource
+        ]
 
         articles_dict = {}
 
@@ -320,13 +327,17 @@ class EllaHubApi(Api):
         return auth_tree
 
     def __get_allowed_public_resources(self, user):
-        allowed_public_resources = [res_obj for res_name, res_obj in self._registry.items()
-            if getattr(res_obj._meta, "public", False)]
+        allowed_public_resources = [
+            res_obj for res_name, res_obj in self._registry.items()
+            if getattr(res_obj._meta, "public", False)
+        ]
         return allowed_public_resources
 
     def __get_allowed_private_resources(self, user):
-        allowed_private_resources = [res_obj for res_name, res_obj in self._registry.items()
-            if not getattr(res_obj._meta, "public", False)]
+        allowed_private_resources = [
+            res_obj for res_name, res_obj in self._registry.items()
+            if not getattr(res_obj._meta, "public", False)
+        ]
         return allowed_private_resources
 
     def __create_resource_tree(self, res_obj, user):
@@ -344,11 +355,10 @@ class EllaHubApi(Api):
                 pub_states.update({state.codename: unicode(state.title)})
             res_tree.update({"states": pub_states})
 
-        init_state = None
         workflow = get_workflow(res_model)
 
         if workflow:
-            init_state = workflow.get_initial_state()
+            workflow.get_initial_state()
 
         for fn, attrs in schema["fields"].items():
             field_attrs = {"readonly": False, "nullable": False, "disabled": False}
