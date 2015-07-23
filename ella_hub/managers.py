@@ -14,4 +14,4 @@ class StateObjectRelationManager(Manager):
 class StateManager(Manager):
 
     def get_states_choices_as_dict(self):
-        return dict((state.codename, state.title) for state in self.get_query_set().order_by('id'))
+        return dict((state.codename, state.title) for state in self.all().order_by('id'))
