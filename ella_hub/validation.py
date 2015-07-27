@@ -16,7 +16,7 @@ class ModelValidation(Validation):
 
     def _update_errors(self, errors, obj):
         opts = obj._meta
-        fields = opts.concrete_fields + opts.virtual_fields + opts.many_to_many
+        fields = tuple(opts.concrete_fields) + tuple(opts.virtual_fields) + tuple(opts.many_to_many)
         for field, messages in errors.error_dict.items():
             if field not in fields:
                 continue
