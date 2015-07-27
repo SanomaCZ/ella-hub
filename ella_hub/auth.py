@@ -10,6 +10,7 @@ from tastypie.models import ApiKey
 
 from ella.utils import timezone
 
+from ella_hub.utils import get_model_name_from_class
 from ella_hub import conf
 
 
@@ -56,7 +57,10 @@ class ApiAuthorization(DjangoAuthorization):
         if klass is False:
             return []
 
-        permission = '%s.change_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = '%s.change_%s' % (
+            klass._meta.app_label,
+            get_model_name_from_class(klass),
+        )
 
         if not bundle.request.user.has_perm(permission):
             raise Unauthorized("You are not allowed to access that resource - %s" % (permission,))
@@ -69,7 +73,10 @@ class ApiAuthorization(DjangoAuthorization):
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = '%s.change_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = '%s.change_%s' % (
+            klass._meta.app_label,
+            get_model_name_from_class(klass),
+        )
 
         if not bundle.request.user.has_perm(permission):
             raise Unauthorized("You are not allowed to access that resource - %s" % (permission,))

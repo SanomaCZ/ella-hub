@@ -46,3 +46,8 @@ def get_all_resource_content_types():
 
 def get_all_resource_classes():
     return tuple(__RESOURCE_CLASSES)
+
+
+def get_model_name_from_class(cls):
+    opts = cls._meta
+    return hasattr(opts, 'model_name') and opts.model_name or opts.module_name
