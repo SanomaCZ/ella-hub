@@ -73,7 +73,6 @@ class State(models.Model):
         "Transition",
         verbose_name=_("Transitions"),
         blank=True,
-        null=True
     )
 
     objects = StateManager()

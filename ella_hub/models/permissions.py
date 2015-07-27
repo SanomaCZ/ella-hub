@@ -18,7 +18,6 @@ class Permission(models.Model):
         ContentType,
         verbose_name=_("Content Types"),
         blank=True,
-        null=True,
         related_name="content_types"
     )
 

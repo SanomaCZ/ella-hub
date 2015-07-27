@@ -64,9 +64,8 @@ class PublishableLock(models.Model):
 
     objects = PublishableLockManager()
 
-    publishable = models.ForeignKey(
+    publishable = models.OneToOneField(
         Publishable,
-        unique=True,
         verbose_name=_("Locked publishable")
     )
     locked_by = models.ForeignKey(User)
