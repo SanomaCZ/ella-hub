@@ -26,6 +26,7 @@ from ella_hub.utils.workflow import set_state, get_state
 from ella_hub.utils import get_content_type_for_resource, get_resource_for_object, THUMB_FORMAT
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.validation import ModelValidation
+from ella_hub import conf
 
 
 logger = logging.getLogger(__name__)
@@ -183,9 +184,12 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
         bundle.data['image'] = bundle.obj.image.url[len(settings.MEDIA_URL):]
         bundle.data['public_url'] = bundle.request.build_absolute_uri(bundle.obj.image.url)
 
-        if bundle.obj.image and THUMB_FORMAT is not None:
-            fp = FormatedPhoto.objects.get_photo_in_format(bundle.obj.id, THUMB_FORMAT)
-            bundle.data['thumbnail_url'] = bundle.request.build_absolute_uri(fp['url'])
+        if bundle.obj.image:
+            if THUMB_FORMAT is not None:
+                fp = FormatedPhoto.objects.get_photo_in_format(bundle.obj.id, THUMB_FORMAT)
+                bundle.data['thumbnail_url'] = bundle.request.build_absolute_uri(fp['url'])
+            elif conf.ALLOW_THUMBNAIL_FALLBACK:
+                bundle.data['thumbnail_url'] = bundle.data['public_url']
 
         return bundle
 
