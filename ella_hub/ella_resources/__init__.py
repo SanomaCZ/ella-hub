@@ -23,21 +23,12 @@ from ella.utils.timezone import now
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource, NameSlugPredictedMixin
 from ella_hub.models import Draft, State
 from ella_hub.utils.workflow import set_state, get_state
-from ella_hub.utils import get_content_type_for_resource, get_resource_for_object
+from ella_hub.utils import get_content_type_for_resource, get_resource_for_object, THUMB_FORMAT
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.validation import ModelValidation
 
 
 logger = logging.getLogger(__name__)
-
-# get format for thumbnail
-THUMB_FORMAT = None
-thumb_format_name = getattr(settings, 'HUB_THUMBNAIL_FORMAT', None)
-if thumb_format_name is not None:
-    try:
-        THUMB_FORMAT = Format.objects.get_for_name(thumb_format_name)
-    except Format.DoesNotExist:
-        pass
 
 
 class SiteResource(ApiModelResource):

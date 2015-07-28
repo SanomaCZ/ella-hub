@@ -1,8 +1,24 @@
-from django.contrib.contenttypes.models import ContentType
+import logging
 
+from django.contrib.contenttypes.models import ContentType
+from ella.photos.models import Format
+
+from ella_hub import conf
+
+
+logger = logging.getLogger(__name__)
 
 __RESOURCE_CLASSES = []
 __REGISTERED_RESOURCES = {}
+
+
+# get format for thumbnail
+THUMB_FORMAT = None
+if conf.THUMBNAIL_FORMAT is not None:
+    try:
+        THUMB_FORMAT = Format.objects.get_for_name(conf.THUMBNAIL_FORMAT)
+    except Format.DoesNotExist:
+        logger.warning("Format for thumbnail with name: %s does not exist" % conf.THUMBNAIL_FORMAT)
 
 
 def save_resource_class(cls):
