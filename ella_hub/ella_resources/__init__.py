@@ -204,8 +204,9 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
             # image contains only path to uploaded image
             if isinstance(uploaded_image, (basestring,)):
                 path = os.path.join(settings.MEDIA_ROOT, uploaded_image)
-                image = self._rotate_image(path, bundle.data['rotate'])
-                image.save(path)
+                with open(path, "rb") as img:
+                    image = self._rotate_image(img, bundle.data['rotate'])
+                    image.save(path)
             else:
                 path = self._upload_to(uploaded_image.name)
 
@@ -216,8 +217,8 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
                 image = self._rotate_image(uploaded_image, bundle.data['rotate'])
                 image.save(path)
 
-                bundle.data['image'] = ImageFile(open(path, "rb"))
-                bundle.obj.image = bundle.data['image']
+            bundle.data['image'] = ImageFile(open(path, "rb"))
+            bundle.obj.image = bundle.data['image']
 
         # if slug is empty delete it means not specified or not changed
         if "slug" in bundle.data and not bundle.data['slug']:
