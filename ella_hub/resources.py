@@ -222,11 +222,9 @@ class ApiModelResource(ModelResource):
 
     def hydrate(self, bundle, *args, **kwargs):
         """Fills user fields by current logged user."""
+
         for field_name in getattr(self._meta, "user_fields", ()):
             setattr(bundle.obj, field_name, bundle.request.user)
-
-        if "state" in bundle.data:
-            set_state(bundle.obj, bundle.data["state"])
 
         return bundle
 
@@ -250,6 +248,17 @@ class ApiModelResource(ModelResource):
 #
 #                if getattr(bundle.obj, field_object.attribute, None) is not None:
 #                    setattr(bundle.obj, field_object.attribute, None)
+
+        return bundle
+
+    def save(self, bundle, skip_errors=False):
+        bundle = super(ApiModelResource, self).save(bundle, skip_errors=skip_errors)
+
+        # we need save state only when the object is created
+        # so it is not possible to call this in hydrate or full_hydrate
+        # because it will not work for new objects
+        if "state" in bundle.data:
+            set_state(bundle.obj, bundle.data["state"])
 
         return bundle
 
