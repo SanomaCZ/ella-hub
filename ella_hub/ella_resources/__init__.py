@@ -12,6 +12,7 @@ from django.contrib.sites.models import Site
 from django.core.files.images import ImageFile
 from django.utils.encoding import force_unicode, smart_str
 from django.db.models import Q
+from django.utils.text import slugify
 
 from ella.core.models import Publishable, Listing, Category, Author, Source, Related
 from ella.articles.models import Article
@@ -240,7 +241,7 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
         return os.path.join(
             settings.MEDIA_ROOT,
             force_unicode(now().strftime(smart_str(photos_settings.UPLOAD_TO))),
-            name + ext
+            slugify(name) + ext
         )
 
     class Meta(MultipartFormDataModelResource.Meta):
