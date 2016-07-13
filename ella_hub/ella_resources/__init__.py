@@ -24,7 +24,12 @@ from ella.utils.timezone import now
 from ella_hub.resources import ApiModelResource, MultipartFormDataModelResource, NameSlugPredictedMixin
 from ella_hub.models import Draft, State
 from ella_hub.utils.workflow import set_state, get_state
-from ella_hub.utils import get_content_type_for_resource, get_resource_for_object, THUMB_FORMAT
+from ella_hub.utils import (
+    get_content_type_for_resource,
+    get_resource_for_object,
+    THUMB_FORMAT,
+    get_media_drafts_root,
+)
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.validation import ModelValidation
 from ella_hub import conf
@@ -239,7 +244,7 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
         ext = photos_settings.TYPE_EXTENSION.get(ext, ext)
 
         return os.path.join(
-            settings.MEDIA_ROOT,
+            get_media_drafts_root(),
             force_unicode(now().strftime(smart_str(photos_settings.UPLOAD_TO))),
             slugify(name) + ext
         )

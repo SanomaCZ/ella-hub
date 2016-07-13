@@ -1,6 +1,8 @@
+import os
 import logging
 
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from ella.photos.models import Format
 
 from ella_hub import conf
@@ -67,3 +69,10 @@ def get_all_resource_classes():
 def get_model_name_from_class(cls):
     opts = cls._meta
     return hasattr(opts, 'model_name') and opts.model_name or opts.module_name
+
+
+def get_media_drafts_root():
+    return os.path.join(
+        settings.MEDIA_ROOT,
+        conf.MEDIA_DRAFTS_DIR
+    )
