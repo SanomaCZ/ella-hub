@@ -30,6 +30,7 @@ from ella_hub.utils import (
     THUMB_FORMAT,
     get_media_drafts_root,
 )
+from ella_hub.fields import BackportedForeignKey
 from ella_hub.utils.fields import use_in_clever
 from ella_hub.validation import ModelValidation
 from ella_hub import conf
@@ -452,8 +453,8 @@ class ListingResource(ApiModelResource):
 
 
 class RelatedResource(ApiModelResource):
-    publishable = fields.ForeignKey(PublishableResource, 'publishable', full=True)
-    related = fields.ForeignKey(PublishableResource, 'related', full=True, use_in='detail')
+    publishable = BackportedForeignKey(PublishableResource, 'publishable', full=True)
+    related = BackportedForeignKey(PublishableResource, 'related', full=True, use_in='detail')
 
     def hydrate(self, bundle, *args, **kwargs):
         bundle = super(RelatedResource, self).hydrate(bundle, *args, **kwargs)
