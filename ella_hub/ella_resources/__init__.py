@@ -122,6 +122,11 @@ class AuthorResource(NameSlugPredictedMixin, ApiModelResource):
             'email': ('exact', 'iexact', 'contains', 'icontains', 'startswith', 'endswith',),
             'photo': ALL_WITH_RELATIONS,
         }
+        ordering = (
+            'id',
+            'name',
+            'slug',
+        )
         public = False
 
 
