@@ -198,7 +198,11 @@ class PhotoResource(ExcludeItemsMixin, MultipartFormDataModelResource):
 
         if bundle.obj.image:
             if THUMB_FORMAT is not None:
-                fp = FormatedPhoto.objects.get_photo_in_format(bundle.obj.id, THUMB_FORMAT)
+                try:
+                    fp = FormatedPhoto.objects.get_photo_in_format(bundle.obj.id, THUMB_FORMAT)
+                except Exception:
+                    logger.error('Can not get photo in format', exc_info=True)
+                    fp = {'url': None}
                 bundle.data['thumbnail_url'] = bundle.request.build_absolute_uri(fp['url'])
             elif conf.ALLOW_THUMBNAIL_FALLBACK:
                 bundle.data['thumbnail_url'] = bundle.data['public_url']
