@@ -37,3 +37,9 @@ doc/Makefile.local
 
 nosetests.xml
 tests/example_project/*.db
+
+# virtual env
+.venv
+
+# ide
+.idea
