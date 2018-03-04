@@ -5,6 +5,7 @@ from inspect import isclass
 
 from django.conf import settings
 from django.conf.urls import url
+from django.core.urlresolvers import reverse_lazy
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
@@ -369,8 +370,8 @@ class EllaHubApi(Api):
 
     def preview_publishable(self, request, id):
         item = get_object_or_404(Publishable, pk=id)
-        url = item.get_absolute_url()
+        url = item.get_absolute_url(preview=True)
         if not item.is_published():
             if not request.user.is_authenticated():
-                url = "%s?%s=%s" % (settings.LOGIN_URL, REDIRECT_FIELD_NAME, url,)
+                url = "%s?%s=%s" % (reverse_lazy("admin:login"), REDIRECT_FIELD_NAME, url,)
         return HttpResponseRedirect(url)
